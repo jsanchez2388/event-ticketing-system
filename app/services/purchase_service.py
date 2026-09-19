@@ -46,3 +46,47 @@
 #   - Helpers must never call commit(); only purchase_tickets() commits.
 #   - The report must explain why atomicity matters here (no order without
 #     payment, no inventory decremented for a failed order, no overselling).
+from app.database.postgres import get_connection
+
+
+def purchase_ticket(
+    user_id: int,
+    ticket_type_id: int,
+    quantity: int
+):
+
+    conn = get_connection()
+
+    try:
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT *
+            FROM purchase_tickets(
+                %s,
+                %s,
+                %s,
+                'Wallet'
+            );
+            """,
+            (
+                user_id,
+                ticket_type_id,
+                quantity
+            )
+        )
+
+        result = cursor.fetchone()
+
+        conn.commit()
+        cursor.close()
+
+        return result
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        conn.close()

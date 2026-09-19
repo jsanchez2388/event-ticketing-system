@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+Create Account | EventHub
+{% endblock %}
+
+
+{% block content %}
+
+
+<section class="auth-section">
+
+    <div class="auth-card">
+
+
+        <p class="eyebrow">
+            Join EventHub
+        </p>
+
+
+        <h1>
+            Create Account
+        </h1>
+
+
+        <p class="auth-description">
+            Create a user or administrator account.
+        </p>
+
+
+        {% if error %}
+
+        <div class="error-message">
+            {{ error }}
+        </div>
+
+        {% endif %}
+
+
+        <form
+            method="POST"
+            action="/site/signup"
+            class="auth-form"
+        >
+
+
+            <!-- CSRF TOKEN -->
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token }}"
+            >
+
+
+            <label>
+
+                First Name
+
+                <input
+                    type="text"
+                    name="first_name"
+                    minlength="1"
+                    maxlength="100"
+                    autocomplete="given-name"
+                    required
+                >
+
+            </label>
+
+
+            <label>
+
+                Last Name
+
+                <input
+                    type="text"
+                    name="last_name"
+                    minlength="1"
+                    maxlength="100"
+                    autocomplete="family-name"
+                    required
+                >
+
+            </label>
+
+
+            <label>
+
+                Email
+
+                <input
+                    type="email"
+                    name="email"
+                    maxlength="255"
+                    autocomplete="email"
+                    placeholder="you@example.com"
+                    required
+                >
+
+            </label>
+
+
+            <label>
+
+                Password
+
+                <input
+                    type="password"
+                    name="password"
+                    minlength="8"
+                    maxlength="72"
+                    autocomplete="new-password"
+                    placeholder="Minimum 8 characters"
+                    required
+                >
+
+            </label>
+
+
+            <label>
+
+                Account Type
+
+                <select
+                    name="role"
+                    id="role"
+                    onchange="toggleAdminCode()"
+                    required
+                >
+
+                    <option value="user">
+                        User
+                    </option>
+
+                    <option value="admin">
+                        Admin
+                    </option>
+
+                </select>
+
+            </label>
+
+
+            <div
+                id="admin-code-section"
+                style="display: none;"
+            >
+
+                <label>
+
+                    Admin Signup Code
+
+                    <input
+                        type="password"
+                        name="admin_code"
+                        maxlength="100"
+                        autocomplete="off"
+                    >
+
+                </label>
+
+            </div>
+
+
+            <div
+                style="
+                    background: #f5f6f8;
+                    border-radius: 10px;
+                    padding: 14px;
+                    font-size: 0.9rem;
+                    color: #555b65;
+                "
+            >
+
+                <strong>
+                    Starting Demo Balance
+                </strong>
+
+                <br><br>
+
+                User: $500.00
+
+                <br>
+
+                Admin: $1,000.00
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="button button-full"
+            >
+                Create Account
+            </button>
+
+        </form>
+
+
+        <p class="auth-footer">
+
+            Already have an account?
+
+            <a href="/site/login">
+                Sign In
+            </a>
+
+        </p>
+
+    </div>
+
+</section>
+
+
+<script>
+
+function toggleAdminCode() {
+
+    const role =
+        document.getElementById("role").value;
+
+    const adminSection =
+        document.getElementById(
+            "admin-code-section"
+        );
+
+
+    if (role === "admin") {
+
+        adminSection.style.display =
+            "block";
+
+    } else {
+
+        adminSection.style.display =
+            "none";
+
+    }
+
+}
+
+
+document.addEventListener(
+    "DOMContentLoaded",
+    toggleAdminCode
+);
+
+</script>
+
+
+{% endblock %}

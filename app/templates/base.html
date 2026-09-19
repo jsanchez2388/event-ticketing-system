@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+
+<head>
+
+    <meta charset="UTF-8">
+
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+
+    <title>
+
+        {% block title %}
+
+        EventHub
+
+        {% endblock %}
+
+    </title>
+
+
+    <link
+        rel="stylesheet"
+        href="/static/css/style.css"
+    >
+
+
+</head>
+
+
+
+<body>
+
+
+    <!-- ========================================= -->
+    <!-- NAVIGATION -->
+    <!-- ========================================= -->
+
+
+    <header class="navbar">
+
+
+        <div class="nav-container">
+
+
+            <!-- LOGO -->
+
+
+            <a
+                href="/site"
+                class="brand"
+            >
+                EventHub
+            </a>
+
+
+
+            <!-- NAVIGATION -->
+
+
+            <nav>
+
+
+                <!-- EVENTS -->
+
+
+                <a href="/site">
+                    Events
+                </a>
+
+
+
+                {% if request.session.get("user_id") %}
+
+
+                    <!-- ============================= -->
+                    <!-- LOGGED IN -->
+                    <!-- ============================= -->
+
+
+                    <a href="/site/account">
+                        My Account
+                    </a>
+
+
+
+                    <!-- ADMIN LINK -->
+
+
+                    {% if request.session.get("role") == "admin" %}
+
+
+                    <a href="/site/admin">
+                        Admin
+                    </a>
+
+
+                    {% endif %}
+
+
+
+                    <!-- USER NAME -->
+
+
+                    <span
+                        style="
+                            color: #6b7280;
+                            font-size: 0.9rem;
+                            display: flex;
+                            align-items: center;
+                        "
+                    >
+
+                        Hi,
+                        {{ request.session.get(
+                            "first_name",
+                            "User"
+                        ) }}
+
+                    </span>
+
+
+
+                    <!-- ============================= -->
+                    <!-- SECURE LOGOUT FORM -->
+                    <!-- ============================= -->
+
+
+                    <form
+                        method="POST"
+                        action="/site/logout"
+                        style="
+                            margin: 0;
+                            padding: 0;
+                            display: flex;
+                            align-items: center;
+                        "
+                    >
+
+
+                        <!-- CSRF TOKEN -->
+
+
+                        <input
+                            type="hidden"
+                            name="csrf_token"
+                            value="{{ csrf_token }}"
+                        >
+
+
+
+                        <!-- LOGOUT BUTTON -->
+
+
+                        <button
+                            type="submit"
+                            style="
+                                border: none;
+                                background: none;
+                                padding: 0;
+                                margin: 0;
+                                font: inherit;
+                                font-weight: 600;
+                                color: #555b65;
+                                cursor: pointer;
+                            "
+                        >
+                            Logout
+                        </button>
+
+
+                    </form>
+
+
+
+                {% else %}
+
+
+                    <!-- ============================= -->
+                    <!-- NOT LOGGED IN -->
+                    <!-- ============================= -->
+
+
+                    <a href="/site/login">
+                        Login
+                    </a>
+
+
+                    <a href="/site/signup">
+                        Sign Up
+                    </a>
+
+
+                {% endif %}
+
+
+            </nav>
+
+
+        </div>
+
+
+    </header>
+
+
+
+    <!-- ========================================= -->
+    <!-- MAIN PAGE CONTENT -->
+    <!-- ========================================= -->
+
+
+    <main>
+
+
+        {% block content %}
+
+
+        {% endblock %}
+
+
+    </main>
+
+
+
+    <!-- ========================================= -->
+    <!-- FOOTER -->
+    <!-- ========================================= -->
+
+
+    <footer>
+
+
+        <div class="container">
+
+
+            COMP 642 Event Ticketing System
+
+
+        </div>
+
+
+    </footer>
+
+
+
+</body>
+
+
+</html>

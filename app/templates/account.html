@@ -1,0 +1,400 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+My Account | EventHub
+{% endblock %}
+
+
+{% block content %}
+
+
+<section class="detail-hero">
+
+    <div class="container">
+
+
+        <p class="eyebrow">
+            EventHub Account
+        </p>
+
+
+        <h1>
+            My Account
+        </h1>
+
+
+        <p
+            style="
+                color: #c9ced8;
+                font-size: 1.05rem;
+            "
+        >
+
+            Welcome,
+            {{ user.first_name }}
+            {{ user.last_name }}
+
+        </p>
+
+
+    </div>
+
+</section>
+
+
+
+<section class="events-section">
+
+
+    <div class="container">
+
+
+        {% if message %}
+
+        <div
+            class="success-message"
+            style="margin-bottom: 25px;"
+        >
+
+            {{ message }}
+
+        </div>
+
+        {% endif %}
+
+
+
+        {% if error %}
+
+        <div
+            class="error-message"
+            style="margin-bottom: 25px;"
+        >
+
+            {{ error }}
+
+        </div>
+
+        {% endif %}
+
+
+
+        <div
+            style="
+                display: grid;
+                grid-template-columns:
+                    repeat(auto-fit, minmax(240px, 1fr));
+                gap: 20px;
+                margin-bottom: 45px;
+            "
+        >
+
+
+            <div class="summary-card">
+
+                <p class="small-label">
+                    Account Holder
+                </p>
+
+                <h2>
+
+                    {{ user.first_name }}
+                    {{ user.last_name }}
+
+                </h2>
+
+                <p>
+                    {{ user.email }}
+                </p>
+
+            </div>
+
+
+
+            <div class="summary-card">
+
+                <p class="small-label">
+                    Account Type
+                </p>
+
+                <h2>
+
+                    {{ user.role|capitalize }}
+
+                </h2>
+
+                <p>
+
+                    Status:
+                    {{ user.account_status|capitalize }}
+
+                </p>
+
+            </div>
+
+
+
+            <div class="summary-card">
+
+                <p class="small-label">
+                    Available Balance
+                </p>
+
+                <h1
+                    style="
+                        margin-top: 8px;
+                        margin-bottom: 8px;
+                        font-size: 2.5rem;
+                    "
+                >
+
+                    ${{ "%.2f"|format(user.wallet_balance) }}
+
+                </h1>
+
+                <p>
+                    Demo EventHub wallet
+                </p>
+
+            </div>
+
+
+        </div>
+
+
+
+        <div class="section-header">
+
+            <div>
+
+                <p class="eyebrow">
+                    Purchases
+                </p>
+
+                <h2>
+                    My Tickets
+                </h2>
+
+            </div>
+
+
+            <a
+                href="/site"
+                class="button"
+            >
+                Browse Events
+            </a>
+
+        </div>
+
+
+
+        {% if orders %}
+
+
+        <div class="event-grid">
+
+
+            {% for order in orders %}
+
+
+            <article class="event-card">
+
+
+                <div class="event-card-top">
+
+
+                    <span class="event-type">
+
+                        Order #{{ order.order_id }}
+
+                    </span>
+
+
+                    <span class="event-id">
+
+                        {{ order.order_status|capitalize }}
+
+                    </span>
+
+
+                </div>
+
+
+
+                <h3>
+
+                    {{ order.title }}
+
+                </h3>
+
+
+
+                <div class="event-info">
+
+
+                    <p>
+
+                        <strong>
+                            Ticket:
+                        </strong>
+
+                        {{ order.ticket_name }}
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>
+                            Quantity:
+                        </strong>
+
+                        {{ order.quantity }}
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>
+                            Price Per Ticket:
+                        </strong>
+
+                        ${{ "%.2f"|format(order.unit_price) }}
+
+                    </p>
+
+
+                    {% if order.order_date %}
+
+                    <p>
+
+                        <strong>
+                            Purchased:
+                        </strong>
+
+                        {{ order.order_date.strftime(
+                            "%B %d, %Y at %I:%M %p"
+                        ) }}
+
+                    </p>
+
+                    {% endif %}
+
+
+                    <p>
+
+                        <strong>
+                            Payment:
+                        </strong>
+
+                        {{ order.payment_method }}
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>
+                            Payment Status:
+                        </strong>
+
+                        {{ order.payment_status|capitalize }}
+
+                    </p>
+
+
+                </div>
+
+
+
+                <div class="event-card-bottom">
+
+
+                    <div>
+
+                        <span class="small-label">
+                            Total Paid
+                        </span>
+
+
+                        <strong class="price">
+
+                            ${{ "%.2f"|format(order.total_amount) }}
+
+                        </strong>
+
+                    </div>
+
+
+
+                    <a
+                        href="/site/events/{{ order.event_id }}"
+                        class="button"
+                    >
+                        View Event
+                    </a>
+
+
+                </div>
+
+
+            </article>
+
+
+            {% endfor %}
+
+
+        </div>
+
+
+        {% else %}
+
+
+        <div
+            class="event-card"
+            style="
+                text-align: center;
+                padding: 50px 25px;
+            "
+        >
+
+
+            <h2>
+                No tickets yet
+            </h2>
+
+
+            <p
+                style="
+                    color: #6b7280;
+                    margin-bottom: 25px;
+                "
+            >
+                You have not purchased any tickets yet.
+            </p>
+
+
+            <a
+                href="/site"
+                class="button"
+            >
+                Browse Events
+            </a>
+
+
+        </div>
+
+
+        {% endif %}
+
+
+    </div>
+
+
+</section>
+
+
+{% endblock %}

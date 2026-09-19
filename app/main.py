@@ -1,27 +1,83 @@
-# app/main.py
-#
-# TO ADD
-#   - A lifespan handler (contextlib.asynccontextmanager, passed as
-#     FastAPI(lifespan=...)) that on startup calls:
-#         app.database.postgres.init_pool()
-#         app.database.mongo.init_client()
-#         app.database.redis.init_client()
-#     and on shutdown calls the matching close functions.
-#   - Router registration:
-#         app.include_router(users.router)
-#         app.include_router(events.router)
-#         app.include_router(orders.router)
-#         app.include_router(reviews.router)
-#         app.include_router(trending.router)
-#         app.include_router(admin.router)
-#   - Keep the health check below. Optionally extend it to ping all three
-#     databases and report each one's status.
+import os
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
 
-app = FastAPI(title="Event Ticketing System")
+from app.database.postgres import test_connection
+
+from app.routers.events import router as events_router
+from app.routers.analytics import router as analytics_router
+from app.routers.web import router as web_router
+from app.routers.auth import router as auth_router
+
+from app.routers.account import router as account_router
+
+app = FastAPI(
+    title="Event Ticketing System",
+    description="COMP 642 Event Ticketing API",
+    version="1.0.0"
+)
+
+
+# Login session support
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=os.getenv(
+        "SESSION_SECRET",
+        "development-secret-change-me"
+    ),
+    same_site="lax",
+    https_only=False
+)
+
+
+# API routes
+app.include_router(events_router)
+app.include_router(analytics_router)
+
+# Website routes
+app.include_router(web_router)
+
+# Login / signup routes
+app.include_router(auth_router)
+
+app.include_router(account_router)
+
+# CSS
+app.mount(
+    "/static",
+    StaticFiles(directory="app/static"),
+    name="static"
+)
 
 
 @app.get("/")
-def health_check():
-    return {"status": "ok"}
+def root():
+    return {
+        "status": "ok",
+        "message": "Event Ticketing System",
+        "website": "/site",
+        "signup": "/site/signup",
+        "login": "/site/login",
+        "docs": "/docs"
+    }
+
+
+@app.get("/health/database")
+def database_health():
+    try:
+        result = test_connection()
+
+        return {
+            "status": "ok",
+            "postgresql": "connected",
+            "database": result["database_name"],
+            "user": result["database_user"]
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"PostgreSQL connection failed: {str(e)}"
+        )

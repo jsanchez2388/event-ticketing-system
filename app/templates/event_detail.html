@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+{{ event.title }} | EventHub
+{% endblock %}
+
+
+{% block content %}
+
+
+<section class="detail-hero">
+
+    <div class="container">
+
+        <a
+            class="back-link"
+            href="/site"
+        >
+            ← All Events
+        </a>
+
+
+        <div class="detail-type">
+            {{ event.event_type|capitalize }}
+        </div>
+
+
+        <h1>
+            {{ event.title }}
+        </h1>
+
+
+        {% if categories %}
+
+        <div class="category-list">
+
+            {% for category in categories %}
+
+            <span class="category">
+                {{ category }}
+            </span>
+
+            {% endfor %}
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</section>
+
+
+
+<section class="detail-section">
+
+    <div class="container detail-layout">
+
+
+        <!-- LEFT SIDE -->
+
+        <div class="detail-main">
+
+
+            <!-- EVENT INFORMATION -->
+
+            <section class="info-panel">
+
+                <h2>
+                    Event Details
+                </h2>
+
+
+                <div class="detail-row">
+
+                    <span>
+                        Date
+                    </span>
+
+                    <strong>
+                        {{ event.start_datetime.strftime(
+                            "%A, %B %d, %Y"
+                        ) }}
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-row">
+
+                    <span>
+                        Time
+                    </span>
+
+                    <strong>
+                        {{ event.start_datetime.strftime(
+                            "%I:%M %p"
+                        ) }}
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-row">
+
+                    <span>
+                        Venue
+                    </span>
+
+                    <strong>
+                        {{ event.venue_name }}
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-row">
+
+                    <span>
+                        Location
+                    </span>
+
+                    <strong>
+                        {{ event.city }},
+                        {{ event.state }}
+                    </strong>
+
+                </div>
+
+
+                <div class="detail-row">
+
+                    <span>
+                        Status
+                    </span>
+
+                    <strong>
+                        {{ event.status|capitalize }}
+                    </strong>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- TICKETS -->
+
+            <section class="ticket-panel">
+
+                <h2>
+                    Tickets
+                </h2>
+
+
+                {% if ticket_types %}
+
+
+                    {% for ticket in ticket_types %}
+
+
+                    <div class="ticket-row">
+
+
+                        <!-- TICKET INFO -->
+
+                        <div>
+
+                            <h3>
+                                {{ ticket.ticket_name }}
+                            </h3>
+
+
+                            <p>
+                                {{ ticket.available_quantity }}
+                                remaining
+                            </p>
+
+
+                            {% if ticket.minimum_purchase %}
+
+                            <p>
+                                Minimum:
+                                {{ ticket.minimum_purchase }}
+                            </p>
+
+                            {% endif %}
+
+
+                            {% if ticket.maximum_purchase %}
+
+                            <p>
+                                Maximum:
+                                {{ ticket.maximum_purchase }}
+                                per purchase
+                            </p>
+
+                            {% endif %}
+
+                        </div>
+
+
+
+                        <!-- PRICE -->
+
+                        <div class="ticket-price">
+
+                            {% if ticket.price == 0 %}
+
+                                Free
+
+                            {% else %}
+
+                                ${{ "%.2f"|format(ticket.price) }}
+
+                            {% endif %}
+
+                        </div>
+
+
+
+                        <!-- PURCHASE AREA -->
+
+                        {% if ticket.available_quantity > 0 %}
+
+
+                            {% if request.session.get("user_id") %}
+
+
+                            <form
+                                method="POST"
+                                action="/site/buy/{{ ticket.ticket_type_id }}"
+                                style="
+                                    display: flex;
+                                    gap: 8px;
+                                    align-items: center;
+                                "
+                            >
+
+
+                                <!-- CSRF PROTECTION -->
+
+                                <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="{{ csrf_token }}"
+                                >
+
+
+                                <!-- QUANTITY -->
+
+                                <input
+                                    type="number"
+                                    name="quantity"
+                                    value="{{ ticket.minimum_purchase or 1 }}"
+                                    min="{{ ticket.minimum_purchase or 1 }}"
+
+                                    {% if ticket.maximum_purchase %}
+                                    max="{{ ticket.maximum_purchase }}"
+                                    {% endif %}
+
+                                    style="
+                                        width: 70px;
+                                        padding: 10px;
+                                        border: 1px solid #d5d8de;
+                                        border-radius: 8px;
+                                    "
+
+                                    required
+                                >
+
+
+                                <!-- BUY BUTTON -->
+
+                                <button
+                                    class="button"
+                                    type="submit"
+                                >
+                                    Buy
+                                </button>
+
+
+                            </form>
+
+
+                            {% else %}
+
+
+                            <!-- NOT LOGGED IN -->
+
+                            <a
+                                href="/site/login"
+                                class="button"
+                            >
+                                Login to Buy
+                            </a>
+
+
+                            {% endif %}
+
+
+                        {% else %}
+
+
+                        <!-- SOLD OUT -->
+
+                        <span
+                            style="
+                                font-weight: 700;
+                                color: #9b1c1c;
+                            "
+                        >
+                            Sold Out
+                        </span>
+
+
+                        {% endif %}
+
+
+                    </div>
+
+
+                    {% endfor %}
+
+
+                {% else %}
+
+
+                <p>
+                    No tickets are currently available.
+                </p>
+
+
+                {% endif %}
+
+
+            </section>
+
+
+        </div>
+
+
+
+        <!-- RIGHT SIDE -->
+
+        <aside class="summary-card">
+
+
+            <p class="small-label">
+                Event
+            </p>
+
+
+            <h2>
+                {{ event.title }}
+            </h2>
+
+
+            <p>
+                {{ event.venue_name }}
+            </p>
+
+
+            <p>
+                {{ event.start_datetime.strftime(
+                    "%B %d, %Y"
+                ) }}
+            </p>
+
+
+            <p>
+                {{ event.start_datetime.strftime(
+                    "%I:%M %p"
+                ) }}
+            </p>
+
+
+            {% if request.session.get("user_id") %}
+
+
+            <a
+                href="/site/account"
+                class="button button-full"
+            >
+                My Account
+            </a>
+
+
+            {% else %}
+
+
+            <a
+                href="/site/login"
+                class="button button-full"
+            >
+                Sign In to Purchase
+            </a>
+
+
+            {% endif %}
+
+
+        </aside>
+
+
+    </div>
+
+</section>
+
+
+{% endblock %}

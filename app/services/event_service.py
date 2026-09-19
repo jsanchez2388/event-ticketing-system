@@ -49,3 +49,96 @@
 #   def create_ticket_type(event_id: int, data: TicketTypeCreate) -> dict
 #   def update_ticket_type(ticket_type_id: int, data: TicketTypeUpdate) -> dict
 #       Admin ticket type management; invalidate the event cache afterward.
+from app.database.postgres import get_connection
+
+
+def get_all_events():
+    conn = get_connection()
+
+    try:
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT
+                e.event_id,
+                e.title,
+                e.event_type,
+                e.start_datetime,
+                e.end_datetime,
+                e.status,
+                v.venue_id,
+                v.venue_name,
+                v.city,
+                v.state
+            FROM events AS e
+            JOIN venues AS v
+                ON e.venue_id = v.venue_id
+            ORDER BY e.start_datetime;
+            """
+        )
+
+        events = cursor.fetchall()
+        cursor.close()
+
+        return events
+
+    finally:
+        conn.close()
+
+
+def get_event_by_id(event_id: int):
+    conn = get_connection()
+
+    try:
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT
+                e.event_id,
+                e.title,
+                e.event_type,
+                e.start_datetime,
+                e.end_datetime,
+                e.status,
+                v.venue_id,
+                v.venue_name,
+                v.street,
+                v.city,
+                v.state,
+                v.zip_code,
+                COALESCE(
+                    SUM(tt.available_quantity),
+                    0
+                ) AS remaining_inventory
+            FROM events AS e
+            JOIN venues AS v
+                ON e.venue_id = v.venue_id
+            LEFT JOIN ticket_types AS tt
+                ON e.event_id = tt.event_id
+            WHERE e.event_id = %s
+            GROUP BY
+                e.event_id,
+                e.title,
+                e.event_type,
+                e.start_datetime,
+                e.end_datetime,
+                e.status,
+                v.venue_id,
+                v.venue_name,
+                v.street,
+                v.city,
+                v.state,
+                v.zip_code;
+            """,
+            (event_id,)
+        )
+
+        event = cursor.fetchone()
+        cursor.close()
+
+        return event
+
+    finally:
+        conn.close()

@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+Events | EventHub
+{% endblock %}
+
+
+{% block content %}
+
+
+<section class="hero">
+
+    <div class="container">
+
+        <p class="eyebrow">
+            Discover what's next
+        </p>
+
+        <h1>
+            Find your next event.
+        </h1>
+
+        <p class="hero-description">
+            Concerts, conferences, sports,
+            workshops, university events,
+            and community experiences.
+        </p>
+
+
+        {% if not request.session.get("user_id") %}
+
+        <div
+            style="
+                margin-top: 30px;
+                display: flex;
+                gap: 12px;
+            "
+        >
+
+            <a
+                href="/site/signup"
+                class="button"
+            >
+                Create Account
+            </a>
+
+            <a
+                href="/site/login"
+                style="
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 11px 17px;
+                    border: 1px solid rgba(255,255,255,0.35);
+                    border-radius: 10px;
+                    color: white;
+                    font-weight: 700;
+                "
+            >
+                Sign In
+            </a>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</section>
+
+
+
+<section class="events-section">
+
+    <div class="container">
+
+
+        <div class="section-header">
+
+            <div>
+
+                <p class="eyebrow">
+                    Upcoming
+                </p>
+
+                <h2>
+                    Explore Events
+                </h2>
+
+            </div>
+
+
+            <div class="event-count">
+
+                {{ events|length }} events
+
+            </div>
+
+        </div>
+
+
+
+        {% if events %}
+
+        <div class="event-grid">
+
+
+            {% for event in events %}
+
+
+            <article class="event-card">
+
+
+                <div class="event-card-top">
+
+                    <span class="event-type">
+
+                        {{ event.event_type|capitalize }}
+
+                    </span>
+
+
+                    <span class="event-id">
+
+                        #{{ event.event_id }}
+
+                    </span>
+
+                </div>
+
+
+
+                <div class="event-date">
+
+                    <span class="month">
+
+                        {{ event.start_datetime.strftime("%b") }}
+
+                    </span>
+
+
+                    <span class="day">
+
+                        {{ event.start_datetime.strftime("%d") }}
+
+                    </span>
+
+                </div>
+
+
+
+                <h3>
+
+                    {{ event.title }}
+
+                </h3>
+
+
+
+                <div class="event-info">
+
+                    <p>
+
+                        {{ event.start_datetime.strftime(
+                            "%A, %B %d, %Y"
+                        ) }}
+
+                    </p>
+
+
+                    <p>
+
+                        {{ event.start_datetime.strftime(
+                            "%I:%M %p"
+                        ) }}
+
+                    </p>
+
+
+                    <p>
+
+                        {{ event.venue_name }}
+
+                    </p>
+
+
+                    <p>
+
+                        {{ event.city }},
+                        {{ event.state }}
+
+                    </p>
+
+                </div>
+
+
+
+                <div class="event-card-bottom">
+
+                    <div>
+
+                        <span class="small-label">
+                            From
+                        </span>
+
+
+                        {% if event.starting_price == 0 %}
+
+                            <strong class="price">
+
+                                Free
+
+                            </strong>
+
+                        {% else %}
+
+                            <strong class="price">
+
+                                ${{ "%.2f"|format(event.starting_price) }}
+
+                            </strong>
+
+                        {% endif %}
+
+                    </div>
+
+
+
+                    <a
+                        class="button"
+                        href="/site/events/{{ event.event_id }}"
+                    >
+                        View Event
+                    </a>
+
+                </div>
+
+
+            </article>
+
+
+            {% endfor %}
+
+
+        </div>
+
+
+        {% else %}
+
+
+        <div class="event-card">
+
+            <h3>
+                No events available
+            </h3>
+
+            <p>
+                Check back soon for upcoming events.
+            </p>
+
+        </div>
+
+
+        {% endif %}
+
+
+    </div>
+
+</section>
+
+
+{% endblock %}

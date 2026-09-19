@@ -31,3 +31,39 @@
 #     never build SQL with f-strings.
 #   - Standalone scripts (demos, benchmark) should call init_pool() themselves
 #     since they do not run the FastAPI lifespan.
+
+import psycopg2
+from psycopg2.extras import RealDictCursor
+
+from app.config import DATABASE_URL
+
+
+def get_connection():
+    return psycopg2.connect(
+        DATABASE_URL,
+        cursor_factory=RealDictCursor
+    )
+
+
+def test_connection():
+    conn = get_connection()
+
+    try:
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT
+                current_database() AS database_name,
+                current_user AS database_user;
+            """
+        )
+
+        result = cursor.fetchone()
+
+        cursor.close()
+
+        return result
+
+    finally:
+        conn.close()

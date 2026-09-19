@@ -1,5 +1,11 @@
 fastapi
 uvicorn[standard]
+psycopg2-binary
+python-dotenv
+jinja2
+python-multipart
+bcrypt
+itsdangerous
+email-validator
 pymongo
 redis
-psycopg2-binary

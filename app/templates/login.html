@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+Login | EventHub
+{% endblock %}
+
+
+{% block content %}
+
+
+<section class="auth-section">
+
+
+    <div class="auth-card">
+
+
+        <p class="eyebrow">
+            Welcome Back
+        </p>
+
+
+        <h1>
+            Sign In
+        </h1>
+
+
+        <p class="auth-description">
+            Sign in to access your EventHub account.
+        </p>
+
+
+        {% if error %}
+
+        <div class="error-message">
+            {{ error }}
+        </div>
+
+        {% endif %}
+
+
+        <form
+            method="POST"
+            action="/site/login"
+            class="auth-form"
+        >
+
+
+            <!-- CSRF TOKEN -->
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token }}"
+            >
+
+
+            <label>
+
+                Email
+
+                <input
+                    type="email"
+                    name="email"
+                    maxlength="255"
+                    autocomplete="email"
+                    placeholder="you@example.com"
+                    required
+                >
+
+            </label>
+
+
+            <label>
+
+                Password
+
+                <input
+                    type="password"
+                    name="password"
+                    maxlength="72"
+                    autocomplete="current-password"
+                    placeholder="Password"
+                    required
+                >
+
+            </label>
+
+
+            <button
+                type="submit"
+                class="button button-full"
+            >
+                Sign In
+            </button>
+
+
+        </form>
+
+
+        <p class="auth-footer">
+
+            Don't have an account?
+
+            <a href="/site/signup">
+                Create Account
+            </a>
+
+        </p>
+
+
+    </div>
+
+
+</section>
+
+
+{% endblock %}

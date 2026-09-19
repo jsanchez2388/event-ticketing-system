@@ -30,3 +30,33 @@
 #   - Define /events/venue/{venue_id} BEFORE /events/{event_id}, or use a
 #     separate venues router, to avoid route conflicts.
 #   - Reviews are handled in routers/reviews.py.
+from fastapi import APIRouter, HTTPException
+
+from app.services.event_service import (
+    get_all_events,
+    get_event_by_id
+)
+
+
+router = APIRouter(
+    prefix="/events",
+    tags=["Events"]
+)
+
+
+@router.get("")
+def list_events():
+    return get_all_events()
+
+
+@router.get("/{event_id}")
+def event_details(event_id: int):
+    event = get_event_by_id(event_id)
+
+    if event is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Event not found"
+        )
+
+    return event
