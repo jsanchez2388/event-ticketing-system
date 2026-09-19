@@ -1,0 +1,40 @@
+-- sql/queries.sql
+--
+-- PURPOSE
+--   The 8 required SQL queries. Label each one and use a sample parameter value.
+--   The API services (user_service, event_service, sales_service) should run
+--   these same queries with parameters.
+--   At least TWO must join THREE OR MORE tables.
+--
+-- TO ADD
+--
+-- Query 1: Find all events at a particular venue.
+--   Tables: events, venues. Filter by venue_id; order by start_time.
+--
+-- Query 2: Find all tickets purchased by a particular user.        [3+ table join]
+--   Tables: users, orders, order_items, ticket_types, events.
+--   Output: order id/date, event title, ticket type, quantity, unit price.
+--
+-- Query 3: Calculate total tickets sold for each event.            [3+ table join]
+--   Tables: events, ticket_types, order_items. SUM(quantity) GROUP BY event.
+--   Use LEFT JOIN so events with zero sales still appear.
+--
+-- Query 4: Determine remaining ticket inventory for an event.
+--   Tables: events, ticket_types. Per ticket type, plus the event total remaining.
+--
+-- Query 5: Calculate total revenue for each event.                 [3+ table join]
+--   Tables: events, ticket_types, order_items. SUM(quantity * unit_price).
+--   Consider only orders with a completed payment.
+--
+-- Query 6: Identify the customers who have purchased the most tickets.
+--   Tables: users, orders, order_items. SUM(quantity) GROUP BY user,
+--   ORDER BY total DESC, LIMIT N.
+--
+-- Query 7: Find events whose sales exceed a specified threshold.
+--   Tables: events, ticket_types, order_items. GROUP BY ... HAVING > threshold.
+--
+-- Query 8: Calculate monthly ticket revenue.
+--   Tables: orders (or payments), order_items.
+--   DATE_TRUNC by month on the order date, SUM(...), ORDER BY month.
+--
+-- (Optional) Additional queries used by admin analytics.

@@ -1,0 +1,22 @@
+-- sql/transaction_demo.sql
+--
+-- PURPOSE
+--   Standalone SQL demonstration of the ticket-purchase transaction for the
+--   report. The application version lives in app/services/purchase_service.py.
+--
+-- TO ADD
+--   Scenario 1: successful purchase
+--     BEGIN;
+--       SELECT ... FROM ticket_types WHERE ... FOR UPDATE;   -- lock inventory rows
+--       INSERT INTO orders ... RETURNING order_id;
+--       INSERT INTO order_items ...;
+--       UPDATE ticket_types SET quantity_remaining = quantity_remaining - n ...;
+--       INSERT INTO payments ...;
+--     COMMIT;
+--     Follow with SELECTs showing the new rows and the reduced inventory.
+--
+--   Scenario 2: failed purchase -> ROLLBACK
+--     Try to buy more tickets than remain (CHECK constraint violation) or
+--     simulate a payment failure, then ROLLBACK.
+--     Follow with SELECTs proving that no order, items, or payment were
+--     created and that inventory is unchanged.

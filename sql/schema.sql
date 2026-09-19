@@ -1,0 +1,61 @@
+-- sql/schema.sql
+--
+-- PURPOSE
+--   PostgreSQL DDL for the authoritative system of record.
+--   Run with: psql -U <user> -d <db> -f sql/schema.sql
+--
+-- TO ADD (in dependency order; DROP TABLE IF EXISTS ... CASCADE at the top
+-- makes the script re-runnable)
+--
+--   TABLE users
+--     user_id PK, email (NOT NULL, UNIQUE), first_name, last_name,
+--     password_hash, role (NOT NULL, CHECK IN customer/admin),
+--     created_at (TIMESTAMP, default now()).
+--
+--   TABLE venues
+--     venue_id PK, name (NOT NULL), address, city (NOT NULL), state,
+--     capacity (INT, CHECK > 0).
+--
+--   TABLE events
+--     event_id PK, venue_id FK -> venues (NOT NULL), title (NOT NULL),
+--     event_type (NOT NULL; concert/conference/sporting/university/workshop/community),
+--     start_time (TIMESTAMP NOT NULL), end_time, status, created_at.
+--
+--   TABLE categories                 (supports the many-to-many requirement)
+--     category_id PK, name (NOT NULL, UNIQUE).
+--
+--   TABLE event_categories           (junction: events <-> categories)
+--     event_id FK -> events, category_id FK -> categories,
+--     PRIMARY KEY (event_id, category_id).
+--
+--   TABLE ticket_types
+--     ticket_type_id PK, event_id FK -> events (NOT NULL), name (NOT NULL),
+--     price (NUMERIC(10,2) NOT NULL, CHECK >= 0),
+--     total_quantity (INT NOT NULL, CHECK >= 0),
+--     quantity_remaining (INT NOT NULL, CHECK >= 0 AND <= total_quantity),
+--     UNIQUE (event_id, name).
+--
+--   TABLE orders
+--     order_id PK, user_id FK -> users (NOT NULL),
+--     order_date (TIMESTAMP NOT NULL, default now()), status (NOT NULL),
+--     total_amount (NUMERIC(10,2) NOT NULL).
+--
+--   TABLE order_items                (junction: orders <-> ticket_types, many-to-many)
+--     order_item_id PK, order_id FK -> orders (NOT NULL, ON DELETE CASCADE),
+--     ticket_type_id FK -> ticket_types (NOT NULL),
+--     quantity (INT NOT NULL, CHECK > 0), unit_price (NUMERIC(10,2) NOT NULL).
+--
+--   TABLE payments
+--     payment_id PK, order_id FK -> orders (NOT NULL; UNIQUE if one payment per order),
+--     amount (NUMERIC(10,2) NOT NULL), method (NOT NULL), status (NOT NULL),
+--     paid_at (TIMESTAMP).
+--
+--   INDEXES
+--     events(venue_id), events(start_time), events(event_type),
+--     ticket_types(event_id), orders(user_id), orders(order_date),
+--     order_items(order_id), order_items(ticket_type_id), payments(order_id).
+--
+-- NOTES
+--   - Choose ON DELETE behavior deliberately (e.g. RESTRICT deleting a venue
+--     that still has events; CASCADE order_items when an order is deleted).
+--   - Keep this file in sync with docs/er_diagram.png.

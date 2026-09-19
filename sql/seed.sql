@@ -1,0 +1,25 @@
+-- sql/seed.sql
+--
+-- PURPOSE
+--   Sample data that makes every required query return meaningful results.
+--   Run after schema.sql: psql -U <user> -d <db> -f sql/seed.sql
+--
+-- TO ADD (INSERT statements, in dependency order)
+--   users             ~10-20 customers + at least 1 admin.
+--   venues            ~5 venues across a few cities.
+--   categories        e.g. Music, Technology, Sports, Education, Family, Outdoor.
+--   events            ~15-20 events covering ALL six types: concert, conference,
+--                     sporting, university, workshop, community.
+--                     Use explicit event_ids that match eventId in MongoDB.
+--   event_categories  Some events in multiple categories (many-to-many demo).
+--   ticket_types      2-4 per event (e.g. General, VIP, Student) with different prices.
+--                     Set quantity_remaining consistent with the orders below.
+--   orders            Spread across SEVERAL MONTHS (Query 8).
+--                     Some users with many orders, others with few (Query 6).
+--   order_items       Some events selling a lot, others a little (Query 7 threshold).
+--   payments          One per order, consistent with order totals.
+--
+-- NOTES
+--   - After inserting with explicit IDs, reset sequences with setval(...) so
+--     new rows created through the API do not collide.
+--   - quantity_remaining must equal total_quantity minus tickets sold.
