@@ -37,6 +37,7 @@ from app.services.event_service import (
     get_event_by_id
 )
 
+from app.services.content_service import get_event_content
 
 router = APIRouter(
     prefix="/events",
@@ -48,6 +49,17 @@ router = APIRouter(
 def list_events():
     return get_all_events()
 
+@router.get("/{event_id}/content")
+def event_content(event_id: int):
+    content = get_event_content(event_id)
+
+    if content is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Event content not found"
+        )
+
+    return content
 
 @router.get("/{event_id}")
 def event_details(event_id: int):
@@ -60,3 +72,4 @@ def event_details(event_id: int):
         )
 
     return event
+

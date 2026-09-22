@@ -32,3 +32,16 @@
 #
 #   def get_average_rating(event_id: int) -> float | None  (optional)
 #       Aggregation over reviews.rating; useful for admin analytics.
+
+from app.database.mongo import get_event_content_collection
+
+
+def get_event_content(event_id: int):
+    collection = get_event_content_collection()
+
+    document = collection.find_one(
+        {"eventId": event_id},
+        {"_id": 0}
+    )
+
+    return document
