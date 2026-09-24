@@ -41,7 +41,7 @@ def create_indexes():
     print("MongoDB indexes created.")
 
 
-def show_indexes():
+def list_indexes():
     collection = get_event_content_collection()
 
     indexes = collection.index_information()
@@ -51,7 +51,20 @@ def show_indexes():
         print(info)
         print()
 
+def explain_tag_query():
+    collection = get_event_content_collection()
+
+    explanation = collection.find(
+        {"tags": "Tech"}
+    ).explain()
+
+    winning_plan = explanation["queryPlanner"]["winningPlan"]
+
+    print("Explain result for tag query:")
+    print(winning_plan)
+
 
 if __name__ == "__main__":
     create_indexes()
-    show_indexes()
+    list_indexes()
+    explain_tag_query()

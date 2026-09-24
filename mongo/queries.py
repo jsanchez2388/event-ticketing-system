@@ -57,11 +57,9 @@
 #   if __name__ == "__main__": main()
 
 
-from pprint import pprint
-
 from app.database.mongo import get_event_content_collection
 
-
+# Query 1
 def query1_events_with_tag(tag: str):
     collection = get_event_content_collection()
 
@@ -77,7 +75,7 @@ def query1_events_with_tag(tag: str):
 
     return list(results)
 
-
+# Query 2
 def query2_events_with_speaker(name: str):
     collection = get_event_content_collection()
 
@@ -88,7 +86,7 @@ def query2_events_with_speaker(name: str):
 
     return list(results)
 
-
+# Query 3
 def query3_reviews_above_rating(min_rating: int):
     collection = get_event_content_collection()
 
@@ -108,7 +106,7 @@ def query3_reviews_above_rating(min_rating: int):
 
     return list(results)
 
-
+# Query 4
 def query4_speaker_org_and_topic(
     organization: str,
     topic: str
@@ -129,7 +127,7 @@ def query4_speaker_org_and_topic(
 
     return list(results)
 
-
+# Query 5
 def query5_concerts_by_genre(genre: str):
     collection = get_event_content_collection()
 
@@ -148,7 +146,7 @@ def query5_concerts_by_genre(genre: str):
 
     return list(results)
 
-
+# Query 6
 def query6_age_restricted_or_tagged(
     min_age: int,
     tag: str
@@ -179,7 +177,7 @@ def query6_age_restricted_or_tagged(
 
     return list(results)
 
-
+# Query 7
 def query7_sessions_in_room(room: str):
     collection = get_event_content_collection()
 
@@ -191,13 +189,17 @@ def query7_sessions_in_room(room: str):
             "_id": 0,
             "eventId": 1,
             "title": 1,
-            "schedule": 1
+            "schedule": {
+                "elemMatch": {
+                    "room": room
+                }
+            }
         }
     )
 
     return list(results)
 
-
+# Query 8
 def query8_add_review(
     event_id: int,
     review: dict
@@ -218,7 +220,23 @@ def query8_add_review(
         "modified": result.modified_count
     }
 
+def cleanup_query8_review():
+    collection = get_event_content_collection()
 
+    collection.update_one(
+        {"eventId": 101},
+        {
+            "$pull": {
+                "reviews": {
+                    "userId": 402,
+                    "rating": 5,
+                    "comment": "Amazing concert!"
+                }
+            }
+        }
+    )
+
+# Query 9
 def query9_add_tag(
     event_id: int,
     tag: str
@@ -239,53 +257,52 @@ def query9_add_tag(
         "modified": result.modified_count
     }
 
+# Query 10
+def query10_delete_low_reviews():
+        collection = get_event_content_collection()
 
-def query10_remove_low_reviews(
-    event_id: int,
-    max_rating: int
-):
-    collection = get_event_content_collection()
+        test_document = {
+            "eventId": 999,
+            "eventType": "Test",
+            "title": "Temporary Delete Test",
+            "tags": ["Test"]
 
-    result = collection.update_one(
-        {"eventId": event_id},
-        {
-            "$pull": {
-                "reviews": {
-                    "rating": {
-                        "$lte": max_rating
-                    }
-                }
-            }
         }
-    )
 
-    return {
-        "matched": result.matched_count,
-        "modified": result.modified_count
-    }
+        collection.insert_one(test_document)
+
+        result = collection.delete_one(
+            {"eventId": 999}
+        )
+
+        return {
+            "deleted": result.deleted_count
+        }
+
+
 
 
 if __name__ == "__main__":
 
     print("\nQUERY 1 - Events with tag 'Tech'")
-    pprint(
+    print(
         query1_events_with_tag("Tech")
     )
 
     print("\nQUERY 2 - Events with speaker Dr. John Doe")
-    pprint(
+    print(
         query2_events_with_speaker(
             "Dr. John Doe"
         )
     )
 
     print("\nQUERY 3 - Reviews above rating 4")
-    pprint(
+    print(
         query3_reviews_above_rating(4)
     )
 
     print("\nQUERY 4 - Speaker organization and topic")
-    pprint(
+    print(
         query4_speaker_org_and_topic(
             "TechAI",
             "Feature Engineering"
@@ -293,14 +310,14 @@ if __name__ == "__main__":
     )
 
     print("\nQUERY 5 - Concerts by genre")
-    pprint(
+    print(
         query5_concerts_by_genre(
             "Pop"
         )
     )
 
     print("\nQUERY 6 - Age restricted OR tagged")
-    pprint(
+    print(
         query6_age_restricted_or_tagged(
             18,
             "Outdoors"
@@ -308,8 +325,35 @@ if __name__ == "__main__":
     )
 
     print("\nQUERY 7 - Sessions in Main Hall")
-    pprint(
+    print(
         query7_sessions_in_room(
             "Main Hall"
         )
     )
+
+    print("\nQUERY 8 - Add review")
+    print(
+        query8_add_review(
+            101,
+            {
+                "userId": 402,
+                "rating": 5,
+                "comment": "Amazing concert!"
+            }
+        )
+    )
+
+    print("\nQUERY 9 - Add tag")
+    print(
+        query9_add_tag(
+            101,
+            "Featured"
+        )
+    )
+
+    print("\nQUERY 10 - Delete temporary test document")
+    print(
+        query10_delete_low_reviews()
+    )
+
+    cleanup_query8_review()

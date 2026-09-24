@@ -41,6 +41,8 @@ load_dotenv()
 MONGO_URI = os.getenv("MONGO_URI")
 MONGO_DB = os.getenv("MONGO_DB")
 
+EVENT_CONTENT_COLLECTION = "event_content"
+
 
 if not MONGO_URI:
     raise RuntimeError(
@@ -53,23 +55,42 @@ if not MONGO_DB:
     )
 
 
-client = MongoClient(MONGO_URI)
+_client = None
 
-database = client[MONGO_DB]
 
-event_content = database["event_content"]
+def init_client():
+    global _client
+
+    if _client is None:
+        _client = MongoClient(MONGO_URI)
+
+
+def close_client():
+    global _client
+
+    if _client is not None:
+        _client.close()
+        _client = None
 
 
 def get_database():
-    return database
+    if _client is None:
+        init_client()
+
+    return _client[MONGO_DB]
 
 
 def get_event_content_collection():
-    return event_content
+    database = get_database()
+
+    return database[EVENT_CONTENT_COLLECTION]
 
 
 def test_connection():
-    client.admin.command("ping")
+    if _client is None:
+        init_client()
+
+    _client.admin.command("ping")
 
     return {
         "status": "connected",

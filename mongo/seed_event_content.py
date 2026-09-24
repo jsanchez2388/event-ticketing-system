@@ -175,19 +175,51 @@ SAMPLE_DOCUMENTS = [
 ]
 
 
-def seed_event_content():
+def clear_collection():
     collection = get_event_content_collection()
 
     collection.delete_many({})
 
-    result = collection.insert_many(
-        SAMPLE_DOCUMENTS
+    print("Existing event content cleared.")
+
+
+def seed_single_document():
+    collection = get_event_content_collection()
+
+    result = collection.insert_one(
+        SAMPLE_DOCUMENTS[0]
     )
 
     print(
-        f"Inserted {len(result.inserted_ids)} documents."
+        f"Inserted one document: {result.inserted_id}"
+    )
+
+
+def seed_many_documents():
+    collection = get_event_content_collection()
+
+    result = collection.insert_many(
+        SAMPLE_DOCUMENTS[1:]
+    )
+
+    print(
+        f"Inserted {len(result.inserted_ids)} additional documents."
+    )
+
+
+def main():
+    clear_collection()
+
+    seed_single_document()
+
+    seed_many_documents()
+
+    collection = get_event_content_collection()
+
+    print(
+        f"Total documents: {collection.count_documents({})}"
     )
 
 
 if __name__ == "__main__":
-    seed_event_content()
+    main()
