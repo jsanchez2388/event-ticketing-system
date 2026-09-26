@@ -53,7 +53,6 @@ app.include_router(web_router)
 
 # Login / signup routes
 app.include_router(auth_router)
-
 app.include_router(account_router)
 
 # CSS
@@ -93,3 +92,7 @@ def database_health():
             status_code=500,
             detail=f"PostgreSQL connection failed: {str(e)}"
         )
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
