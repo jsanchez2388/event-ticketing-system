@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -13,21 +14,22 @@ from app.routers.auth import router as auth_router
 from app.routers.account import router as account_router
 from app.routers.reviews import router as reviews_router
 
+# MongoDB connection lifecycle
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_client()
+
+    yield
+
+    close_client()
+
+
 app = FastAPI(
     title="Event Ticketing System",
     description="COMP 642 Event Ticketing API",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
-
-# MongoDB connection lifecycle
-@app.on_event("startup")
-def startup_event():
-    init_client()
-
-
-@app.on_event("shutdown")
-def shutdown_event():
-    close_client()
 
 # Login session support
 app.add_middleware(

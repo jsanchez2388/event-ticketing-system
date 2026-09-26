@@ -1,46 +1,39 @@
 # app/config.py
 #
 # PURPOSE
-#   Single place where application settings are read from the environment
-#   (.env file locally). Every other module imports settings from here instead
-#   of hard-coding hosts, ports, or credentials.
-#
-# TO ADD
-#   class Settings
-#       Holds all configuration values. Suggested fields:
-#         - postgres_host: str
-#         - postgres_port: int
-#         - postgres_db: str
-#         - postgres_user: str
-#         - postgres_password: str
-#         - mongo_uri: str
-#         - mongo_db: str                      (database that holds `event_content`)
-#         - redis_host: str
-#         - redis_port: int
-#         - redis_db: int
-#         - cache_ttl_seconds: int             (TTL for cached event details)
-#       Options: a plain class populated with os.getenv(), or a
-#       pydantic-settings BaseSettings subclass (add `pydantic-settings` and/or
-#       `python-dotenv` to requirements.txt if used).
-#
-#   def get_settings() -> Settings
-#       Returns a single shared Settings instance (e.g. cached with
-#       functools.lru_cache) so the .env file is only read once.
-#
-# NOTES
-#   - Variable names must match .env.example.
-#   - Never commit real credentials; .env is already in .gitignore.
+#   Single place where application settings are read from the environment file.
+#   Every other module imports settings from here instead of hard-coding hosts, ports, or credentials.
+
 import os
+from functools import lru_cache
 from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+class Settings:
+    def __init__(self) -> None:
+        self.POSTGRES_CONNECTION_STRING: str | None = os.getenv("POSTGRES_CONNECTION_STRING")
+        self.MONGO_URI: str | None = os.getenv("MONGO_URI")
+        self.MONGO_DB: str | None = os.getenv("MONGO_DB")
 
-if not DATABASE_URL:
-    raise RuntimeError(
-        "DATABASE_URL is missing. Add it to the .env file."
-    )
+        self.REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
+        self.REDIS_PORT: int = int(os.getenv("REDIS_PORT", 6379))
+        self.REDIS_DB: int = int(os.getenv("REDIS_DB", 0))
+        self.CACHE_TTL_SECONDS: int = int(os.getenv("CACHE_TTL_SECONDS", 300))
 
-MONGO_URI = os.getenv("MONGO_URI")
-MONGO_DB = os.getenv("MONGO_DB")
+        self.EVENT_CONTENT_COLLECTION: str = "event_content"
+
+    def require(self, name: str) -> str:
+        value = getattr(self, name)
+
+        if not value:
+            raise RuntimeError(f"{name} is missing. Add it to the .env file.")
+
+        return value
+
+@lru_cache()
+def get_settings() -> Settings:
+    """
+    Return the application settings, cached to avoid re-reading the environment file.
+    """
+    return Settings()

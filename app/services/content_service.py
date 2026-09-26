@@ -3,41 +3,20 @@
 # PURPOSE
 #   MongoDB `event_content` operations used by the API
 #   (descriptions, speakers, schedules, performers, reviews).
-#
-# TO ADD
-#   def get_event_content(event_id: int) -> dict | None
-#       find_one by eventId with a projection that excludes _id.
-#       Used by GET /events/{id}/content and event_service.
-#
-#   def create_event_content(document: dict) -> None
-#       insert_one a new content document (admin event creation).
-#
-#   def update_event_content(event_id: int, updates: dict) -> bool
-#       update_one with $set; invalidate the event cache afterward.
-#
-#   def delete_event_content(event_id: int) -> bool
-#       delete_one by eventId.
-#
-#   def add_review(event_id: int, review: ReviewCreate) -> dict
-#       update_one with $push onto `reviews` (add a createdAt timestamp).
-#       Check that the user exists in PostgreSQL (user_service.get_user) and,
-#       optionally, that the user bought a ticket to this event.
-#       Invalidate the event cache afterward.
-#
-#   def get_reviews(event_id: int, min_rating: int | None = None) -> list[dict]
-#       Return an event's reviews, optionally filtered by rating.
-#
-#   def delete_review(event_id: int, user_id: int) -> bool
-#       update_one with $pull; invalidate the event cache afterward.
-#
-#   def get_average_rating(event_id: int) -> float | None  (optional)
-#       Aggregation over reviews.rating; useful for admin analytics.
 
 from datetime import datetime, timezone
 from app.database.mongo import get_event_content_collection
 from app.models.event_content import ReviewCreate
 
-def get_event_content(event_id: int):
+def get_event_content(event_id: int) -> dict | None:
+    """
+    Return the content document for the given event, or None if not found.
+    Args:
+        event_id (int): The ID of the event to retrieve content for.
+
+    Returns:
+        dict | None: The content document if found, otherwise None.
+    """
     collection = get_event_content_collection()
 
     document = collection.find_one(
@@ -47,7 +26,16 @@ def get_event_content(event_id: int):
 
     return document
 
-def add_review(event_id: int, review: ReviewCreate):
+def add_review(event_id: int, review: ReviewCreate) -> dict | None:
+    """
+    Add a review to the given event's content document.
+    Args:
+        event_id (int): The ID of the event to add the review for.
+        review (ReviewCreate): The review data to add.
+
+    Returns:
+        dict | None: The added review data if successful, otherwise None.
+    """
     collection = get_event_content_collection()
 
     review_data = review.model_dump()
@@ -62,9 +50,21 @@ def add_review(event_id: int, review: ReviewCreate):
         }
     )
 
-    return result.modified_count > 0
+    if result.matched_count == 0:
+        return None
 
-def get_reviews(event_id: int, min_rating: int | None = None):
+    return review_data
+
+def get_reviews(event_id: int, min_rating: int | None = None) -> list[dict] | None:
+    """
+    Return the reviews for the given event, optionally filtered by minimum rating.
+    Args:
+        event_id (int): The ID of the event to retrieve reviews for.
+        min_rating (int | None): The minimum rating to include in the results.
+
+    Returns:
+        list[dict] | None: A list of review documents if found, otherwise None.
+    """
     collection = get_event_content_collection()
 
     document = collection.find_one(
@@ -73,7 +73,7 @@ def get_reviews(event_id: int, min_rating: int | None = None):
     )
 
     if document is None:
-        return []
+        return None
 
     reviews = document.get("reviews", [])
 
@@ -86,7 +86,16 @@ def get_reviews(event_id: int, min_rating: int | None = None):
 
     return reviews
 
-def delete_review(event_id: int, user_id: int):
+def delete_review(event_id: int, user_id: int) -> bool:
+    """
+    Delete a review from the given event's content document.
+    Args:
+        event_id (int): The ID of the event to delete the review for.
+        user_id (int): The ID of the user whose review should be deleted.
+
+    Returns:
+        bool: True if the review was successfully deleted, otherwise False.
+    """
     collection = get_event_content_collection()
 
     result = collection.update_one(
@@ -102,7 +111,15 @@ def delete_review(event_id: int, user_id: int):
 
     return result.modified_count > 0
 
-def create_event_content(document: dict):
+def create_event_content(document: dict) -> bool:
+    """
+    Create a new content document for the given event.
+    Args:
+        document (dict): The content document to create.
+
+    Returns:
+        bool: True if the content was successfully created, otherwise False.
+    """
     collection = get_event_content_collection()
 
     result = collection.insert_one(document)
@@ -110,7 +127,16 @@ def create_event_content(document: dict):
     return result.inserted_id is not None
 
 
-def update_event_content(event_id: int, updates: dict):
+def update_event_content(event_id: int, updates: dict) -> bool:
+    """
+    Update the content document for the given event.
+    Args:
+        event_id (int): The ID of the event to update the content for.
+        updates (dict): The updates to apply to the content document.
+
+    Returns:
+        bool: True if the content was successfully updated, otherwise False.
+    """
     collection = get_event_content_collection()
 
     result = collection.update_one(
@@ -120,10 +146,18 @@ def update_event_content(event_id: int, updates: dict):
         }
     )
 
-    return result.modified_count > 0
+    return result.matched_count > 0
 
 
-def delete_event_content(event_id: int):
+def delete_event_content(event_id: int) -> bool:
+    """
+    Delete the content document for the given event.
+    Args:
+        event_id (int): The ID of the event to delete the content for.
+
+    Returns:
+        bool: True if the content was successfully deleted, otherwise False.
+    """
     collection = get_event_content_collection()
 
     result = collection.delete_one(
@@ -132,7 +166,15 @@ def delete_event_content(event_id: int):
 
     return result.deleted_count > 0
 
-def get_average_rating(event_id: int):
+def get_average_rating(event_id: int) -> float | None:
+    """
+    Calculate the average rating for the given event.
+    Args:
+        event_id (int): The ID of the event to calculate the average rating for.
+
+    Returns:
+        float | None: The average rating if found, otherwise None.
+    """
     collection = get_event_content_collection()
 
     pipeline = [
