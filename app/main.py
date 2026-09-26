@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -13,21 +14,22 @@ from app.routers.auth import router as auth_router
 from app.routers.account import router as account_router
 from app.routers.reviews import router as reviews_router
 
+# MongoDB connection lifecycle
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_client()
+
+    yield
+
+    close_client()
+
+
 app = FastAPI(
     title="Event Ticketing System",
     description="COMP 642 Event Ticketing API",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
-
-# MongoDB connection lifecycle
-@app.on_event("startup")
-def startup_event():
-    init_client()
-
-
-@app.on_event("shutdown")
-def shutdown_event():
-    close_client()
 
 # Login session support
 app.add_middleware(
@@ -51,7 +53,6 @@ app.include_router(web_router)
 
 # Login / signup routes
 app.include_router(auth_router)
-
 app.include_router(account_router)
 
 # CSS
@@ -91,3 +92,7 @@ def database_health():
             status_code=500,
             detail=f"PostgreSQL connection failed: {str(e)}"
         )
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
