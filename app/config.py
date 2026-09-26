@@ -41,3 +41,6 @@ if not DATABASE_URL:
     raise RuntimeError(
         "DATABASE_URL is missing. Add it to the .env file."
     )
+
+MONGO_URI = os.getenv("MONGO_URI")
+MONGO_DB = os.getenv("MONGO_DB")
