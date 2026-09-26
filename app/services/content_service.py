@@ -114,12 +114,20 @@ def delete_review(event_id: int, user_id: int) -> bool:
 def create_event_content(document: dict) -> bool:
     """
     Create a new content document for the given event.
+    Verifies that the event exists in PostgreSQL before creating.
+
     Args:
         document (dict): The content document to create.
 
     Returns:
         bool: True if the content was successfully created, otherwise False.
     """
+    from app.services.event_service import get_event_by_id
+
+    event_id = document.get("eventId")
+    if event_id is None or get_event_by_id(event_id) is None:
+        return False
+
     collection = get_event_content_collection()
 
     result = collection.insert_one(document)
