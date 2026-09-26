@@ -122,7 +122,7 @@ event-ticketing-system/
 Open `.env` and add:
 
 ```env
-DATABASE_URL=YOUR_NEON_POSTGRESQL_CONNECTION_STRING
+POSTGRES_CONNECTION_STRING=YOUR_NEON_POSTGRESQL_CONNECTION_STRING
 
 SESSION_SECRET=YOUR_PRIVATE_SESSION_SECRET
 
@@ -132,7 +132,7 @@ ADMIN_SIGNUP_CODE=YOUR_ADMIN_CODE
 Example:
 
 ```env
-DATABASE_URL=postgresql://username:password@hostname/neondb?sslmode=require
+POSTGRES_CONNECTION_STRING=postgresql://username:password@hostname/neondb?sslmode=require
 
 SESSION_SECRET=my-long-private-session-secret
 
@@ -160,7 +160,7 @@ postgresql://username:password@ep-example.us-west-2.aws.neon.tech/neondb?sslmode
 Place the connection string in:
 
 ```env
-DATABASE_URL=
+POSTGRES_CONNECTION_STRING=
 ```
 
 inside `.env`.
@@ -168,7 +168,7 @@ inside `.env`.
 Example:
 
 ```env
-DATABASE_URL=postgresql://username:password@hostname/neondb?sslmode=require
+POSTGRES_CONNECTION_STRING=postgresql://username:password@hostname/neondb?sslmode=require
 ```
 
 ---
@@ -453,7 +453,7 @@ A successful database connection should return JSON similar to:
 If this endpoint fails, check the:
 
 ```env
-DATABASE_URL=
+POSTGRES_CONNECTION_STRING=
 ```
 
 value inside `.env`.
@@ -637,7 +637,7 @@ Check `.env`.
 Make sure:
 
 ```env
-DATABASE_URL=
+POSTGRES_CONNECTION_STRING=
 ```
 
 contains the correct Neon PostgreSQL connection string.
@@ -776,7 +776,7 @@ Never commit the following to GitHub:
 
 ```text
 .env
-DATABASE_URL
+POSTGRES_CONNECTION_STRING
 database passwords
 SESSION_SECRET
 ADMIN_SIGNUP_CODE
@@ -812,7 +812,7 @@ touch .env
 Add the required values to `.env`:
 
 ```env
-DATABASE_URL=YOUR_NEON_CONNECTION_STRING
+POSTGRES_CONNECTION_STRING=YOUR_NEON_CONNECTION_STRING
 SESSION_SECRET=YOUR_PRIVATE_SECRET
 ADMIN_SIGNUP_CODE=YOUR_ADMIN_CODE
 ```
