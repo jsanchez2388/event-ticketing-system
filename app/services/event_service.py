@@ -50,7 +50,7 @@
 #   def update_ticket_type(ticket_type_id: int, data: TicketTypeUpdate) -> dict
 #       Admin ticket type management; invalidate the event cache afterward.
 from app.database.postgres import get_connection
-
+from app.services.content_service import get_event_content
 
 def get_all_events():
     conn = get_connection()
@@ -142,3 +142,7 @@ def get_event_by_id(event_id: int):
 
     finally:
         conn.close()
+
+
+def get_event_content_from_mongo(event_id: int):
+    return get_event_content(event_id)

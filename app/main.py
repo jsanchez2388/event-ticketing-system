@@ -5,13 +5,13 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.database.postgres import test_connection
-
+from app.database.mongo import init_client, close_client
 from app.routers.events import router as events_router
 from app.routers.analytics import router as analytics_router
 from app.routers.web import router as web_router
 from app.routers.auth import router as auth_router
-
 from app.routers.account import router as account_router
+from app.routers.reviews import router as reviews_router
 
 app = FastAPI(
     title="Event Ticketing System",
@@ -19,6 +19,15 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# MongoDB connection lifecycle
+@app.on_event("startup")
+def startup_event():
+    init_client()
+
+
+@app.on_event("shutdown")
+def shutdown_event():
+    close_client()
 
 # Login session support
 app.add_middleware(
@@ -35,6 +44,7 @@ app.add_middleware(
 # API routes
 app.include_router(events_router)
 app.include_router(analytics_router)
+app.include_router(reviews_router)
 
 # Website routes
 app.include_router(web_router)
