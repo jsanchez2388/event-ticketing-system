@@ -41,3 +41,12 @@ if not DATABASE_URL:
     raise RuntimeError(
         "DATABASE_URL is missing. Add it to the .env file."
     )
+
+# Redis configuration
+REDIS_URL = os.getenv(
+    "REDIS_URL",
+    "redis://localhost:6379/0"
+)
+
+# Event cache lifetime in seconds. Choose 60 for the demo.
+CACHE_TTL_SECONDS = int(os.getenv("CACHE_TTL_SECONDS", 60))
