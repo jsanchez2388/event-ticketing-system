@@ -52,6 +52,11 @@
 from app.database.postgres import get_connection
 from app.services.content_service import get_event_content
 
+
+from app.services.cache_service import (get_cached_event, set_cached_event)
+from app.services.trending_service import (record_view, get_event_score)
+
+
 def get_all_events():
     conn = get_connection()
 
@@ -146,3 +151,59 @@ def get_event_by_id(event_id: int):
 
 def get_event_content_from_mongo(event_id: int):
     return get_event_content(event_id)
+
+
+# Builds a complete event detail by combining PostgreSQL + MongoDB data. NO Redis involved. Redis will cache the result of this function.
+def build_event_detail(event_id: int):
+    event = get_event_by_id(event_id)
+
+    if event is None:
+        return None
+
+    event_detail = dict(event)
+
+    content = get_event_content_from_mongo(event_id)
+
+    if content is not None:
+        mongo_content = dict(content)
+
+        # PostgreSQL is authoritative for these shared fields.
+        mongo_content.pop("eventId", None)
+        mongo_content.pop("eventType", None)
+        mongo_content.pop("title", None)
+
+        event_detail.update(mongo_content)
+
+    return event_detail
+
+
+# Combines PostgreSQL + MongoDB + Redis to return a complete event detail, with popularity score and cache hit flag. 
+def get_event_detail(event_id: int, use_cache: bool = True):
+    event_detail = None
+    cache_hit = False
+
+    # Check the cache first
+    if use_cache:
+        event_detail = get_cached_event(event_id)
+
+        if event_detail is not None:
+            cache_hit = True
+
+    #If the event is not in the cache, builds it from PostgreSQL + MongoDB using the build_event_detail function and then cache it.
+    if event_detail is None:
+        event_detail = build_event_detail(event_id)
+
+        if event_detail is None:
+            return None
+
+        if use_cache:
+            set_cached_event(event_id, event_detail)
+
+    record_view(event_id)
+
+    popularity_score = get_event_score(event_id)
+
+    event_detail["popularity_score"] = popularity_score
+    event_detail["cache_hit"] = cache_hit
+
+    return event_detail
