@@ -19,7 +19,14 @@ class Settings:
         self.REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
         self.REDIS_PORT: int = int(os.getenv("REDIS_PORT", 6379))
         self.REDIS_DB: int = int(os.getenv("REDIS_DB", 0))
-        self.CACHE_TTL_SECONDS: int = int(os.getenv("CACHE_TTL_SECONDS", 300))
+
+        # REDIS_URL is used as-is when set; otherwise it is built from the host/port/db above.
+        self.REDIS_URL: str = os.getenv("REDIS_URL") or (
+            f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+        )
+
+        # Event cache lifetime in seconds
+        self.CACHE_TTL_SECONDS: int = int(os.getenv("CACHE_TTL_SECONDS", 60))
 
         self.EVENT_CONTENT_COLLECTION: str = "event_content"
 
