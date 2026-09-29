@@ -9,12 +9,20 @@ _client = None
 def init_client():
     global _client
 
-    _client = redis.Redis.from_url(
+    client = redis.Redis.from_url(
         get_settings().REDIS_URL,
         decode_responses=True
     )
 
-    _client.ping()
+    # Only publish the client once the ping proves it is usable
+    try:
+        client.ping()
+
+    except Exception:
+        client.close()
+        raise
+
+    _client = client
 
 
 def get_redis():
