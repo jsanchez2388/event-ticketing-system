@@ -21,3 +21,40 @@
 #
 #   def get_tickets_purchased_by_user(user_id: int) -> list[dict]
 #       Query 2: all tickets purchased by a particular user.
+
+from app.database.postgres import get_connection
+
+
+def get_user(user_id: int) -> dict | None:
+    """
+    Return a single user from PostgreSQL by user_id, or None if not found.
+    """
+    conn = get_connection()
+
+    try:
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT
+                user_id,
+                first_name,
+                last_name,
+                email,
+                role,
+                account_status,
+                wallet_balance
+            FROM users
+            WHERE user_id = %s;
+            """,
+            (user_id,)
+        )
+
+        user = cursor.fetchone()
+        cursor.close()
+
+        return user
+
+    finally:
+        conn.close()
+
