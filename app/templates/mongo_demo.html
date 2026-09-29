@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}
+MongoDB Queries | EventHub
+{% endblock %}
+
+{% block content %}
+<section class="hero" style="padding: 40px 0 35px;">
+    <div class="container">
+        <h1 style="font-size: 2.2rem; margin: 0;">MongoDB Queries</h1>
+    </div>
+</section>
+
+<section class="container" style="padding: 30px 20px 70px; max-width: 860px;">
+    <div style="display: grid; gap: 16px;">
+
+        <!-- QUERY 1 -->
+        <div class="info-panel">
+            <h3 style="margin: 0 0 10px; font-size: 1.05rem;">Query 1: Events by Tag</h3>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-family: monospace; font-size: 0.82rem; color: #1e293b; overflow-x: auto;">
+                db.event_content.find({ "tags": tag }, { "_id": 0, "eventId": 1, "title": 1, "tags": 1 })
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <input type="text" id="q1_tag" value="Tech" placeholder="Tag" style="flex: 1; min-width: 180px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem;">
+                <button class="button" onclick="runQuery('q1', `/mongo/events/by-tag?tag=${encodeURIComponent(document.getElementById('q1_tag').value)}`)">Run</button>
+            </div>
+            <pre id="q1_out" style="display: none; margin-top: 12px; background: #17191c; color: #e5e7eb; padding: 12px 14px; border-radius: 8px; font-size: 0.82rem; overflow-x: auto; max-height: 220px; font-family: monospace;"></pre>
+        </div>
+
+        <!-- QUERY 2 -->
+        <div class="info-panel">
+            <h3 style="margin: 0 0 10px; font-size: 1.05rem;">Query 2: Events by Speaker</h3>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-family: monospace; font-size: 0.82rem; color: #1e293b; overflow-x: auto;">
+                db.event_content.find({ "speakers.name": name }, { "_id": 0 })
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <input type="text" id="q2_name" value="Dr. John Doe" placeholder="Speaker name" style="flex: 1; min-width: 180px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem;">
+                <button class="button" onclick="runQuery('q2', `/mongo/events/by-speaker?name=${encodeURIComponent(document.getElementById('q2_name').value)}`)">Run</button>
+            </div>
+            <pre id="q2_out" style="display: none; margin-top: 12px; background: #17191c; color: #e5e7eb; padding: 12px 14px; border-radius: 8px; font-size: 0.82rem; overflow-x: auto; max-height: 220px; font-family: monospace;"></pre>
+        </div>
+
+        <!-- QUERY 3 -->
+        <div class="info-panel">
+            <h3 style="margin: 0 0 10px; font-size: 1.05rem;">Query 3: Reviews Above Rating</h3>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-family: monospace; font-size: 0.82rem; color: #1e293b; overflow-x: auto;">
+                db.event_content.find({ "reviews.rating": { "$gt": min_rating } }, { "_id": 0, "eventId": 1, "title": 1, "reviews": 1 })
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                <select id="q3_rating" style="padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem;">
+                    <option value="4" selected>&gt; 4 Stars</option>
+                    <option value="3">&gt; 3 Stars</option>
+                    <option value="2">&gt; 2 Stars</option>
+                </select>
+                <button class="button" onclick="runQuery('q3', `/mongo/reviews/above-rating?min_rating=${document.getElementById('q3_rating').value}`)">Run</button>
+            </div>
+            <pre id="q3_out" style="display: none; margin-top: 12px; background: #17191c; color: #e5e7eb; padding: 12px 14px; border-radius: 8px; font-size: 0.82rem; overflow-x: auto; max-height: 220px; font-family: monospace;"></pre>
+        </div>
+
+        <!-- QUERY 4 -->
+        <div class="info-panel">
+            <h3 style="margin: 0 0 10px; font-size: 1.05rem;">Query 4: Speaker by Org & Topic</h3>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-family: monospace; font-size: 0.82rem; color: #1e293b; overflow-x: auto;">
+                db.event_content.find({ "speakers": { "$elemMatch": { "organization": organization, "topics": topic } } }, { "_id": 0 })
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <input type="text" id="q4_org" value="TechAI" placeholder="Organization" style="flex: 1; min-width: 140px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem;">
+                <input type="text" id="q4_topic" value="Feature Engineering" placeholder="Topic" style="flex: 1; min-width: 140px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem;">
+                <button class="button" onclick="runQuery('q4', `/mongo/speakers/by-org-and-topic?organization=${encodeURIComponent(document.getElementById('q4_org').value)}&topic=${encodeURIComponent(document.getElementById('q4_topic').value)}`)">Run</button>
+            </div>
+            <pre id="q4_out" style="display: none; margin-top: 12px; background: #17191c; color: #e5e7eb; padding: 12px 14px; border-radius: 8px; font-size: 0.82rem; overflow-x: auto; max-height: 220px; font-family: monospace;"></pre>
+        </div>
+
+        <!-- QUERY 5 -->
+        <div class="info-panel">
+            <h3 style="margin: 0 0 10px; font-size: 1.05rem;">Query 5: Concerts by Genre</h3>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-family: monospace; font-size: 0.82rem; color: #1e293b; overflow-x: auto;">
+                db.event_content.find({ "eventType": "Concert", "genres": genre }, { "_id": 0, "eventId": 1, "title": 1, "genres": 1 })
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <input type="text" id="q5_genre" value="Pop" placeholder="Genre" style="flex: 1; min-width: 180px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem;">
+                <button class="button" onclick="runQuery('q5', `/mongo/concerts/by-genre?genre=${encodeURIComponent(document.getElementById('q5_genre').value)}`)">Run</button>
+            </div>
+            <pre id="q5_out" style="display: none; margin-top: 12px; background: #17191c; color: #e5e7eb; padding: 12px 14px; border-radius: 8px; font-size: 0.82rem; overflow-x: auto; max-height: 220px; font-family: monospace;"></pre>
+        </div>
+
+        <!-- QUERY 6 -->
+        <div class="info-panel">
+            <h3 style="margin: 0 0 10px; font-size: 1.05rem;">Query 6: Age Restricted OR Tagged</h3>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-family: monospace; font-size: 0.82rem; color: #1e293b; overflow-x: auto;">
+                db.event_content.find({ "$or": [{ "ageRestriction": { "$gte": min_age } }, { "tags": tag }] }, { "_id": 0, "eventId": 1, "title": 1, "ageRestriction": 1, "tags": 1 })
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <input type="number" id="q6_age" value="18" placeholder="Age" style="width: 80px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem;">
+                <input type="text" id="q6_tag" value="Live Music" placeholder="Tag" style="flex: 1; min-width: 140px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem;">
+                <button class="button" onclick="runQuery('q6', `/mongo/events/age-restricted-or-tagged?min_age=${document.getElementById('q6_age').value}&tag=${encodeURIComponent(document.getElementById('q6_tag').value)}`)">Run</button>
+            </div>
+            <pre id="q6_out" style="display: none; margin-top: 12px; background: #17191c; color: #e5e7eb; padding: 12px 14px; border-radius: 8px; font-size: 0.82rem; overflow-x: auto; max-height: 220px; font-family: monospace;"></pre>
+        </div>
+
+        <!-- QUERY 7 -->
+        <div class="info-panel">
+            <h3 style="margin: 0 0 10px; font-size: 1.05rem;">Query 7: Sessions in Room</h3>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-family: monospace; font-size: 0.82rem; color: #1e293b; overflow-x: auto;">
+                db.event_content.find({ "schedule.room": room }, { "_id": 0, "eventId": 1, "title": 1, "schedule": { "$elemMatch": { "room": room } } })
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <input type="text" id="q7_room" value="Main Hall" placeholder="Room" style="flex: 1; min-width: 180px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem;">
+                <button class="button" onclick="runQuery('q7', `/mongo/sessions/in-room?room=${encodeURIComponent(document.getElementById('q7_room').value)}`)">Run</button>
+            </div>
+            <pre id="q7_out" style="display: none; margin-top: 12px; background: #17191c; color: #e5e7eb; padding: 12px 14px; border-radius: 8px; font-size: 0.82rem; overflow-x: auto; max-height: 220px; font-family: monospace;"></pre>
+        </div>
+
+        <!-- QUERY 8 -->
+        <div class="info-panel">
+            <h3 style="margin: 0 0 10px; font-size: 1.05rem;">Query 8: Add Review ($push)</h3>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-family: monospace; font-size: 0.82rem; color: #1e293b; overflow-x: auto;">
+                db.event_content.updateOne({ "eventId": eventId }, { "$push": { "reviews": review } })
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <input type="number" id="q8_event" value="101" placeholder="Event ID" style="width: 90px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem;">
+                <input type="number" id="q8_rating" value="5" min="1" max="5" placeholder="1-5" style="width: 70px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem;">
+                <input type="text" id="q8_comment" value="Superb experience!" placeholder="Comment" style="flex: 1; min-width: 140px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem;">
+                <button class="button" onclick="submitReviewOp()">Run</button>
+            </div>
+            <pre id="q8_out" style="display: none; margin-top: 12px; background: #17191c; color: #e5e7eb; padding: 12px 14px; border-radius: 8px; font-size: 0.82rem; overflow-x: auto; max-height: 220px; font-family: monospace;"></pre>
+        </div>
+
+        <!-- QUERY 9 -->
+        <div class="info-panel">
+            <h3 style="margin: 0 0 10px; font-size: 1.05rem;">Query 9: Add Tag ($addToSet)</h3>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-family: monospace; font-size: 0.82rem; color: #1e293b; overflow-x: auto;">
+                db.event_content.updateOne({ "eventId": eventId }, { "$addToSet": { "tags": tag } })
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <input type="number" id="q9_event" value="101" placeholder="Event ID" style="width: 90px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem;">
+                <input type="text" id="q9_tag" value="Featured" placeholder="Tag" style="flex: 1; min-width: 140px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem;">
+                <button class="button" onclick="runPostQuery('q9', `/mongo/events/${document.getElementById('q9_event').value}/tags?tag=${encodeURIComponent(document.getElementById('q9_tag').value)}`)">Run</button>
+            </div>
+            <pre id="q9_out" style="display: none; margin-top: 12px; background: #17191c; color: #e5e7eb; padding: 12px 14px; border-radius: 8px; font-size: 0.82rem; overflow-x: auto; max-height: 220px; font-family: monospace;"></pre>
+        </div>
+
+        <!-- QUERY 10 -->
+        <div class="info-panel">
+            <h3 style="margin: 0 0 10px; font-size: 1.05rem;">Query 10: Delete Document</h3>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-family: monospace; font-size: 0.82rem; color: #1e293b; overflow-x: auto;">
+                db.event_content.deleteOne({ "eventId": 999 })
+            </div>
+            <div>
+                <button class="button" onclick="runPostQuery('q10', '/mongo/test-delete')">Run</button>
+            </div>
+            <pre id="q10_out" style="display: none; margin-top: 12px; background: #17191c; color: #e5e7eb; padding: 12px 14px; border-radius: 8px; font-size: 0.82rem; overflow-x: auto; max-height: 220px; font-family: monospace;"></pre>
+        </div>
+
+    </div>
+</section>
+
+<script>
+async function runQuery(id, url) {
+    const pre = document.getElementById(`${id}_out`);
+    pre.style.display = "block";
+    pre.textContent = "Executing...";
+    try {
+        const resp = await fetch(url);
+        const data = await resp.json();
+        pre.textContent = JSON.stringify(data, null, 2);
+    } catch (err) {
+        pre.textContent = `Error: ${err.message}`;
+    }
+}
+
+async function runPostQuery(id, url) {
+    const pre = document.getElementById(`${id}_out`);
+    pre.style.display = "block";
+    pre.textContent = "Executing...";
+    try {
+        const resp = await fetch(url, { method: "POST" });
+        const data = await resp.json();
+        pre.textContent = JSON.stringify(data, null, 2);
+    } catch (err) {
+        pre.textContent = `Error: ${err.message}`;
+    }
+}
+
+async function submitReviewOp() {
+    const pre = document.getElementById("q8_out");
+    pre.style.display = "block";
+    pre.textContent = "Executing...";
+    const eventId = document.getElementById("q8_event").value;
+    const rating = parseInt(document.getElementById("q8_rating").value);
+    const comment = document.getElementById("q8_comment").value;
+    try {
+        const resp = await fetch(`/mongo/events/${eventId}/reviews`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({userId: 999, rating, comment})
+        });
+        const data = await resp.json();
+        pre.textContent = JSON.stringify(data, null, 2);
+    } catch (err) {
+        pre.textContent = `Error: ${err.message}`;
+    }
+}
+</script>
+{% endblock %}

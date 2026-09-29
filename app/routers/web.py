@@ -119,3 +119,21 @@ def website_event_details(
             "ttl_remaining": ttl_remaining
         }
     )
+
+
+# ============================================================
+# MONGO QUERIES DEMO
+# ============================================================
+
+@router.get("/mongo")
+@router.get("/site/mongo-demo")
+def website_mongo_demo(request: Request):
+    csrf_token = get_csrf_token(request)
+
+    return templates.TemplateResponse(
+        request=request,
+        name="mongo_demo.html",
+        context={
+            "csrf_token": csrf_token
+        }
+    )
