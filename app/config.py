@@ -42,5 +42,15 @@ if not DATABASE_URL:
         "DATABASE_URL is missing. Add it to the .env file."
     )
 
+# MongoDB configuration
 MONGO_URI = os.getenv("MONGO_URI")
 MONGO_DB = os.getenv("MONGO_DB")
+
+# Redis configuration
+REDIS_URL = os.getenv(
+    "REDIS_URL",
+    "redis://localhost:6379/0"
+)
+
+# Event cache lifetime in seconds
+CACHE_TTL_SECONDS = int(os.getenv("CACHE_TTL_SECONDS", 60))
