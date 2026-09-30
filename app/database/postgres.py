@@ -32,20 +32,22 @@
 #   - Standalone scripts (demos, benchmark) should call init_pool() themselves
 #     since they do not run the FastAPI lifespan.
 
+from typing import Any, cast
+
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-from app.config import DATABASE_URL
-
+from app.config import get_settings
 
 def get_connection():
-    return psycopg2.connect(
-        DATABASE_URL,
-        cursor_factory=RealDictCursor
-    )
+      settings = get_settings()
 
+      return psycopg2.connect(
+          settings.require("POSTGRES_CONNECTION_STRING"),
+          cursor_factory=RealDictCursor
+      )
 
-def test_connection():
+def test_connection() -> dict[str, Any]:
     conn = get_connection()
 
     try:
@@ -59,9 +61,14 @@ def test_connection():
             """
         )
 
-        result = cursor.fetchone()
+        result = cast("dict[str, Any] | None", cursor.fetchone())
 
         cursor.close()
+
+        if result is None:
+            raise RuntimeError(
+                "Health-check query returned no rows."
+            )
 
         return result
 

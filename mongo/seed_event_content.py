@@ -187,7 +187,7 @@ def seed_single_document():
     collection = get_event_content_collection()
 
     result = collection.insert_one(
-        SAMPLE_DOCUMENTS[0]
+        dict(SAMPLE_DOCUMENTS[0])
     )
 
     print(
@@ -199,7 +199,7 @@ def seed_many_documents():
     collection = get_event_content_collection()
 
     result = collection.insert_many(
-        SAMPLE_DOCUMENTS[1:]
+        [dict(document) for document in SAMPLE_DOCUMENTS[1:]]
     )
 
     print(

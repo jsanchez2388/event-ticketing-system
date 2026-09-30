@@ -1,11 +1,13 @@
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.database.postgres import test_connection
-from app.database.mongo import init_client, close_client
+from app.database import mongo as mongo_db
+from app.database import redis as redis_db
 from app.routers.events import router as events_router
 from app.routers.analytics import router as analytics_router
 from app.routers.web import router as web_router
@@ -13,31 +15,72 @@ from app.routers.auth import router as auth_router
 from app.routers.account import router as account_router
 from app.routers.reviews import router as reviews_router
 
+# MongoDB and Redis connection lifecycle
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    mongo_db.init_client()
+    print("MongoDB initialized.")
+
+    redis_ready = False
+
+    try:
+        try:
+            redis_db.init_client()
+            redis_ready = True
+            print("Redis initialized.")
+
+        except Exception as exc:
+            # Redis is only a cache layer, so the app stays usable without it.
+            print(f"Redis unavailable, continuing without cache: {exc}")
+
+        yield
+
+    finally:
+        # Runs even if a startup step above or the request phase raises,
+        # so connections opened here are never leaked.
+        if redis_ready:
+            redis_db.close_client()
+            print("Redis connection closed.")
+
+        mongo_db.close_client()
+        print("MongoDB connection closed.")
+
+
 app = FastAPI(
     title="Event Ticketing System",
     description="COMP 642 Event Ticketing API",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
-# MongoDB connection lifecycle
-@app.on_event("startup")
-def startup_event():
-    init_client()
-
-
-@app.on_event("shutdown")
-def shutdown_event():
-    close_client()
-
 # Login session support
+#
+# The session cookie is signed, not encrypted, so the secret is the only thing
+# stopping a client from writing their own user_id and role. A default value
+# committed to this repository would be public, so the secret is required and
+# the app refuses to start without it.
+SESSION_SECRET = os.getenv("SESSION_SECRET")
+
+if not SESSION_SECRET:
+    raise RuntimeError(
+        "SESSION_SECRET is not set. It signs the login session cookie that "
+        "carries user_id and role - the app will not start without it. "
+        "Add it to the .env file."
+    )
+
+# Send the session cookie over HTTPS only. Defaults to off so local HTTP
+# development still works; turn it on in any deployed environment.
+SESSION_HTTPS_ONLY = os.getenv("SESSION_HTTPS_ONLY", "false").lower() in (
+    "1",
+    "true",
+    "yes"
+)
+
 app.add_middleware(
     SessionMiddleware,
-    secret_key=os.getenv(
-        "SESSION_SECRET",
-        "development-secret-change-me"
-    ),
+    secret_key=SESSION_SECRET,
     same_site="lax",
-    https_only=False
+    https_only=SESSION_HTTPS_ONLY
 )
 
 
@@ -51,7 +94,6 @@ app.include_router(web_router)
 
 # Login / signup routes
 app.include_router(auth_router)
-
 app.include_router(account_router)
 
 # CSS
@@ -91,3 +133,7 @@ def database_health():
             status_code=500,
             detail=f"PostgreSQL connection failed: {str(e)}"
         )
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)

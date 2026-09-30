@@ -4,58 +4,6 @@
 #   The 8+ required MongoDB queries, each in its own labeled function that
 #   prints its results for the report.
 #   Run from the repo root: python -m mongo.queries
-#
-# REQUIRED OPERATION COVERAGE (note which function covers each)
-#   find(), projection, comparison operators, boolean operators,
-#   nested documents, arrays, dot notation, $elemMatch, updates, deletes.
-#   (insertOne/insertMany: seed_event_content.py; indexing: indexes.py)
-#
-# TO ADD
-#   def query1_events_with_tag(tag: str)
-#       find({"tags": tag}) with a projection of title and tags, excluding _id.
-#       [find, arrays, projection]
-#
-#   def query2_events_with_speaker(name: str)
-#       find({"speakers.name": name}).
-#       [dot notation, nested documents]
-#
-#   def query3_events_with_review_rating_above(min_rating: int)
-#       find({"reviews.rating": {"$gt": min_rating}}).
-#       [comparison operators, arrays]
-#
-#   def query4_speaker_org_and_topic(organization: str, topic: str)
-#       find({"speakers": {"$elemMatch": {"organization": ..., "topics": ...}}}).
-#       [$elemMatch, nested documents]
-#
-#   def query5_concerts_by_genre(genre: str)
-#       find({"genres": genre}).
-#       [arrays]
-#
-#   def query6_age_restricted_or_tagged(min_age: int, tag: str)
-#       find({"$or": [{"ageRestriction": {"$gte": min_age}}, {"tags": tag}]}).
-#       [boolean operators, comparison operators]
-#
-#   def query7_conference_sessions_in_room(room: str)
-#       find on "schedule.room", projecting only the matching schedule entries.
-#       [dot notation, projection]
-#
-#   def query8_add_review(event_id: int, review: dict)
-#       update_one({"eventId": ...}, {"$push": {"reviews": review}}).
-#       [updates, arrays]
-#
-#   def query9_update_tags(event_id: int, tag: str)
-#       update_one with $addToSet or $set.
-#       [updates]
-#
-#   def query10_delete_low_reviews(event_id: int, max_rating: int)
-#       update_one with $pull, and/or delete_one for a whole document.
-#       [deletes]
-#
-#   def main() -> None
-#       Initialize the client, run each query with sample arguments, print results.
-#
-#   if __name__ == "__main__": main()
-
 
 from app.database.mongo import get_event_content_collection
 
@@ -190,7 +138,7 @@ def query7_sessions_in_room(room: str):
             "eventId": 1,
             "title": 1,
             "schedule": {
-                "elemMatch": {
+                "$elemMatch": {
                     "room": room
                 }
             }
@@ -258,26 +206,29 @@ def query9_add_tag(
     }
 
 # Query 10
-def query10_delete_low_reviews():
-        collection = get_event_content_collection()
+def query10_delete_low_reviews(
+    event_id: int,
+    max_rating: int
+):
+    collection = get_event_content_collection()
 
-        test_document = {
-            "eventId": 999,
-            "eventType": "Test",
-            "title": "Temporary Delete Test",
-            "tags": ["Test"]
-
+    result = collection.update_one(
+        {"eventId": event_id},
+        {
+            "$pull": {
+                "reviews": {
+                    "rating": {
+                        "$lte": max_rating
+                    }
+                }
+            }
         }
+    )
 
-        collection.insert_one(test_document)
-
-        result = collection.delete_one(
-            {"eventId": 999}
-        )
-
-        return {
-            "deleted": result.deleted_count
-        }
+    return {
+        "matched": result.matched_count,
+        "modified": result.modified_count
+    }
 
 
 
@@ -351,9 +302,9 @@ if __name__ == "__main__":
         )
     )
 
-    print("\nQUERY 10 - Delete temporary test document")
+    print("\nQUERY 10 - Delete reviews rated 4 or lower for event 105")
     print(
-        query10_delete_low_reviews()
+        query10_delete_low_reviews(105, 4)
     )
 
     cleanup_query8_review()

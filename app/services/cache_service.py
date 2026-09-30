@@ -1,12 +1,12 @@
 
 import json
 
-from app.config import CACHE_TTL_SECONDS
+from app.config import get_settings
 from app.database import redis as redis_db
 
 # Naming convention: event:{event_id}
 EVENT_CACHE_PREFIX = "event:"
-DEFAULT_TTL_SECONDS = CACHE_TTL_SECONDS
+DEFAULT_TTL_SECONDS = get_settings().CACHE_TTL_SECONDS
 
 
 def event_cache_key(event_id: int) -> str:
