@@ -343,65 +343,150 @@
 
 
         <!-- RIGHT SIDE -->
-
-        <aside class="summary-card">
-
-
-            <p class="small-label">
-                Event
-            </p>
+        <div class="detail-sidebar">
+            <aside class="summary-card">
 
 
-            <h2>
-                {{ event.title }}
-            </h2>
+                <p class="small-label">
+                    Event
+                </p>
 
 
-            <p>
-                {{ event.venue_name }}
-            </p>
+                <h2>
+                    {{ event.title }}
+                </h2>
 
 
-            <p>
-                {{ event.start_datetime.strftime(
-                    "%B %d, %Y"
-                ) }}
-            </p>
+                <p>
+                    {{ event.venue_name }}
+                </p>
 
 
-            <p>
-                {{ event.start_datetime.strftime(
-                    "%I:%M %p"
-                ) }}
-            </p>
+                <p>
+                    {{ event.start_datetime.strftime(
+                        "%B %d, %Y"
+                    ) }}
+                </p>
 
 
-            {% if request.session.get("user_id") %}
+                <p>
+                    {{ event.start_datetime.strftime(
+                        "%I:%M %p"
+                    ) }}
+                </p>
 
 
-            <a
-                href="/site/account"
-                class="button button-full"
-            >
-                My Account
-            </a>
+                {% if request.session.get("user_id") %}
 
 
-            {% else %}
+                <a
+                    href="/site/account"
+                    class="button button-full"
+                >
+                    My Account
+                </a>
 
 
-            <a
-                href="/site/login"
-                class="button button-full"
-            >
-                Sign In to Purchase
-            </a>
+                {% else %}
 
 
-            {% endif %}
+                <a
+                    href="/site/login"
+                    class="button button-full"
+                >
+                    Sign In to Purchase
+                </a>
 
 
-        </aside>
+                {% endif %}
+
+            </aside>
+
+            <aside class="redis-demo-card">
+
+                <p class="small-label">
+
+                    Redis Cache Demo
+
+                </p>
+
+                <div class="redis-demo-row">
+
+                    <span>Cache Status</span>
+
+                    <strong>
+
+                        {% if event.cache_hit %}
+
+                            HIT
+
+                        {% else %}
+
+                            MISS
+
+                        {% endif %}
+
+                    </strong>
+
+                </div>
+
+                <div class="redis-demo-row">
+
+                    <span>Redis Key</span>
+
+                    <strong>event:{{ event.event_id }}</strong>
+
+                </div>
+
+                <div class="redis-demo-row">
+
+                    <span>TTL Remaining</span>
+
+                    <strong>{{ ttl_remaining }} seconds</strong>
+
+                </div>
+
+                <div class="redis-demo-row">
+
+                    <span>Request Time</span>
+
+                    <strong>{{ "%.2f"|format(request_time_ms) }} ms</strong>
+
+                </div>
+
+                <div class="redis-demo-row">
+
+                    <span>Popularity</span>
+
+                    <strong>{{ event.popularity_score|int }} views</strong>
+
+                </div>
+
+                <div class="redis-demo-row">
+
+                    <span>Data Source</span>
+
+                    <strong>
+
+                        {% if event.cache_hit %}
+
+                            Redis Cache
+
+                        {% else %}
+
+                            PostgreSQL + MongoDB
+
+                        {% endif %}
+
+                    </strong>
+
+                </div>
+
+            </aside>
+
+        </div>
+
+
 
 
     </div>

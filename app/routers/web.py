@@ -1,4 +1,6 @@
 from pathlib import Path
+from time import perf_counter
+from app.services.cache_service import get_ttl_remaining
 
 from fastapi import (
     APIRouter,
@@ -60,10 +62,13 @@ def website_event_details(
     request: Request,
     event_id: int
 ):
+    start = perf_counter()
 
     data = get_event_page_details(
         event_id
     )
+
+    request_time_ms = (perf_counter() - start) * 1000
 
     if data is None:
 
@@ -72,17 +77,19 @@ def website_event_details(
             detail="Event not found"
         )
 
+    ttl_remaining = get_ttl_remaining(event_id)
 
     csrf_token = get_csrf_token(
         request
     )
-
 
     return templates.TemplateResponse(
         request=request,
         name="event_detail.html",
         context={
             **data,
-            "csrf_token": csrf_token
+            "csrf_token": csrf_token,
+            "request_time_ms": request_time_ms,
+            "ttl_remaining": ttl_remaining
         }
     )

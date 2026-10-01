@@ -1,6 +1,5 @@
-
 import json
-
+from datetime import datetime
 from app.config import get_settings
 from app.database import redis as redis_db
 
@@ -24,8 +23,18 @@ def get_cached_event(event_id: int) -> dict | None:
         print(f"CACHE MISS: {key}")
         return None
 
-    print(f"CACHE HIT: {key}")
-    return json.loads(cached_data)
+    data = json.loads(cached_data)
+    if data.get("start_datetime"):
+        data["start_datetime"] = datetime.fromisoformat(
+            data["start_datetime"]
+        )
+
+    if data.get("end_datetime"):
+        data["end_datetime"] = datetime.fromisoformat(
+            data["end_datetime"]
+        )
+
+    return data
 
 # We can pass in a custom TTL for the DEMO if needed. If not, it will default to the value in config.py
 def set_cached_event(

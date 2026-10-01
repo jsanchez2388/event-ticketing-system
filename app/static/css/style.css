@@ -407,13 +407,11 @@ nav a:hover {
 
 .info-panel,
 .ticket-panel,
-.summary-card {
+.summary-card,
+.redis-demo-card {
     background: white;
-
     border: 1px solid #e5e7eb;
-
     border-radius: 18px;
-
     padding: 28px;
 }
 
@@ -423,7 +421,8 @@ nav a:hover {
 
 .info-panel h2,
 .ticket-panel h2,
-.summary-card h2 {
+.summary-card h2,
+.redis-demo-card h2 {
     margin-top: 0;
 }
 
@@ -486,15 +485,66 @@ nav a:hover {
 }
 
 .summary-card {
-    position: sticky;
-
-    top: 95px;
+    position: static;
 }
 
 .summary-card p {
     color: #646a74;
 
     line-height: 1.5;
+}
+
+/* EVENT DETAIL SIDEBAR */
+
+.detail-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+    position: sticky;
+    top: 95px;
+}
+
+
+/* REDIS CACHE DEMO */
+
+
+.redis-demo-card .small-label {
+    margin-top: 0;
+    margin-bottom: 18px;
+
+    color: #17191c;
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+
+.redis-demo-row {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 13px 0;
+
+    border-bottom: 1px solid #eceef1;
+}
+
+.redis-demo-row:last-child {
+    border-bottom: 0;
+}
+
+.redis-demo-row span {
+    color: #737985;
+
+    font-size: 0.88rem;
+}
+
+.redis-demo-row strong {
+    font-size: 0.88rem;
+
+    text-align: right;
 }
 
 
@@ -519,8 +569,8 @@ footer {
         grid-template-columns: 1fr;
     }
 
-    .summary-card {
-        position: static;
+    .detail-sidebar {
+    position: static;
     }
 
     .ticket-row {
