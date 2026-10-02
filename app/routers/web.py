@@ -1,4 +1,7 @@
 from pathlib import Path
+from time import perf_counter
+from app.services.cache_service import get_ttl_remaining
+
 
 from fastapi import (
     APIRouter,
@@ -12,7 +15,8 @@ from app.security import get_csrf_token
 
 from app.services.web_service import (
     get_event_cards,
-    get_event_page_details
+    get_event_page_details,
+    get_trending_event_cards
 )
 
 
@@ -52,6 +56,30 @@ def website_home(request: Request):
 
 
 # ============================================================
+# TRENDING EVENTS
+# ============================================================
+
+@router.get("/site/trending")
+def website_trending(request: Request):
+
+    events = get_trending_event_cards()
+
+    csrf_token = get_csrf_token(
+        request
+    )
+
+    return templates.TemplateResponse(
+        request=request,
+        name="trending.html",
+        context={
+            "events": events,
+            "csrf_token": csrf_token
+        }
+    )
+
+
+
+# ============================================================
 # EVENT DETAILS
 # ============================================================
 
@@ -60,10 +88,13 @@ def website_event_details(
     request: Request,
     event_id: int
 ):
+    start = perf_counter()
 
     data = get_event_page_details(
         event_id
     )
+
+    request_time_ms = (perf_counter() - start) * 1000
 
     if data is None:
 
@@ -72,17 +103,19 @@ def website_event_details(
             detail="Event not found"
         )
 
+    ttl_remaining = get_ttl_remaining(event_id)
 
     csrf_token = get_csrf_token(
         request
     )
-
 
     return templates.TemplateResponse(
         request=request,
         name="event_detail.html",
         context={
             **data,
-            "csrf_token": csrf_token
+            "csrf_token": csrf_token,
+            "request_time_ms": request_time_ms,
+            "ttl_remaining": ttl_remaining
         }
     )

@@ -34,7 +34,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.services.event_service import (
     get_all_events,
-    get_event_by_id
+    get_event_detail
 )
 
 from app.services.content_service import get_event_content
@@ -61,9 +61,10 @@ def event_content(event_id: int):
 
     return content
 
+
 @router.get("/{event_id}")
 def event_details(event_id: int):
-    event = get_event_by_id(event_id)
+    event = get_event_detail(event_id)
 
     if event is None:
         raise HTTPException(
@@ -72,4 +73,3 @@ def event_details(event_id: int):
         )
 
     return event
-

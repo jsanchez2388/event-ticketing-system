@@ -1,4 +1,6 @@
 from app.database.postgres import get_connection
+from app.services.event_service import get_event_detail, get_events_by_ids
+from app.services.trending_service import get_top_trending
 
 
 def get_event_cards():
@@ -57,46 +59,54 @@ def get_event_cards():
         conn.close()
 
 
+def get_trending_event_cards(limit: int = 10):
+    trending = get_top_trending(limit)
+
+    if not trending:
+        return []
+
+    event_ids = [
+        item["event_id"]
+        for item in trending
+    ]
+
+    events = get_events_by_ids(event_ids)
+
+    events_by_id = {
+        event["event_id"]: event
+        for event in events
+    }
+
+    results = []
+
+    for item in trending:
+        event = events_by_id.get(item["event_id"])
+
+        if event is None:
+            continue
+
+        results.append({
+            "rank": item["rank"],
+            "score": item["score"],
+            **event
+        })
+
+    return results
+
+
 def get_event_page_details(event_id: int):
+
+    event = get_event_detail(event_id)
+    
+    if event is None:
+        return None
+    
     conn = get_connection()
 
     try:
         cursor = conn.cursor()
 
-        # Main event information
-        cursor.execute(
-            """
-            SELECT
-                e.event_id,
-                e.title,
-                e.event_type,
-                e.start_datetime,
-                e.end_datetime,
-                e.status,
-
-                v.venue_id,
-                v.venue_name,
-                v.street,
-                v.city,
-                v.state,
-                v.zip_code,
-                v.country
-
-            FROM events AS e
-
-            JOIN venues AS v
-                ON e.venue_id = v.venue_id
-
-            WHERE e.event_id = %s;
-            """,
-            (event_id,)
-        )
-
-        event = cursor.fetchone()
-
-        if event is None:
-            cursor.close()
-            return None
+        
 
         # Ticket types
         cursor.execute(
