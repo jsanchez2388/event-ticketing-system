@@ -99,6 +99,47 @@ def get_event_by_id(event_id: int):
         conn.close()
 
 
+# Will be used to collect all the event details for the trending page
+def get_events_by_ids(event_ids: list[int]):
+    if not event_ids:
+        return []
+
+    conn = get_connection()
+
+    try:
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT
+                e.event_id,
+                e.title,
+                e.event_type,
+                e.start_datetime,
+                e.end_datetime,
+                e.status,
+                v.venue_id,
+                v.venue_name,
+                v.city,
+                v.state
+            FROM events AS e
+            JOIN venues AS v
+                ON e.venue_id = v.venue_id
+            WHERE e.event_id = ANY(%s);
+            """,
+            (event_ids,)
+        )
+
+        events = cursor.fetchall()
+        cursor.close()
+
+        return events
+
+    finally:
+        conn.close()
+
+
+
 def get_event_content_from_mongo(event_id: int):
     return get_event_content(event_id)
 

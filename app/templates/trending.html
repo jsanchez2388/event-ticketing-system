@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Trending Events{% endblock %}
+
+{% block content %}
+
+<section class="page-header">
+  <h1>Trending Events</h1>
+  <p>See which events are getting the most attention right now.</p>
+</section>
+
+{% if events %}
+
+<div class="trending-list">
+
+  {% for event in events %}
+
+  <article class="trending-card">
+
+    <!-- Large ranking number -->
+    <div class="trending-position">
+      {{ event.rank }}
+    </div>
+
+    <!-- Event information -->
+    <div class="trending-card-body">
+
+      <div class="trending-card-main">
+
+        <div class="trending-date">
+          {{ event.start_datetime.strftime('%b %d') }}
+        </div>
+
+        <h2>{{ event.title }}</h2>
+
+        <span class="event-type">
+          {{ event.event_type }}
+        </span>
+
+        <div class="trending-details">
+          <p>
+            {{ event.start_datetime.strftime('%A, %B %d, %Y') }}
+          </p>
+
+          <p>
+            {{ event.start_datetime.strftime('%I:%M %p') }}
+          </p>
+
+          <p>
+            {{ event.venue_name }}
+          </p>
+
+          <p>
+            {{ event.city }}, {{ event.state }}
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Views and button -->
+      <div class="trending-card-actions">
+
+        <div class="trending-views">
+          <strong>{{ event.score | int }}</strong>
+          <span>views</span>
+        </div>
+
+        <a
+          href="/site/events/{{ event.event_id }}"
+          class="button"
+        >
+          View Event
+        </a>
+
+      </div>
+
+    </div>
+
+  </article>
+
+  {% endfor %}
+
+</div>
+
+{% else %}
+
+<section class="empty-state">
+  <h2>No trending events yet</h2>
+  <p>Event rankings will appear here as visitors view events.</p>
+</section>
+
+{% endif %}
+
+{% endblock %}

@@ -787,3 +787,211 @@ footer {
 .auth-footer a {
     font-weight: 700;
 }
+
+/* ============================================================
+   TRENDING EVENTS
+   ============================================================ */
+
+.page-header {
+    width: min(1180px, 92%);
+    margin: 0 auto;
+    padding: 55px 0 28px;
+}
+
+.page-header h1 {
+    margin: 0 0 8px;
+    font-size: 2.4rem;
+    letter-spacing: -0.04em;
+}
+
+.page-header p {
+    margin: 0;
+    color: #6b7280;
+}
+
+.trending-list {
+    width: min(1180px, 92%);
+    margin: 0 auto 90px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.trending-card {
+    display: grid;
+    grid-template-columns: 110px minmax(0, 1fr);
+
+    background: white;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 7px 24px
+        rgba(0, 0, 0, 0.045);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.trending-card:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 14px 35px
+        rgba(0, 0, 0, 0.08);
+}
+
+
+/* RANK NUMBER */
+
+.trending-position {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #17191c;
+    color: white;
+
+    font-size: 3.4rem;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+}
+
+
+/* CARD CONTENT */
+
+.trending-card-body {
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 32px;
+
+    padding: 25px 28px;
+}
+
+.trending-card-main {
+    min-width: 0;
+    flex: 1;
+}
+
+.trending-date {
+    margin-bottom: 6px;
+
+    color: #6b7280;
+
+    font-size: 0.8rem;
+    font-weight: 800;
+
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.trending-card-main h2 {
+    margin: 0 0 10px;
+
+    font-size: 1.5rem;
+    line-height: 1.2;
+
+    letter-spacing: -0.025em;
+}
+
+.trending-card-main .event-type {
+    margin-bottom: 14px;
+}
+
+
+/* EVENT DETAILS */
+
+.trending-details {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 5px 24px;
+
+    color: #6b7280;
+
+    font-size: 0.9rem;
+}
+
+.trending-details p {
+    margin: 0;
+}
+
+
+/* VIEWS + BUTTON */
+
+.trending-card-actions {
+    min-width: 125px;
+    flex-shrink: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: flex-end;
+
+    gap: 22px;
+}
+
+.trending-views {
+    text-align: right;
+}
+
+.trending-views strong {
+    display: inline;
+
+    font-size: 1.65rem;
+    line-height: 1;
+}
+
+.trending-views span {
+    margin-left: 4px;
+
+    color: #6b7280;
+
+    font-size: 0.85rem;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 760px) {
+
+    .trending-card {
+        grid-template-columns:
+            70px minmax(0, 1fr);
+    }
+
+    .trending-position {
+        font-size: 2.4rem;
+    }
+
+    .trending-card-body {
+        flex-direction: column;
+        align-items: stretch;
+
+        gap: 20px;
+
+        padding: 22px;
+    }
+
+    .trending-card-actions {
+        width: 100%;
+
+        flex-direction: row;
+
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .trending-views {
+        text-align: left;
+    }
+}
