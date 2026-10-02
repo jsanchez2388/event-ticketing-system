@@ -19,6 +19,7 @@ from mongo.queries import (
     query9_add_tag,
     query10_delete_low_reviews
 )
+from app.services.cache_service import invalidate_event
 
 router = APIRouter(
     prefix="/mongo",
@@ -116,6 +117,7 @@ def add_event_review(
     result = query8_add_review(event_id, review_dict)
     if result["matched"] == 0:
         raise HTTPException(status_code=404, detail="Event content not found in MongoDB")
+    invalidate_event(event_id)
     return {"status": "success", "result": result}
 
 
@@ -130,12 +132,19 @@ def add_event_tag(
     result = query9_add_tag(event_id, tag)
     if result["matched"] == 0:
         raise HTTPException(status_code=404, detail="Event content not found in MongoDB")
+    invalidate_event(event_id)
     return {"status": "success", "result": result}
 
 
 # ============================================================
-# QUERY 10: Delete operation test (delete_one)
+# QUERY 10: Delete operation test (delete low reviews)
 # ============================================================
 @router.post("/test-delete")
-def test_delete_query():
-    return query10_delete_low_reviews()
+def test_delete_query(
+    event_id: int = Query(default=101, description="Event ID"),
+    max_rating: int = Query(default=2, ge=1, le=5, description="Max rating to delete")
+):
+    result = query10_delete_low_reviews(event_id, max_rating)
+    if result.get("modified", 0) > 0:
+        invalidate_event(event_id)
+    return {"status": "success", "result": result}

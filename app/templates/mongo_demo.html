@@ -142,12 +142,14 @@ MongoDB Queries | EventHub
 
         <!-- QUERY 10 -->
         <div class="info-panel">
-            <h3 style="margin: 0 0 10px; font-size: 1.05rem;">Query 10: Delete Document</h3>
+            <h3 style="margin: 0 0 10px; font-size: 1.05rem;">Query 10: Delete Low Reviews ($pull with $lte)</h3>
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-family: monospace; font-size: 0.82rem; color: #1e293b; overflow-x: auto;">
-                db.event_content.deleteOne({ "eventId": 999 })
+                db.event_content.updateOne({ "eventId": eventId }, { "$pull": { "reviews": { "rating": { "$lte": max_rating } } } })
             </div>
-            <div>
-                <button class="button" onclick="runPostQuery('q10', '/mongo/test-delete')">Run</button>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <input type="number" id="q10_event" value="105" placeholder="Event ID" style="width: 90px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem;">
+                <input type="number" id="q10_rating" value="4" min="1" max="5" placeholder="Max rating" style="width: 110px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem;">
+                <button class="button" onclick="runPostQuery('q10', `/mongo/test-delete?event_id=${document.getElementById('q10_event').value}&max_rating=${document.getElementById('q10_rating').value}`)">Run</button>
             </div>
             <pre id="q10_out" style="display: none; margin-top: 12px; background: #17191c; color: #e5e7eb; padding: 12px 14px; border-radius: 8px; font-size: 0.82rem; overflow-x: auto; max-height: 220px; font-family: monospace;"></pre>
         </div>
