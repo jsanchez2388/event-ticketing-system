@@ -7,6 +7,7 @@
 from datetime import datetime, timezone
 from app.database.mongo import get_event_content_collection
 from app.models.event_content import ReviewCreate
+from app.services.cache_service import invalidate_event
 
 def get_event_content(event_id: int) -> dict | None:
     """
@@ -52,6 +53,8 @@ def add_review(event_id: int, review: ReviewCreate) -> dict | None:
 
     if result.matched_count == 0:
         return None
+
+    invalidate_event(event_id)
 
     return review_data
 
@@ -109,7 +112,11 @@ def delete_review(event_id: int, user_id: int) -> bool:
         }
     )
 
-    return result.modified_count > 0
+    if result.modified_count > 0:
+        invalidate_event(event_id)
+        return True
+
+    return False
 
 def create_event_content(document: dict) -> bool:
     """
@@ -154,7 +161,11 @@ def update_event_content(event_id: int, updates: dict) -> bool:
         }
     )
 
-    return result.matched_count > 0
+    if result.matched_count > 0:
+        invalidate_event(event_id)
+        return True
+
+    return False
 
 
 def delete_event_content(event_id: int) -> bool:
@@ -172,7 +183,11 @@ def delete_event_content(event_id: int) -> bool:
         {"eventId": event_id}
     )
 
-    return result.deleted_count > 0
+    if result.deleted_count > 0:
+        invalidate_event(event_id)
+        return True
+
+    return False
 
 def get_average_rating(event_id: int) -> float | None:
     """

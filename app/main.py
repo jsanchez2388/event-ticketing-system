@@ -15,6 +15,7 @@ from app.routers.auth import router as auth_router
 from app.routers.account import router as account_router
 from app.routers.reviews import router as reviews_router
 from app.routers.trending import router as trending_router
+from app.routers.mongo_queries import router as mongo_queries_router
 
 # MongoDB and Redis connection lifecycle
 @asynccontextmanager
@@ -90,6 +91,7 @@ app.include_router(events_router)
 app.include_router(analytics_router)
 app.include_router(reviews_router)
 app.include_router(trending_router)
+app.include_router(mongo_queries_router)
 
 # Website routes
 app.include_router(web_router)

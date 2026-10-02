@@ -47,6 +47,7 @@
 #   - The report must explain why atomicity matters here (no order without
 #     payment, no inventory decremented for a failed order, no overselling).
 from app.database.postgres import get_connection
+from app.services.cache_service import invalidate_event
 
 
 def purchase_ticket(
@@ -59,6 +60,18 @@ def purchase_ticket(
 
     try:
         cursor = conn.cursor()
+
+        # Find the event_id for this ticket type so we can invalidate its cache after purchase
+        cursor.execute(
+            """
+            SELECT event_id
+            FROM ticket_types
+            WHERE ticket_type_id = %s;
+            """,
+            (ticket_type_id,)
+        )
+        row = cursor.fetchone()
+        event_id = row["event_id"] if row else None
 
         cursor.execute(
             """
@@ -81,6 +94,9 @@ def purchase_ticket(
 
         conn.commit()
         cursor.close()
+
+        if event_id is not None:
+            invalidate_event(event_id)
 
         return result
 
