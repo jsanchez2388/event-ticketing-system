@@ -91,6 +91,130 @@
     </form>
 
 </section>
+
+
+<hr style="margin: 40px 0;">
+
+<section>
+
+    <h2>Redis Cache Performance Test</h2>
+
+    <p>
+        Compare event retrieval from PostgreSQL + MongoDB
+        against Redis cache retrieval.
+    </p>
+
+    <form
+        method="POST"
+        action="/site/admin/cache/benchmark"
+    >
+
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="{{ csrf_token }}"
+        >
+
+        <label>Event ID</label>
+
+        <input
+            type="number"
+            name="event_id"
+            value="101"
+            min="1"
+            required
+        >
+
+        <label>Iterations</label>
+
+        <input
+            type="number"
+            name="iterations"
+            value="10"
+            min="1"
+            max="100"
+            required
+        >
+
+        <button type="submit">
+            Run Performance Test
+        </button>
+
+    </form>
+
+
+    {% if benchmark_error %}
+
+        <p>
+            {{ benchmark_error }}
+        </p>
+
+    {% endif %}
+
+
+    {% if benchmark_result %}
+
+        <h3>
+            Results:
+            {{ benchmark_result.event_title }}
+        </h3>
+
+        <table>
+
+            <tr>
+                <th>Measurement</th>
+                <th>Result</th>
+            </tr>
+
+            <tr>
+                <td>Iterations</td>
+                <td>
+                    {{ benchmark_result.iterations }}
+                </td>
+            </tr>
+
+            <tr>
+                <td>Without Redis Cache</td>
+                <td>
+                    {{ benchmark_result.without_cache_ms }} ms
+                </td>
+            </tr>
+
+            <tr>
+                <td>With Redis Cache</td>
+                <td>
+                    {{ benchmark_result.with_cache_ms }} ms
+                </td>
+            </tr>
+
+            <tr>
+                <td>Speed Improvement</td>
+                <td>
+                    {{ benchmark_result.speedup }}x
+                </td>
+            </tr>
+
+            <tr>
+                <td>Fastest Without Cache</td>
+                <td>
+                    {{ benchmark_result.without_cache_min_ms }} ms
+                </td>
+            </tr>
+
+            <tr>
+                <td>Fastest With Cache</td>
+                <td>
+                    {{ benchmark_result.with_cache_min_ms }} ms
+                </td>
+            </tr>
+
+        </table>
+
+    {% endif %}
+
+</section>
+
+
     <!-- ====================================================== -->
     <!-- EVENT ACTIVITY -->
     <!-- ====================================================== -->

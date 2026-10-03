@@ -1,3 +1,4 @@
+from app.services.cache_benchmark_service import run_cache_benchmark
 from pathlib import Path
 from time import perf_counter
 from app.services.analytics_service import get_event_inventory
@@ -187,6 +188,8 @@ def website_admin_dashboard(
             **dashboard,
             "csrf_token": csrf_token,
             "cache_enabled": cache_enabled,
+            "benchmark_result": None,
+            "benchmark_error": None,
         }
     )
 
@@ -224,6 +227,58 @@ def website_admin_toggle_cache(
     )
 
 
+
+
+# ============================================================
+# ADMIN - CACHE PERFORMANCE BENCHMARK
+# ============================================================
+
+@router.post("/site/admin/cache/benchmark")
+def website_admin_cache_benchmark(
+    request: Request,
+    event_id: int = Form(...),
+    iterations: int = Form(10),
+    csrf_token: str = Form(...),
+):
+    if request.session.get("role") != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Administrator access required"
+        )
+
+    if csrf_token != get_csrf_token(request):
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid CSRF token"
+        )
+
+    dashboard = get_admin_dashboard_data()
+
+    cache_enabled = is_event_cache_enabled()
+
+    try:
+        benchmark_result = run_cache_benchmark(
+            event_id=event_id,
+            iterations=iterations
+        )
+
+        benchmark_error = None
+
+    except Exception as error:
+        benchmark_result = None
+        benchmark_error = str(error)
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin.html",
+        context={
+            **dashboard,
+            "csrf_token": get_csrf_token(request),
+            "cache_enabled": cache_enabled,
+            "benchmark_result": benchmark_result,
+            "benchmark_error": benchmark_error,
+        }
+    )
 
 
 # ============================================================
