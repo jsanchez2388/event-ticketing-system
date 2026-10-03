@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="form-page">
+
+    <h1>Edit Ticket Type</h1>
+
+    <h2>{{ ticket_type.ticket_name }}</h2>
+
+    <p>
+        Ticket Type ID:
+        {{ ticket_type.ticket_type_id }}
+    </p>
+
+    <p>
+        Event ID:
+        {{ ticket_type.event_id }}
+    </p>
+
+    <p>
+        Tickets already sold:
+        {{ ticket_type.sold_quantity }}
+    </p>
+
+    {% if error %}
+
+        <div class="error-message">
+            {{ error }}
+        </div>
+
+    {% endif %}
+
+    <form
+        method="POST"
+        action="/site/admin/ticket-types/{{ ticket_type.ticket_type_id }}/edit"
+    >
+
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="{{ csrf_token }}"
+        >
+
+
+        <label>
+            Price
+        </label>
+
+        <input
+            type="number"
+            name="price"
+            min="0"
+            step="0.01"
+            value="{{ ticket_type.price }}"
+            required
+        >
+
+
+        <label>
+            Total Ticket Quantity
+        </label>
+
+        <input
+            type="number"
+            name="total_quantity"
+            min="{{ ticket_type.sold_quantity }}"
+            value="{{ ticket_type.total_quantity }}"
+            required
+        >
+
+        <small>
+            {{ ticket_type.sold_quantity }}
+            ticket(s) have already been sold.
+            Total quantity cannot be lower than this value.
+        </small>
+
+
+        <label>
+            Current Available Quantity
+        </label>
+
+        <input
+            type="number"
+            value="{{ ticket_type.available_quantity }}"
+            disabled
+        >
+
+        <small>
+            Available quantity is calculated automatically
+            after saving.
+        </small>
+
+
+        <label>
+            Status
+        </label>
+
+        <select
+            name="status"
+            required
+        >
+
+            <option
+                value="active"
+                {% if ticket_type.status == "active" %}
+                    selected
+                {% endif %}
+            >
+                Active
+            </option>
+
+            <option
+                value="inactive"
+                {% if ticket_type.status == "inactive" %}
+                    selected
+                {% endif %}
+            >
+                Inactive
+            </option>
+
+        </select>
+
+
+        <div class="form-actions">
+
+            <button type="submit">
+                Save Ticket Changes
+            </button>
+
+            <a href="/site/admin">
+                Cancel
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+
+
+<style>
+
+.form-page {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 30px;
+}
+
+.form-page form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.form-page label {
+    font-weight: bold;
+    margin-top: 12px;
+}
+
+.form-page input,
+.form-page select {
+    padding: 10px;
+    font-size: 1rem;
+}
+
+.form-page small {
+    opacity: 0.75;
+}
+
+.form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+}
+
+.error-message {
+    padding: 12px;
+    border: 1px solid #b00020;
+    margin-bottom: 20px;
+}
+
+</style>
+
+{% endblock %}

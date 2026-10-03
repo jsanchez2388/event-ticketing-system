@@ -27,8 +27,11 @@ from app.services.admin_service import (
     get_admin_dashboard_data,
     get_all_venues,
     create_event,
+    get_admin_event,
+    update_event,
+    get_admin_ticket_type,
+    update_ticket_type,
 )
-
 router = APIRouter(
     tags=["Website"]
 )
@@ -185,7 +188,9 @@ def website_admin_dashboard(
 # ============================================================
 
 @router.get("/site/admin/events/create")
-def website_admin_create_event_form(request: Request):
+def website_admin_create_event_form(
+    request: Request
+):
 
     if request.session.get("role") != "admin":
         raise HTTPException(
@@ -194,7 +199,10 @@ def website_admin_create_event_form(request: Request):
         )
 
     venues = get_all_venues()
-    csrf_token = get_csrf_token(request)
+
+    csrf_token = get_csrf_token(
+        request
+    )
 
     return templates.TemplateResponse(
         request=request,
@@ -208,12 +216,13 @@ def website_admin_create_event_form(request: Request):
 
 
 # ============================================================
-# ADMIN - CREATE EVENT SUBMIT
+# ADMIN - CREATE EVENT
 # ============================================================
 
 @router.post("/site/admin/events/create")
 def website_admin_create_event(
     request: Request,
+
     venue_id: int = Form(...),
     title: str = Form(...),
     event_type: str = Form(...),
@@ -229,9 +238,15 @@ def website_admin_create_event(
             detail="Administrator access required"
         )
 
-    expected_csrf_token = get_csrf_token(request)
+    # Validate CSRF token.
+    session_token = request.session.get(
+        "csrf_token"
+    )
 
-    if csrf_token != expected_csrf_token:
+    if (
+        not session_token
+        or csrf_token != session_token
+    ):
         raise HTTPException(
             status_code=403,
             detail="Invalid CSRF token"
@@ -240,14 +255,14 @@ def website_admin_create_event(
     venues = get_all_venues()
 
     try:
-        start_value = datetime.fromisoformat(start_datetime)
-        end_value = datetime.fromisoformat(end_datetime)
 
-        if not title.strip():
-            raise ValueError("Event title is required.")
+        start_value = datetime.fromisoformat(
+            start_datetime
+        )
 
-        if not event_type.strip():
-            raise ValueError("Event type is required.")
+        end_value = datetime.fromisoformat(
+            end_datetime
+        )
 
         create_event(
             venue_id=venue_id,
@@ -259,12 +274,219 @@ def website_admin_create_event(
         )
 
     except Exception as error:
+
         return templates.TemplateResponse(
             request=request,
             name="admin_event_create.html",
             context={
                 "venues": venues,
+                "csrf_token": get_csrf_token(
+                    request
+                ),
+                "error": str(error),
+            },
+            status_code=400,
+        )
+
+    return RedirectResponse(
+        url="/site/admin",
+        status_code=303,
+    )
+
+# ============================================================
+# ADMIN - EDIT EVENT FORM
+# ============================================================
+
+@router.get("/site/admin/events/{event_id}/edit")
+def website_admin_edit_event_form(
+    request: Request,
+    event_id: int
+):
+    if request.session.get("role") != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Administrator access required"
+        )
+
+    event = get_admin_event(event_id)
+
+    if event is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Event not found"
+        )
+
+    venues = get_all_venues()
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin_event_edit.html",
+        context={
+            "event": event,
+            "venues": venues,
+            "csrf_token": get_csrf_token(request),
+            "error": None,
+        }
+    )
+
+
+# ============================================================
+# ADMIN - EDIT EVENT SUBMIT
+# ============================================================
+
+@router.post("/site/admin/events/{event_id}/edit")
+def website_admin_edit_event(
+    request: Request,
+    event_id: int,
+    venue_id: int = Form(...),
+    title: str = Form(...),
+    event_type: str = Form(...),
+    start_datetime: str = Form(...),
+    end_datetime: str = Form(...),
+    status: str = Form(...),
+    csrf_token: str = Form(...),
+):
+    if request.session.get("role") != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Administrator access required"
+        )
+
+    if csrf_token != get_csrf_token(request):
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid CSRF token"
+        )
+
+    try:
+        if not title.strip():
+            raise ValueError("Event title is required.")
+
+        if not event_type.strip():
+            raise ValueError("Event type is required.")
+
+        update_event(
+            event_id=event_id,
+            venue_id=venue_id,
+            title=title.strip(),
+            event_type=event_type.strip(),
+            start_datetime=datetime.fromisoformat(
+                start_datetime
+            ),
+            end_datetime=datetime.fromisoformat(
+                end_datetime
+            ),
+            status=status,
+        )
+
+    except Exception as error:
+        event = get_admin_event(event_id)
+        venues = get_all_venues()
+
+        return templates.TemplateResponse(
+            request=request,
+            name="admin_event_edit.html",
+            context={
+                "event": event,
+                "venues": venues,
                 "csrf_token": get_csrf_token(request),
+                "error": str(error),
+            },
+            status_code=400,
+        )
+
+    return RedirectResponse(
+        url="/site/admin",
+        status_code=303
+    )
+
+
+# ============================================================
+# ADMIN - EDIT TICKET TYPE FORM
+# ============================================================
+
+@router.get(
+    "/site/admin/ticket-types/{ticket_type_id}/edit"
+)
+def website_admin_edit_ticket_type_form(
+    request: Request,
+    ticket_type_id: int
+):
+    if request.session.get("role") != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Administrator access required"
+        )
+
+    ticket_type = get_admin_ticket_type(
+        ticket_type_id
+    )
+
+    if ticket_type is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Ticket type not found"
+        )
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin_ticket_type_edit.html",
+        context={
+            "ticket_type": ticket_type,
+            "csrf_token": get_csrf_token(request),
+            "error": None,
+        }
+    )
+
+
+# ============================================================
+# ADMIN - EDIT TICKET TYPE SUBMIT
+# ============================================================
+
+@router.post(
+    "/site/admin/ticket-types/{ticket_type_id}/edit"
+)
+def website_admin_edit_ticket_type(
+    request: Request,
+    ticket_type_id: int,
+    price: float = Form(...),
+    total_quantity: int = Form(...),
+    status: str = Form(...),
+    csrf_token: str = Form(...),
+):
+    if request.session.get("role") != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Administrator access required"
+        )
+
+    if csrf_token != get_csrf_token(request):
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid CSRF token"
+        )
+
+    try:
+        update_ticket_type(
+            ticket_type_id=ticket_type_id,
+            price=price,
+            total_quantity=total_quantity,
+            status=status,
+        )
+
+    except Exception as error:
+        ticket_type = get_admin_ticket_type(
+            ticket_type_id
+        )
+
+        return templates.TemplateResponse(
+            request=request,
+            name="admin_ticket_type_edit.html",
+            context={
+                "ticket_type": ticket_type,
+                "csrf_token": get_csrf_token(
+                    request
+                ),
                 "error": str(error),
             },
             status_code=400,
