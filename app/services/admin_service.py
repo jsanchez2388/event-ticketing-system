@@ -244,3 +244,114 @@ def get_admin_dashboard_data():
         "total_revenue":
             total_revenue,
     }
+
+
+# ============================================================
+# ADMIN EVENT MANAGEMENT
+# ============================================================
+
+from app.database.postgres import get_connection
+
+
+def get_all_venues():
+    """
+    Return all venues for the Admin event form.
+    """
+    conn = get_connection()
+
+    try:
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT
+                venue_id,
+                venue_name,
+                city,
+                state
+            FROM venues
+            ORDER BY venue_name;
+            """
+        )
+
+        venues = cursor.fetchall()
+        cursor.close()
+
+        return venues
+
+    finally:
+        conn.close()
+
+
+def create_event(
+    venue_id: int,
+    title: str,
+    event_type: str,
+    start_datetime,
+    end_datetime,
+    status: str = "scheduled",
+):
+    """
+    Create a new event in PostgreSQL.
+    """
+
+    if end_datetime <= start_datetime:
+        raise ValueError(
+            "Event end time must be after the start time."
+        )
+
+    conn = get_connection()
+
+    try:
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            INSERT INTO events (
+                venue_id,
+                title,
+                event_type,
+                start_datetime,
+                end_datetime,
+                status
+            )
+            VALUES (
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s
+            )
+            RETURNING
+                event_id,
+                venue_id,
+                title,
+                event_type,
+                start_datetime,
+                end_datetime,
+                status;
+            """,
+            (
+                venue_id,
+                title,
+                event_type,
+                start_datetime,
+                end_datetime,
+                status,
+            )
+        )
+
+        event = cursor.fetchone()
+
+        conn.commit()
+        cursor.close()
+
+        return event
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        conn.close()

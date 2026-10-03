@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="form-page">
+
+    <h1>Create Event</h1>
+
+    <p>
+        Add a new event to the EventHub platform.
+    </p>
+
+    {% if error %}
+
+        <div class="error-message">
+            {{ error }}
+        </div>
+
+    {% endif %}
+
+    <form
+        method="POST"
+        action="/site/admin/events/create"
+    >
+
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="{{ csrf_token }}"
+        >
+
+
+        <label for="title">
+            Event Title
+        </label>
+
+        <input
+            type="text"
+            id="title"
+            name="title"
+            required
+        >
+
+
+        <label for="event_type">
+            Event Type
+        </label>
+
+        <select
+            id="event_type"
+            name="event_type"
+            required
+        >
+
+            <option value="">
+                Select an event type
+            </option>
+
+            <option value="Concert">
+                Concert
+            </option>
+
+            <option value="Conference">
+                Conference
+            </option>
+
+            <option value="Sport">
+                Sporting Event
+            </option>
+
+            <option value="University">
+                University Event
+            </option>
+
+            <option value="Workshop">
+                Workshop
+            </option>
+
+            <option value="Community">
+                Community Event
+            </option>
+
+        </select>
+
+
+        <label for="venue_id">
+            Venue
+        </label>
+
+        <select
+            id="venue_id"
+            name="venue_id"
+            required
+        >
+
+            <option value="">
+                Select a venue
+            </option>
+
+            {% for venue in venues %}
+
+                <option value="{{ venue.venue_id }}">
+                    {{ venue.venue_name }}
+                    -
+                    {{ venue.city }},
+                    {{ venue.state }}
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+
+        <label for="start_datetime">
+            Start Date and Time
+        </label>
+
+        <input
+            type="datetime-local"
+            id="start_datetime"
+            name="start_datetime"
+            required
+        >
+
+
+        <label for="end_datetime">
+            End Date and Time
+        </label>
+
+        <input
+            type="datetime-local"
+            id="end_datetime"
+            name="end_datetime"
+            required
+        >
+
+
+        <label for="status">
+            Status
+        </label>
+
+        <select
+            id="status"
+            name="status"
+            required
+        >
+
+            <option value="scheduled">
+                Scheduled
+            </option>
+
+            <option value="cancelled">
+                Cancelled
+            </option>
+
+            <option value="completed">
+                Completed
+            </option>
+
+        </select>
+
+
+        <div class="form-actions">
+
+            <button
+                type="submit"
+                class="button"
+            >
+                Create Event
+            </button>
+
+            <a
+                href="/site/admin"
+                class="button secondary"
+            >
+                Cancel
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+
+
+<style>
+
+.form-page {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 30px;
+}
+
+.form-page form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.form-page label {
+    font-weight: bold;
+    margin-top: 12px;
+}
+
+.form-page input,
+.form-page select {
+    padding: 10px;
+    font-size: 1rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.error-message {
+    padding: 12px;
+    border: 1px solid #b00020;
+    margin-bottom: 20px;
+}
+
+</style>
+
+{% endblock %}
