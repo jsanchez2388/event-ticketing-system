@@ -1,7 +1,7 @@
 from pathlib import Path
 from time import perf_counter
 from app.services.cache_service import get_ttl_remaining
-
+from app.services.analytics_service import get_event_inventory
 from fastapi.responses import RedirectResponse
 from datetime import datetime
 
@@ -31,6 +31,7 @@ from app.services.admin_service import (
     update_event,
     get_admin_ticket_type,
     update_ticket_type,
+    create_ticket_type,
 )
 router = APIRouter(
     tags=["Website"]
@@ -264,7 +265,7 @@ def website_admin_create_event(
             end_datetime
         )
 
-        create_event(
+        new_event = create_event(
             venue_id=venue_id,
             title=title.strip(),
             event_type=event_type.strip(),
@@ -289,7 +290,7 @@ def website_admin_create_event(
         )
 
     return RedirectResponse(
-        url="/site/admin",
+        url=f"/site/admin/events/{new_event['event_id']}/ticket-types/create",
         status_code=303,
     )
 
@@ -318,17 +319,19 @@ def website_admin_edit_event_form(
 
     venues = get_all_venues()
 
+    ticket_types = get_event_inventory(event_id)
+
     return templates.TemplateResponse(
         request=request,
         name="admin_event_edit.html",
         context={
             "event": event,
             "venues": venues,
+            "ticket_types": ticket_types,
             "csrf_token": get_csrf_token(request),
             "error": None,
         }
     )
-
 
 # ============================================================
 # ADMIN - EDIT EVENT SUBMIT
@@ -381,14 +384,13 @@ def website_admin_edit_event(
 
     except Exception as error:
         event = get_admin_event(event_id)
-        venues = get_all_venues()
-
+        ticket_types = get_event_inventory(event_id)
         return templates.TemplateResponse(
             request=request,
             name="admin_event_edit.html",
             context={
                 "event": event,
-                "venues": venues,
+                "ticket_types": ticket_types,
                 "csrf_token": get_csrf_token(request),
                 "error": str(error),
             },
@@ -494,5 +496,156 @@ def website_admin_edit_ticket_type(
 
     return RedirectResponse(
         url="/site/admin",
+        status_code=303
+    )
+
+
+# ============================================================
+# ADMIN - DELETE EVENT
+# ============================================================
+
+@router.post("/site/admin/events/{event_id}/delete")
+def website_admin_delete_event(
+    request: Request,
+    event_id: int,
+    csrf_token: str = Form(...),
+):
+    if request.session.get("role") != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Administrator access required"
+        )
+
+    if csrf_token != get_csrf_token(request):
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid CSRF token"
+        )
+
+    from app.services.admin_service import delete_event
+
+    try:
+        delete_event(event_id)
+
+    except ValueError as error:
+        event = get_admin_event(event_id)
+
+        if event is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Event not found"
+            )
+
+        venues = get_all_venues()
+
+        return templates.TemplateResponse(
+            request=request,
+            name="admin_event_edit.html",
+            context={
+                "event": event,
+                "venues": venues,
+                "csrf_token": get_csrf_token(request),
+                "error": str(error),
+            },
+            status_code=400,
+        )
+
+    return RedirectResponse(
+        url="/site/admin",
+        status_code=303
+    )
+# ============================================================
+# ADMIN - CREATE TICKET TYPE FORM
+# ============================================================
+
+@router.get(
+    "/site/admin/events/{event_id}/ticket-types/create"
+)
+def website_admin_create_ticket_type_form(
+    request: Request,
+    event_id: int
+):
+    if request.session.get("role") != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Administrator access required"
+        )
+
+    event = get_admin_event(event_id)
+
+    if event is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Event not found"
+        )
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin_ticket_type_create.html",
+        context={
+            "event": event,
+            "csrf_token": get_csrf_token(request),
+            "error": None,
+        }
+    )
+
+
+# ============================================================
+# ADMIN - CREATE TICKET TYPE SUBMIT
+# ============================================================
+
+@router.post(
+    "/site/admin/events/{event_id}/ticket-types/create"
+)
+def website_admin_create_ticket_type(
+    request: Request,
+    event_id: int,
+    ticket_name: str = Form(...),
+    price: float = Form(...),
+    total_quantity: int = Form(...),
+    minimum_purchase: int = Form(1),
+    maximum_purchase: int = Form(10),
+    status: str = Form("active"),
+    csrf_token: str = Form(...),
+):
+    if request.session.get("role") != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Administrator access required"
+        )
+
+    if csrf_token != get_csrf_token(request):
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid CSRF token"
+        )
+
+    try:
+        create_ticket_type(
+            event_id=event_id,
+            ticket_name=ticket_name.strip(),
+            price=price,
+            total_quantity=total_quantity,
+            minimum_purchase=minimum_purchase,
+            maximum_purchase=maximum_purchase,
+            status=status,
+        )
+
+    except Exception as error:
+        event = get_admin_event(event_id)
+
+        return templates.TemplateResponse(
+            request=request,
+            name="admin_ticket_type_create.html",
+            context={
+                "event": event,
+                "csrf_token": get_csrf_token(request),
+                "error": str(error),
+            },
+            status_code=400,
+        )
+
+    return RedirectResponse(
+        url=f"/site/admin/events/{event_id}/edit",
         status_code=303
     )

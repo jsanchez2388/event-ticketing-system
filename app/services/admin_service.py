@@ -1,4 +1,3 @@
-from app.services.cache_service import invalidate_event
 # app/services/admin_service.py
 
 from app.services.analytics_service import (
@@ -12,7 +11,7 @@ from app.services.analytics_service import (
 from app.services.trending_service import get_event_score
 from app.services.content_service import get_average_rating
 
-from app.services.cache_service import invalidate_event
+from app.services.cache_service import invalidate_event     
 
 def get_admin_dashboard_data():
 
@@ -360,8 +359,110 @@ def create_event(
     finally:
         conn.close()
 
+
 # ============================================================
-# ADMIN - GET EVENT FOR EDITING
+# ADMIN - CREATE TICKET TYPE
+# ============================================================
+
+def create_ticket_type(
+    event_id: int,
+    ticket_name: str,
+    price,
+    total_quantity: int,
+    minimum_purchase: int = 1,
+    maximum_purchase: int = 10,
+    status: str = "active",
+):
+    if price < 0:
+        raise ValueError("Ticket price cannot be negative.")
+
+    if total_quantity < 0:
+        raise ValueError("Ticket quantity cannot be negative.")
+
+    if minimum_purchase < 1:
+        raise ValueError("Minimum purchase must be at least 1.")
+
+    if maximum_purchase < minimum_purchase:
+        raise ValueError(
+            "Maximum purchase cannot be less than minimum purchase."
+        )
+
+    conn = get_connection()
+
+    try:
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT event_id
+            FROM events
+            WHERE event_id = %s;
+            """,
+            (event_id,)
+        )
+
+        if cursor.fetchone() is None:
+            raise ValueError("Event not found.")
+
+        cursor.execute(
+            """
+            INSERT INTO ticket_types (
+                event_id,
+                ticket_name,
+                price,
+                total_quantity,
+                available_quantity,
+                minimum_purchase,
+                maximum_purchase,
+                status
+            )
+            VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s
+            )
+            RETURNING
+                ticket_type_id,
+                event_id,
+                ticket_name,
+                price,
+                total_quantity,
+                available_quantity,
+                status;
+            """,
+            (
+                event_id,
+                ticket_name,
+                price,
+                total_quantity,
+                total_quantity,
+                minimum_purchase,
+                maximum_purchase,
+                status,
+            )
+        )
+
+        ticket_type = cursor.fetchone()
+
+        conn.commit()
+        cursor.close()
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        conn.close()
+
+    try:
+        invalidate_event(event_id)
+    except Exception as error:
+        print(
+            f"Could not invalidate cache for event "
+            f"{event_id}: {error}"
+        )
+
+    return ticket_type
+# ============================================================
+# ADMIN - GET EVENT
 # ============================================================
 
 def get_admin_event(event_id: int):
@@ -393,7 +494,6 @@ def get_admin_event(event_id: int):
 
     finally:
         conn.close()
-
 
 # ============================================================
 # ADMIN - UPDATE EVENT
@@ -465,16 +565,9 @@ def update_event(
     finally:
         conn.close()
 
-    try:
-        invalidate_event(event_id)
-    except Exception as error:
-        print(
-            f"Could not invalidate cache for event "
-            f"{event_id}: {error}"
-        )
+    invalidate_event(event_id)
 
     return event
-
 
 # ============================================================
 # ADMIN - GET TICKET TYPE
@@ -514,7 +607,6 @@ def get_admin_ticket_type(ticket_type_id: int):
     finally:
         conn.close()
 
-
 # ============================================================
 # ADMIN - UPDATE TICKET TYPE
 # ============================================================
@@ -526,9 +618,7 @@ def update_ticket_type(
     status: str,
 ):
     if price < 0:
-        raise ValueError(
-            "Ticket price cannot be negative."
-        )
+        raise ValueError("Ticket price cannot be negative.")
 
     if total_quantity < 0:
         raise ValueError(
@@ -557,9 +647,7 @@ def update_ticket_type(
         current = cursor.fetchone()
 
         if current is None:
-            raise ValueError(
-                "Ticket type not found."
-            )
+            raise ValueError("Ticket type not found.")
 
         event_id = current["event_id"]
 
@@ -570,14 +658,11 @@ def update_ticket_type(
 
         if total_quantity < sold_quantity:
             raise ValueError(
-                f"Cannot reduce total quantity below "
-                f"{sold_quantity}, because "
-                f"{sold_quantity} ticket(s) have already sold."
+                f"Cannot reduce quantity below "
+                f"{sold_quantity}. Those tickets are already sold."
             )
 
-        new_available_quantity = (
-            total_quantity - sold_quantity
-        )
+        new_available = total_quantity - sold_quantity
 
         cursor.execute(
             """
@@ -588,25 +673,18 @@ def update_ticket_type(
                 available_quantity = %s,
                 status = %s
             WHERE ticket_type_id = %s
-            RETURNING
-                ticket_type_id,
-                event_id,
-                ticket_name,
-                price,
-                total_quantity,
-                available_quantity,
-                status;
+            RETURNING *;
             """,
             (
                 price,
                 total_quantity,
-                new_available_quantity,
+                new_available,
                 status,
                 ticket_type_id,
             )
         )
 
-        updated_ticket_type = cursor.fetchone()
+        updated = cursor.fetchone()
 
         conn.commit()
         cursor.close()
@@ -619,12 +697,6 @@ def update_ticket_type(
         conn.close()
 
     if event_id is not None:
-        try:
-            invalidate_event(event_id)
-        except Exception as error:
-            print(
-                f"Could not invalidate cache for event "
-                f"{event_id}: {error}"
-            )
+        invalidate_event(event_id)
 
-    return updated_ticket_type
+    return updated

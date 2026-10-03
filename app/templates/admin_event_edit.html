@@ -161,4 +161,105 @@
 }
 </style>
 
+
+
+<hr style="margin: 40px 0;">
+
+<hr style="margin: 40px 0;">
+
+<h2>Ticket Types</h2>
+
+<p>
+    <a href="/site/admin/events/{{ event.event_id }}/ticket-types/create">
+        + Add Ticket Type
+    </a>
+</p>
+
+{% if ticket_types %}
+
+<table style="width: 100%; border-collapse: collapse;">
+
+    <thead>
+        <tr>
+            <th>Ticket</th>
+            <th>Price</th>
+            <th>Total</th>
+            <th>Available</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        {% for ticket in ticket_types %}
+
+        <tr>
+            <td>
+                {{ ticket.ticket_name }}
+            </td>
+
+            <td>
+                ${{ ticket.price }}
+            </td>
+
+            <td>
+                {{ ticket.total_quantity }}
+            </td>
+
+            <td>
+                {{ ticket.remaining_for_ticket_type }}
+            </td>
+
+            <td>
+                <a href="/site/admin/ticket-types/{{ ticket.ticket_type_id }}/edit">
+                    Edit Price / Quantity
+                </a>
+            </td>
+        </tr>
+
+        {% endfor %}
+
+    </tbody>
+
+</table>
+
+{% else %}
+
+<p>
+    No ticket types exist for this event yet.
+</p>
+
+<p>
+    <a href="/site/admin/events/{{ event.event_id }}/ticket-types/create">
+        Create the first ticket type
+    </a>
+</p>
+
+{% endif %}
+
+
+
+<h2>Delete Event</h2>
+
+<p>
+    Delete this event permanently.
+    Events with existing ticket sales cannot be deleted.
+</p>
+
+<form
+    method="POST"
+    action="/site/admin/events/{{ event.event_id }}/delete"
+    onsubmit="return confirm('Are you sure you want to permanently delete this event?');"
+>
+    <input
+        type="hidden"
+        name="csrf_token"
+        value="{{ csrf_token }}"
+    >
+
+    <button type="submit">
+        Delete Event
+    </button>
+</form>
+
 {% endblock %}
