@@ -253,6 +253,25 @@ nav a:hover {
     margin: 3px 0;
 }
 
+.event-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 16px;
+}
+
+.event-tag {
+    display: inline-block;
+    padding: 6px 10px;
+    border: 1px solid #dfe3e8;
+    border-radius: 100px;
+    background: #f7f8fa;
+    color: #555b65;
+    font-size: 0.75rem;
+    font-weight: 650;
+}
+
+
 .event-card-bottom {
     border-top: 1px solid #eceef1;
 
@@ -425,6 +444,65 @@ nav a:hover {
 .redis-demo-card h2 {
     margin-top: 0;
 }
+
+/* MONGODB EVENT CONTENT */
+
+.mongo-content-panel {
+    margin-top: 24px;
+}
+
+.mongo-content-group {
+    padding: 18px 0;
+    border-bottom: 1px solid #eceef1;
+}
+
+.mongo-content-group:first-of-type {
+    padding-top: 8px;
+}
+
+.mongo-content-group:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.mongo-content-group h3 {
+    margin: 0 0 8px;
+
+    color: #737985;
+
+    font-size: 0.78rem;
+    font-weight: 800;
+
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.mongo-content-group p {
+    margin: 0;
+
+    color: #30343b;
+
+    line-height: 1.6;
+}
+
+.mongo-content-group ul {
+    margin: 0;
+    padding-left: 20px;
+
+    color: #30343b;
+
+    line-height: 1.65;
+}
+
+.mongo-content-group li + li {
+    margin-top: 5px;
+}
+
+.mongo-content-group .event-tags {
+    margin-top: 0;
+}
+
+
 
 .detail-row {
     display: flex;

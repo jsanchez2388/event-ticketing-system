@@ -144,6 +144,493 @@
             </section>
 
 
+            <!-- MONGODB EVENT CONTENT -->
+
+            <section class="info-panel mongo-content-panel">
+
+                <h2>
+                    About This Event
+                </h2>
+
+
+                <!-- TAGS -->
+
+                {% if event.tags %}
+
+                <div class="mongo-content-group">
+
+                    <h3>
+                        Tags
+                    </h3>
+
+                    <div class="event-tags">
+
+                        {% for tag in event.tags %}
+
+                        <span class="event-tag">
+                            {{ tag }}
+                        </span>
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+                {% endif %}
+
+
+                <!-- CONCERT: PERFORMERS -->
+
+                {% if event.performers %}
+
+                <div class="mongo-content-group">
+
+                    <h3>
+                        Performers
+                    </h3>
+
+                    <p>
+                        {{ event.performers | join(", ") }}
+                    </p>
+
+                </div>
+
+                {% endif %}
+
+
+                <!-- CONCERT: GENRES -->
+
+                {% if event.genres %}
+
+                <div class="mongo-content-group">
+
+                    <h3>
+                        Genres
+                    </h3>
+
+                    <p>
+                        {{ event.genres | join(", ") }}
+                    </p>
+
+                </div>
+
+                {% endif %}
+
+
+                <!-- CONCERT: AGE RESTRICTION -->
+
+                {% if event.ageRestriction %}
+
+                <div class="mongo-content-group">
+
+                    <h3>
+                        Age Restriction
+                    </h3>
+
+                    <p>
+                        {{ event.ageRestriction }}
+                    </p>
+
+                </div>
+
+                {% endif %}
+
+
+                <!-- CONCERT: VIP PACKAGES -->
+
+                {% if event.vip_packages %}
+
+                <div class="mongo-content-group">
+
+                    <h3>VIP Packages</h3>
+
+                    <ul>
+                        {% for package in event.vip_packages %}
+                        <li>{{ package }}</li>
+                        {% endfor %}
+                    </ul>
+
+                </div>
+
+                {% endif %}
+
+
+                <!-- CONFERENCE: SPEAKERS -->
+
+                {% if event.speakers %}
+
+                <div class="mongo-content-group">
+
+                    <h3>
+                        Speakers
+                    </h3>
+
+                    <ul>
+
+                        {% for speaker in event.speakers %}
+
+                        <li>
+
+                            <strong>
+                                {{ speaker.name }}
+                            </strong>
+
+                            {% if speaker.organization %}
+                            — {{ speaker.organization }}
+                            {% endif %}
+
+                            {% if speaker.topics %}
+                            — {{ speaker.topics | join(", ") }}
+                            {% endif %}
+
+                        </li>
+
+                        {% endfor %}
+
+                    </ul>
+
+                </div>
+
+                {% endif %}
+
+                <!-- SPORTS: TEAMS -->
+
+                {% if event.teams %}
+
+                <div class="mongo-content-group">
+
+                    <h3>
+                        Teams
+                    </h3>
+
+                    <p>
+                        {% if event.teams.away %}
+                            {{ event.teams.away }}
+                        {% endif %}
+
+                        {% if event.teams.away and event.teams.home %}
+                            at
+                        {% endif %}
+
+                        {% if event.teams.home %}
+                            {{ event.teams.home }}
+                        {% endif %}
+                    </p>
+
+                </div>
+
+                {% endif %}
+
+                
+                <!-- SPORTS: PROMOTIONS -->
+
+                {% if event.promotions %}
+
+                <div class="mongo-content-group">
+
+                    <h3>
+                        Promotions
+                    </h3>
+
+                    <ul>
+
+                        {% for promotion in event.promotions %}
+
+                        <li>
+                            {{ promotion }}
+                        </li>
+
+                        {% endfor %}
+
+                    </ul>
+
+                </div>
+
+                {% endif %}
+
+
+                <!-- SPORTS: STADIUM RULES -->
+
+                {% if event.stadium_rules %}
+
+                <div class="mongo-content-group">
+
+                    <h3>
+                        Stadium Rules
+                    </h3>
+
+                    <ul>
+
+                        <li>
+                            <strong>Tailgating:</strong>
+                            {{ "Allowed" if event.stadium_rules.tailgateAllowed else "Not Allowed" }}
+                        </li>
+
+                        <li>
+                            <strong>Clear Bag Policy:</strong>
+                            {{ "Yes" if event.stadium_rules.clearBagPolicy else "No" }}
+                        </li>
+
+                    </ul>
+
+                </div>
+
+                {% endif %}
+
+
+                <!-- UNIVERSITY: DEPARTMENT -->
+
+                {% if event.department %}
+
+                <div class="mongo-content-group">
+
+                    <h3>
+                        Department
+                    </h3>
+
+                    <p>
+                        {{ event.department }}
+                    </p>
+
+                </div>
+
+                {% endif %}
+
+
+                <!-- UNIVERSITY: TARGET AUDIENCE -->
+
+                {% if event.targetAudience %}
+
+                <div class="mongo-content-group">
+
+                    <h3>
+                        Target Audience
+                    </h3>
+
+                    <p>
+                        {{ event.targetAudience | join(", ") }}
+                    </p>
+
+                </div>
+
+                {% endif %}
+
+
+                <!-- WORKSHOP: INSTRUCTOR -->
+
+                {% if event.instructor %}
+
+                <div class="mongo-content-group">
+
+                    <h3>
+                        Instructor
+                    </h3>
+
+                    <p>
+                        {{ event.instructor }}
+                    </p>
+
+                </div>
+
+                {% endif %}
+
+
+                <!-- WORKSHOP: SKILL LEVEL -->
+
+                {% if event.skillLevel %}
+
+                <div class="mongo-content-group">
+
+                    <h3>
+                        Skill Level
+                    </h3>
+
+                    <p>
+                        {{ event.skillLevel }}
+                    </p>
+
+                </div>
+
+                {% endif %}
+
+
+                <!-- WORKSHOP: MATERIALS -->
+
+                {% if event.materialsProvided %}
+
+                <div class="mongo-content-group">
+
+                    <h3>
+                        Materials Provided
+                    </h3>
+
+                    <ul>
+
+                        {% for material in event.materialsProvided %}
+
+                        <li>
+                            {{ material }}
+                        </li>
+
+                        {% endfor %}
+
+                    </ul>
+
+                </div>
+
+                {% endif %}
+
+
+                <!-- WORKSHOP: TOPICS -->
+
+                {% if event.topics %}
+
+                <div class="mongo-content-group">
+
+                    <h3>
+                        Topics
+                    </h3>
+
+                    <p>
+                        {{ event.topics | join(", ") }}
+                    </p>
+
+                </div>
+
+                {% endif %}
+
+
+                <!-- COMMUNITY: KID FRIENDLY -->
+
+                {% if event.kidFriendly is defined %}
+
+                <div class="mongo-content-group">
+
+                    <h3>
+                        Kid Friendly
+                    </h3>
+
+                    <p>
+                        {{ "Yes" if event.kidFriendly else "No" }}
+                    </p>
+
+                </div>
+
+                {% endif %}
+
+
+                <!-- COMMUNITY: ACCESSIBILITY -->
+
+                {% if event.accessibility %}
+
+                <div class="mongo-content-group">
+
+                    <h3>
+                        Accessibility
+                    </h3>
+
+                    <p>
+                        {{ event.accessibility }}
+                    </p>
+
+                </div>
+
+                {% endif %}
+
+
+                <!-- AGENDA -->
+
+                {% if event.agenda %}
+
+                <div class="mongo-content-group">
+
+                    <h3>
+                        Agenda
+                    </h3>
+
+                    <ul>
+
+                        {% for item in event.agenda %}
+
+                        <li>
+
+                            {% if item.time %}
+                            <strong>
+                                {{ item.time }}
+                            </strong>
+                            {% endif %}
+
+                            {% if item.title %}
+                            — {{ item.title }}
+                            {% endif %}
+
+                            {% if item.activity %}
+                            — {{ item.activity }}
+                            {% endif %}
+
+                        </li>
+
+                        {% endfor %}
+
+                    </ul>
+
+                </div>
+
+                {% endif %}
+
+
+                <!-- SCHEDULE -->
+
+                {% if event.schedule %}
+
+                <div class="mongo-content-group">
+
+                    <h3>
+                        Schedule
+                    </h3>
+
+                    <ul>
+
+                        {% for item in event.schedule %}
+
+                        <li>
+
+                            {% if item.time %}
+                            <strong>
+                                {{ item.time }}
+                            </strong>
+                            {% endif %}
+
+                            {% if item.title %}
+                            — {{ item.title }}
+                            {% endif %}
+
+                            {% if item.activity %}
+                            — {{ item.activity }}
+                            {% endif %}
+
+                            {% if item.session %}
+                            — {{ item.session }}
+                            {% endif %}
+
+                            {% if item.room %}
+                            — {{ item.room }}
+                            {% endif %}
+
+                        </li>
+
+                        {% endfor %}
+
+                    </ul>
+
+                </div>
+
+                {% endif %}
+
+
+            </section>
+
 
             <!-- TICKETS -->
 
