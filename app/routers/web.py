@@ -19,6 +19,9 @@ from app.services.web_service import (
     get_trending_event_cards
 )
 
+from app.services.admin_service import (
+    get_admin_dashboard_data
+)
 
 router = APIRouter(
     tags=["Website"]
@@ -134,6 +137,39 @@ def website_mongo_demo(request: Request):
         request=request,
         name="mongo_demo.html",
         context={
+            "csrf_token": csrf_token
+        }
+    )
+# ============================================================
+# ADMIN DASHBOARD
+# ============================================================
+
+@router.get("/site/admin")
+def website_admin_dashboard(
+    request: Request
+):
+
+    # Only administrator accounts may access this page.
+    if request.session.get("role") != "admin":
+
+        raise HTTPException(
+            status_code=403,
+            detail="Administrator access required"
+        )
+
+
+    dashboard = get_admin_dashboard_data()
+
+    csrf_token = get_csrf_token(
+        request
+    )
+
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin.html",
+        context={
+            **dashboard,
             "csrf_token": csrf_token
         }
     )
