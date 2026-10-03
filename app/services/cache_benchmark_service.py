@@ -1,4 +1,5 @@
 from time import perf_counter
+from statistics import median
 
 from app.services.event_service import build_event_detail
 from app.services.cache_service import (
@@ -128,4 +129,16 @@ def run_cache_benchmark(
 
         "with_cache_min_ms":
             round(min(cache_times), 3),
+
+        "without_cache_max_ms":
+            round(max(no_cache_times), 3),
+
+        "with_cache_max_ms":
+            round(max(cache_times), 3),
+
+        "without_cache_median_ms":
+            round(median(no_cache_times), 3),
+
+        "with_cache_median_ms":
+            round(median(cache_times), 3),
     }
