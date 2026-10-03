@@ -1,9 +1,14 @@
 from pathlib import Path
 from time import perf_counter
-from app.services.cache_service import get_ttl_remaining
 from app.services.analytics_service import get_event_inventory
 from fastapi.responses import RedirectResponse
 from datetime import datetime
+
+from app.services.cache_service import (
+    get_ttl_remaining,
+    is_event_cache_enabled,
+    set_event_cache_enabled,
+)
 
 
 from fastapi import (
@@ -174,15 +179,52 @@ def website_admin_dashboard(
         request
     )
 
-
+    cache_enabled = is_event_cache_enabled()
     return templates.TemplateResponse(
         request=request,
         name="admin.html",
         context={
             **dashboard,
-            "csrf_token": csrf_token
+            "csrf_token": csrf_token,
+            "cache_enabled": cache_enabled,
         }
     )
+
+
+# ============================================================
+# ADMIN - TOGGLE EVENT CACHE
+# ============================================================
+
+@router.post("/site/admin/cache/toggle")
+def website_admin_toggle_cache(
+    request: Request,
+    csrf_token: str = Form(...),
+):
+    if request.session.get("role") != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Administrator access required"
+        )
+
+    if csrf_token != get_csrf_token(request):
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid CSRF token"
+        )
+
+    currently_enabled = is_event_cache_enabled()
+
+    set_event_cache_enabled(
+        not currently_enabled
+    )
+
+    return RedirectResponse(
+        url="/site/admin",
+        status_code=303
+    )
+
+
+
 
 # ============================================================
 # ADMIN - CREATE EVENT FORM
