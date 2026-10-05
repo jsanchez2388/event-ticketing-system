@@ -1,984 +1,659 @@
-{% extends "base.html" %}
-
-
-{% block title %}
-{{ event.title }} | EventHub
-{% endblock %}
-
-
-{% block content %}
-
+{% extends "base.html" %} {% block title %} {{ event.title }} | EventHub {%
+endblock %} {% block content %}
 
 <section class="detail-hero">
+  <div class="container">
+    <a class="back-link" href="/site"> ← All Events </a>
 
-    <div class="container">
+    <div class="detail-type">{{ event.event_type|capitalize }}</div>
 
-        <a
-            class="back-link"
-            href="/site"
-        >
-            ← All Events
-        </a>
+    <h1>{{ event.title }}</h1>
 
+    {% if categories %}
 
-        <div class="detail-type">
-            {{ event.event_type|capitalize }}
+    <div class="category-list">
+      {% for category in categories %}
+
+      <span class="category"> {{ category }} </span>
+
+      {% endfor %}
+    </div>
+
+    {% endif %}
+  </div>
+</section>
+
+<section class="detail-section">
+  <div class="container detail-layout">
+    <!-- LEFT SIDE -->
+
+    <div class="detail-main">
+      <!-- EVENT INFORMATION -->
+
+      <section class="info-panel">
+        <h2>Event Details</h2>
+
+        <div class="detail-row">
+          <span> Date </span>
+
+          <strong>
+            {{ event.start_datetime.strftime( "%A, %B %d, %Y" ) }}
+          </strong>
         </div>
 
+        <div class="detail-row">
+          <span> Time </span>
 
-        <h1>
-            {{ event.title }}
-        </h1>
+          <strong> {{ event.start_datetime.strftime( "%I:%M %p" ) }} </strong>
+        </div>
 
+        <div class="detail-row">
+          <span> Venue </span>
 
-        {% if categories %}
+          <strong> {{ event.venue_name }} </strong>
+        </div>
 
-        <div class="category-list">
+        <div class="detail-row">
+          <span> Location </span>
 
-            {% for category in categories %}
+          <strong> {{ event.city }}, {{ event.state }} </strong>
+        </div>
 
-            <span class="category">
-                {{ category }}
-            </span>
+        <div class="detail-row">
+          <span> Status </span>
+
+          <strong> {{ event.status|capitalize }} </strong>
+        </div>
+      </section>
+
+      <!-- MONGODB EVENT CONTENT -->
+
+      <section class="info-panel mongo-content-panel">
+        <h2>About This Event</h2>
+
+        <!-- TAGS -->
+
+        {% if event.tags %}
+
+        <div class="mongo-content-group">
+          <h3>Tags</h3>
+
+          <div class="event-tags">
+            {% for tag in event.tags %}
+
+            <span class="event-tag"> {{ tag }} </span>
 
             {% endfor %}
-
+          </div>
         </div>
 
         {% endif %}
 
-    </div>
+        <!-- CONCERT: PERFORMERS -->
 
-</section>
+        {% if event.performers %}
 
+        <div class="mongo-content-group">
+          <h3>Performers</h3>
 
-
-<section class="detail-section">
-
-    <div class="container detail-layout">
-
-
-        <!-- LEFT SIDE -->
-
-        <div class="detail-main">
-
-
-            <!-- EVENT INFORMATION -->
-
-            <section class="info-panel">
-
-                <h2>
-                    Event Details
-                </h2>
-
-
-                <div class="detail-row">
-
-                    <span>
-                        Date
-                    </span>
-
-                    <strong>
-                        {{ event.start_datetime.strftime(
-                            "%A, %B %d, %Y"
-                        ) }}
-                    </strong>
-
-                </div>
-
-
-                <div class="detail-row">
-
-                    <span>
-                        Time
-                    </span>
-
-                    <strong>
-                        {{ event.start_datetime.strftime(
-                            "%I:%M %p"
-                        ) }}
-                    </strong>
-
-                </div>
-
-
-                <div class="detail-row">
-
-                    <span>
-                        Venue
-                    </span>
-
-                    <strong>
-                        {{ event.venue_name }}
-                    </strong>
-
-                </div>
-
-
-                <div class="detail-row">
-
-                    <span>
-                        Location
-                    </span>
-
-                    <strong>
-                        {{ event.city }},
-                        {{ event.state }}
-                    </strong>
-
-                </div>
-
-
-                <div class="detail-row">
-
-                    <span>
-                        Status
-                    </span>
-
-                    <strong>
-                        {{ event.status|capitalize }}
-                    </strong>
-
-                </div>
-
-            </section>
-
-
-            <!-- MONGODB EVENT CONTENT -->
-
-            <section class="info-panel mongo-content-panel">
-
-                <h2>
-                    About This Event
-                </h2>
-
-
-                <!-- TAGS -->
-
-                {% if event.tags %}
-
-                <div class="mongo-content-group">
-
-                    <h3>
-                        Tags
-                    </h3>
-
-                    <div class="event-tags">
-
-                        {% for tag in event.tags %}
-
-                        <span class="event-tag">
-                            {{ tag }}
-                        </span>
-
-                        {% endfor %}
-
-                    </div>
-
-                </div>
-
-                {% endif %}
-
-
-                <!-- CONCERT: PERFORMERS -->
-
-                {% if event.performers %}
-
-                <div class="mongo-content-group">
-
-                    <h3>
-                        Performers
-                    </h3>
-
-                    <p>
-                        {{ event.performers | join(", ") }}
-                    </p>
-
-                </div>
-
-                {% endif %}
-
-
-                <!-- CONCERT: GENRES -->
-
-                {% if event.genres %}
-
-                <div class="mongo-content-group">
-
-                    <h3>
-                        Genres
-                    </h3>
-
-                    <p>
-                        {{ event.genres | join(", ") }}
-                    </p>
-
-                </div>
-
-                {% endif %}
-
-
-                <!-- CONCERT: AGE RESTRICTION -->
-
-                {% if event.ageRestriction %}
-
-                <div class="mongo-content-group">
-
-                    <h3>
-                        Age Restriction
-                    </h3>
-
-                    <p>
-                        {{ event.ageRestriction }}
-                    </p>
-
-                </div>
-
-                {% endif %}
-
-
-                <!-- CONCERT: VIP PACKAGES -->
-
-                {% if event.vip_packages %}
-
-                <div class="mongo-content-group">
-
-                    <h3>VIP Packages</h3>
-
-                    <ul>
-                        {% for package in event.vip_packages %}
-                        <li>{{ package }}</li>
-                        {% endfor %}
-                    </ul>
-
-                </div>
-
-                {% endif %}
-
-
-                <!-- CONFERENCE: SPEAKERS -->
-
-                {% if event.speakers %}
-
-                <div class="mongo-content-group">
-
-                    <h3>
-                        Speakers
-                    </h3>
-
-                    <ul>
-
-                        {% for speaker in event.speakers %}
-
-                        <li>
-
-                            <strong>
-                                {{ speaker.name }}
-                            </strong>
-
-                            {% if speaker.organization %}
-                            — {{ speaker.organization }}
-                            {% endif %}
-
-                            {% if speaker.topics %}
-                            — {{ speaker.topics | join(", ") }}
-                            {% endif %}
-
-                        </li>
-
-                        {% endfor %}
-
-                    </ul>
-
-                </div>
-
-                {% endif %}
-
-                <!-- SPORTS: TEAMS -->
-
-                {% if event.teams %}
-
-                <div class="mongo-content-group">
-
-                    <h3>
-                        Teams
-                    </h3>
-
-                    <p>
-                        {% if event.teams.away %}
-                            {{ event.teams.away }}
-                        {% endif %}
-
-                        {% if event.teams.away and event.teams.home %}
-                            at
-                        {% endif %}
-
-                        {% if event.teams.home %}
-                            {{ event.teams.home }}
-                        {% endif %}
-                    </p>
-
-                </div>
-
-                {% endif %}
-
-                
-                <!-- SPORTS: PROMOTIONS -->
-
-                {% if event.promotions %}
-
-                <div class="mongo-content-group">
-
-                    <h3>
-                        Promotions
-                    </h3>
-
-                    <ul>
-
-                        {% for promotion in event.promotions %}
-
-                        <li>
-                            {{ promotion }}
-                        </li>
-
-                        {% endfor %}
-
-                    </ul>
-
-                </div>
-
-                {% endif %}
-
-
-                <!-- SPORTS: STADIUM RULES -->
-
-                {% if event.stadium_rules %}
-
-                <div class="mongo-content-group">
-
-                    <h3>
-                        Stadium Rules
-                    </h3>
-
-                    <ul>
-
-                        <li>
-                            <strong>Tailgating:</strong>
-                            {{ "Allowed" if event.stadium_rules.tailgateAllowed else "Not Allowed" }}
-                        </li>
-
-                        <li>
-                            <strong>Clear Bag Policy:</strong>
-                            {{ "Yes" if event.stadium_rules.clearBagPolicy else "No" }}
-                        </li>
-
-                    </ul>
-
-                </div>
-
-                {% endif %}
-
-
-                <!-- UNIVERSITY: DEPARTMENT -->
-
-                {% if event.department %}
-
-                <div class="mongo-content-group">
-
-                    <h3>
-                        Department
-                    </h3>
-
-                    <p>
-                        {{ event.department }}
-                    </p>
-
-                </div>
-
-                {% endif %}
-
-
-                <!-- UNIVERSITY: TARGET AUDIENCE -->
-
-                {% if event.targetAudience %}
-
-                <div class="mongo-content-group">
-
-                    <h3>
-                        Target Audience
-                    </h3>
-
-                    <p>
-                        {{ event.targetAudience | join(", ") }}
-                    </p>
-
-                </div>
-
-                {% endif %}
-
-
-                <!-- WORKSHOP: INSTRUCTOR -->
-
-                {% if event.instructor %}
-
-                <div class="mongo-content-group">
-
-                    <h3>
-                        Instructor
-                    </h3>
-
-                    <p>
-                        {{ event.instructor }}
-                    </p>
-
-                </div>
-
-                {% endif %}
-
-
-                <!-- WORKSHOP: SKILL LEVEL -->
-
-                {% if event.skillLevel %}
-
-                <div class="mongo-content-group">
-
-                    <h3>
-                        Skill Level
-                    </h3>
-
-                    <p>
-                        {{ event.skillLevel }}
-                    </p>
-
-                </div>
-
-                {% endif %}
-
-
-                <!-- WORKSHOP: MATERIALS -->
-
-                {% if event.materialsProvided %}
-
-                <div class="mongo-content-group">
-
-                    <h3>
-                        Materials Provided
-                    </h3>
-
-                    <ul>
-
-                        {% for material in event.materialsProvided %}
-
-                        <li>
-                            {{ material }}
-                        </li>
-
-                        {% endfor %}
-
-                    </ul>
-
-                </div>
-
-                {% endif %}
-
-
-                <!-- WORKSHOP: TOPICS -->
-
-                {% if event.topics %}
-
-                <div class="mongo-content-group">
-
-                    <h3>
-                        Topics
-                    </h3>
-
-                    <p>
-                        {{ event.topics | join(", ") }}
-                    </p>
-
-                </div>
-
-                {% endif %}
-
-
-                <!-- COMMUNITY: KID FRIENDLY -->
-
-                {% if event.kidFriendly is defined %}
-
-                <div class="mongo-content-group">
-
-                    <h3>
-                        Kid Friendly
-                    </h3>
-
-                    <p>
-                        {{ "Yes" if event.kidFriendly else "No" }}
-                    </p>
-
-                </div>
-
-                {% endif %}
-
-
-                <!-- COMMUNITY: ACCESSIBILITY -->
-
-                {% if event.accessibility %}
-
-                <div class="mongo-content-group">
-
-                    <h3>
-                        Accessibility
-                    </h3>
-
-                    <p>
-                        {{ event.accessibility }}
-                    </p>
-
-                </div>
-
-                {% endif %}
-
-
-                <!-- AGENDA -->
-
-                {% if event.agenda %}
-
-                <div class="mongo-content-group">
-
-                    <h3>
-                        Agenda
-                    </h3>
-
-                    <ul>
-
-                        {% for item in event.agenda %}
-
-                        <li>
-
-                            {% if item.time %}
-                            <strong>
-                                {{ item.time }}
-                            </strong>
-                            {% endif %}
-
-                            {% if item.title %}
-                            — {{ item.title }}
-                            {% endif %}
-
-                            {% if item.activity %}
-                            — {{ item.activity }}
-                            {% endif %}
-
-                        </li>
-
-                        {% endfor %}
-
-                    </ul>
-
-                </div>
-
-                {% endif %}
-
-
-                <!-- SCHEDULE -->
-
-                {% if event.schedule %}
-
-                <div class="mongo-content-group">
-
-                    <h3>
-                        Schedule
-                    </h3>
-
-                    <ul>
-
-                        {% for item in event.schedule %}
-
-                        <li>
-
-                            {% if item.time %}
-                            <strong>
-                                {{ item.time }}
-                            </strong>
-                            {% endif %}
-
-                            {% if item.title %}
-                            — {{ item.title }}
-                            {% endif %}
-
-                            {% if item.activity %}
-                            — {{ item.activity }}
-                            {% endif %}
-
-                            {% if item.session %}
-                            — {{ item.session }}
-                            {% endif %}
-
-                            {% if item.room %}
-                            — {{ item.room }}
-                            {% endif %}
-
-                        </li>
-
-                        {% endfor %}
-
-                    </ul>
-
-                </div>
-
-                {% endif %}
-
-
-            </section>
-
-
-            <!-- TICKETS -->
-
-            <section class="ticket-panel">
-
-                <h2>
-                    Tickets
-                </h2>
-
-
-                {% if ticket_types %}
-
-
-                    {% for ticket in ticket_types %}
-
-
-                    <div class="ticket-row">
-
-
-                        <!-- TICKET INFO -->
-
-                        <div>
-
-                            <h3>
-                                {{ ticket.ticket_name }}
-                            </h3>
-
-
-                            <p>
-                                {{ ticket.available_quantity }}
-                                remaining
-                            </p>
-
-
-                            {% if ticket.minimum_purchase %}
-
-                            <p>
-                                Minimum:
-                                {{ ticket.minimum_purchase }}
-                            </p>
-
-                            {% endif %}
-
-
-                            {% if ticket.maximum_purchase %}
-
-                            <p>
-                                Maximum:
-                                {{ ticket.maximum_purchase }}
-                                per purchase
-                            </p>
-
-                            {% endif %}
-
-                        </div>
-
-
-
-                        <!-- PRICE -->
-
-                        <div class="ticket-price">
-
-                            {% if ticket.price == 0 %}
-
-                                Free
-
-                            {% else %}
-
-                                ${{ "%.2f"|format(ticket.price) }}
-
-                            {% endif %}
-
-                        </div>
-
-
-
-                        <!-- PURCHASE AREA -->
-
-                        {% if ticket.available_quantity > 0 %}
-
-
-                            {% if request.session.get("user_id") %}
-
-
-                            <form
-                                method="POST"
-                                action="/site/buy/{{ ticket.ticket_type_id }}"
-                                style="
-                                    display: flex;
-                                    gap: 8px;
-                                    align-items: center;
-                                "
-                            >
-
-
-                                <!-- CSRF PROTECTION -->
-
-                                <input
-                                    type="hidden"
-                                    name="csrf_token"
-                                    value="{{ csrf_token }}"
-                                >
-
-
-                                <!-- QUANTITY -->
-
-                                <input
-                                    type="number"
-                                    name="quantity"
-                                    value="{{ ticket.minimum_purchase or 1 }}"
-                                    min="{{ ticket.minimum_purchase or 1 }}"
-
-                                    {% if ticket.maximum_purchase %}
-                                    max="{{ ticket.maximum_purchase }}"
-                                    {% endif %}
-
-                                    style="
-                                        width: 70px;
-                                        padding: 10px;
-                                        border: 1px solid #d5d8de;
-                                        border-radius: 8px;
-                                    "
-
-                                    required
-                                >
-
-
-                                <!-- BUY BUTTON -->
-
-                                <button
-                                    class="button"
-                                    type="submit"
-                                >
-                                    Buy
-                                </button>
-
-
-                            </form>
-
-
-                            {% else %}
-
-
-                            <!-- NOT LOGGED IN -->
-
-                            <a
-                                href="/site/login"
-                                class="button"
-                            >
-                                Login to Buy
-                            </a>
-
-
-                            {% endif %}
-
-
-                        {% else %}
-
-
-                        <!-- SOLD OUT -->
-
-                        <span
-                            style="
-                                font-weight: 700;
-                                color: #9b1c1c;
-                            "
-                        >
-                            Sold Out
-                        </span>
-
-
-                        {% endif %}
-
-
-                    </div>
-
-
-                    {% endfor %}
-
-
-                {% else %}
-
-
-                <p>
-                    No tickets are currently available.
-                </p>
-
-
-                {% endif %}
-
-
-            </section>
-
-
+          <p>{{ event.performers | join(", ") }}</p>
         </div>
 
+        {% endif %}
 
+        <!-- CONCERT: GENRES -->
 
-        <!-- RIGHT SIDE -->
-        <div class="detail-sidebar">
-            <aside class="summary-card">
+        {% if event.genres %}
 
+        <div class="mongo-content-group">
+          <h3>Genres</h3>
 
-                <p class="small-label">
-                    Event
-                </p>
-
-
-                <h2>
-                    {{ event.title }}
-                </h2>
-
-
-                <p>
-                    {{ event.venue_name }}
-                </p>
-
-
-                <p>
-                    {{ event.start_datetime.strftime(
-                        "%B %d, %Y"
-                    ) }}
-                </p>
-
-
-                <p>
-                    {{ event.start_datetime.strftime(
-                        "%I:%M %p"
-                    ) }}
-                </p>
-
-
-                {% if request.session.get("user_id") %}
-
-
-                <a
-                    href="/site/account"
-                    class="button button-full"
-                >
-                    My Account
-                </a>
-
-
-                {% else %}
-
-
-                <a
-                    href="/site/login"
-                    class="button button-full"
-                >
-                    Sign In to Purchase
-                </a>
-
-
-                {% endif %}
-
-            </aside>
-
-            <aside class="redis-demo-card">
-
-                <p class="small-label">
-
-                    Redis Cache Demo
-
-                </p>
-
-                <div class="redis-demo-row">
-
-                    <span>Cache Status</span>
-
-                    <strong>
-
-                        {% if event.cache_hit %}
-
-                            HIT
-
-                        {% else %}
-
-                            MISS
-
-                        {% endif %}
-
-                    </strong>
-
-                </div>
-
-                <div class="redis-demo-row">
-
-                    <span>Redis Key</span>
-
-                    <strong>event:{{ event.event_id }}</strong>
-
-                </div>
-
-                <div class="redis-demo-row">
-
-                    <span>TTL Remaining</span>
-
-                    <strong>{{ ttl_remaining }} seconds</strong>
-
-                </div>
-
-                <div class="redis-demo-row">
-
-                    <span>Request Time</span>
-
-                    <strong>{{ "%.2f"|format(request_time_ms) }} ms</strong>
-
-                </div>
-
-                <div class="redis-demo-row">
-
-                    <span>Popularity</span>
-
-                    <strong>{{ event.popularity_score|int }} views</strong>
-
-                </div>
-
-                <div class="redis-demo-row">
-
-                    <span>Data Source</span>
-
-                    <strong>
-
-                        {% if event.cache_hit %}
-
-                            Redis Cache
-
-                        {% else %}
-
-                            PostgreSQL + MongoDB
-
-                        {% endif %}
-
-                    </strong>
-
-                </div>
-
-            </aside>
-
+          <p>{{ event.genres | join(", ") }}</p>
         </div>
 
+        {% endif %}
 
+        <!-- CONCERT: AGE RESTRICTION -->
 
+        {% if event.ageRestriction %}
 
+        <div class="mongo-content-group">
+          <h3>Age Restriction</h3>
+
+          <p>{{ event.ageRestriction }}</p>
+        </div>
+
+        {% endif %}
+
+        <!-- CONCERT: VIP PACKAGES -->
+
+        {% if event.vip_packages %}
+
+        <div class="mongo-content-group">
+          <h3>VIP Packages</h3>
+
+          <ul>
+            {% for package in event.vip_packages %}
+            <li>{{ package }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        {% endif %}
+
+        <!-- CONFERENCE: SPEAKERS -->
+
+        {% if event.speakers %}
+
+        <div class="mongo-content-group">
+          <h3>Speakers</h3>
+
+          <ul>
+            {% for speaker in event.speakers %}
+
+            <li>
+              <strong> {{ speaker.name }} </strong>
+
+              {% if speaker.organization %} — {{ speaker.organization }} {%
+              endif %} {% if speaker.topics %} — {{ speaker.topics | join(", ")
+              }} {% endif %}
+            </li>
+
+            {% endfor %}
+          </ul>
+        </div>
+
+        {% endif %}
+
+        <!-- SPORTS: TEAMS -->
+
+        {% if event.teams %}
+
+        <div class="mongo-content-group">
+          <h3>Teams</h3>
+
+          <p>
+            {% if event.teams.away %} {{ event.teams.away }} {% endif %} {% if
+            event.teams.away and event.teams.home %} at {% endif %} {% if
+            event.teams.home %} {{ event.teams.home }} {% endif %}
+          </p>
+        </div>
+
+        {% endif %}
+
+        <!-- SPORTS: PROMOTIONS -->
+
+        {% if event.promotions %}
+
+        <div class="mongo-content-group">
+          <h3>Promotions</h3>
+
+          <ul>
+            {% for promotion in event.promotions %}
+
+            <li>{{ promotion }}</li>
+
+            {% endfor %}
+          </ul>
+        </div>
+
+        {% endif %}
+
+        <!-- SPORTS: STADIUM RULES -->
+
+        {% if event.stadium_rules %}
+
+        <div class="mongo-content-group">
+          <h3>Stadium Rules</h3>
+
+          <ul>
+            <li>
+              <strong>Tailgating:</strong>
+              {{ "Allowed" if event.stadium_rules.tailgateAllowed else "Not
+              Allowed" }}
+            </li>
+
+            <li>
+              <strong>Clear Bag Policy:</strong>
+              {{ "Yes" if event.stadium_rules.clearBagPolicy else "No" }}
+            </li>
+          </ul>
+        </div>
+
+        {% endif %}
+
+        <!-- UNIVERSITY: DEPARTMENT -->
+
+        {% if event.department %}
+
+        <div class="mongo-content-group">
+          <h3>Department</h3>
+
+          <p>{{ event.department }}</p>
+        </div>
+
+        {% endif %}
+
+        <!-- UNIVERSITY: TARGET AUDIENCE -->
+
+        {% if event.targetAudience %}
+
+        <div class="mongo-content-group">
+          <h3>Target Audience</h3>
+
+          <p>{{ event.targetAudience | join(", ") }}</p>
+        </div>
+
+        {% endif %}
+
+        <!-- WORKSHOP: INSTRUCTOR -->
+
+        {% if event.instructor %}
+
+        <div class="mongo-content-group">
+          <h3>Instructor</h3>
+
+          <p>{{ event.instructor }}</p>
+        </div>
+
+        {% endif %}
+
+        <!-- WORKSHOP: SKILL LEVEL -->
+
+        {% if event.skillLevel %}
+
+        <div class="mongo-content-group">
+          <h3>Skill Level</h3>
+
+          <p>{{ event.skillLevel }}</p>
+        </div>
+
+        {% endif %}
+
+        <!-- WORKSHOP: MATERIALS -->
+
+        {% if event.materialsProvided %}
+
+        <div class="mongo-content-group">
+          <h3>Materials Provided</h3>
+
+          <ul>
+            {% for material in event.materialsProvided %}
+
+            <li>{{ material }}</li>
+
+            {% endfor %}
+          </ul>
+        </div>
+
+        {% endif %}
+
+        <!-- WORKSHOP: TOPICS -->
+
+        {% if event.topics %}
+
+        <div class="mongo-content-group">
+          <h3>Topics</h3>
+
+          <p>{{ event.topics | join(", ") }}</p>
+        </div>
+
+        {% endif %}
+
+        <!-- COMMUNITY: KID FRIENDLY -->
+
+        {% if event.kidFriendly is defined %}
+
+        <div class="mongo-content-group">
+          <h3>Kid Friendly</h3>
+
+          <p>{{ "Yes" if event.kidFriendly else "No" }}</p>
+        </div>
+
+        {% endif %}
+
+        <!-- COMMUNITY: ACCESSIBILITY -->
+
+        {% if event.accessibility %}
+
+        <div class="mongo-content-group">
+          <h3>Accessibility</h3>
+
+          <p>{{ event.accessibility }}</p>
+        </div>
+
+        {% endif %}
+
+        <!-- AGENDA -->
+
+        {% if event.agenda %}
+
+        <div class="mongo-content-group">
+          <h3>Agenda</h3>
+
+          <ul>
+            {% for item in event.agenda %}
+
+            <li>
+              {% if item.time %}
+              <strong> {{ item.time }} </strong>
+              {% endif %} {% if item.title %} — {{ item.title }} {% endif %} {%
+              if item.activity %} — {{ item.activity }} {% endif %}
+            </li>
+
+            {% endfor %}
+          </ul>
+        </div>
+
+        {% endif %}
+
+        <!-- SCHEDULE -->
+
+        {% if event.schedule %}
+
+        <div class="mongo-content-group">
+          <h3>Schedule</h3>
+
+          <ul>
+            {% for item in event.schedule %}
+
+            <li>
+              {% if item.time %}
+              <strong> {{ item.time }} </strong>
+              {% endif %} {% if item.title %} — {{ item.title }} {% endif %} {%
+              if item.activity %} — {{ item.activity }} {% endif %} {% if
+              item.session %} — {{ item.session }} {% endif %} {% if item.room
+              %} — {{ item.room }} {% endif %}
+            </li>
+
+            {% endfor %}
+          </ul>
+        </div>
+
+        {% endif %}
+      </section>
+
+      <!-- TICKETS -->
+
+      <section class="ticket-panel">
+        <h2>Tickets</h2>
+
+        {% if ticket_types %} {% for ticket in ticket_types %}
+
+        <div class="ticket-row">
+          <!-- TICKET INFO -->
+
+          <div>
+            <h3>{{ ticket.ticket_name }}</h3>
+
+            <p>{{ ticket.available_quantity }} remaining</p>
+
+            {% if ticket.minimum_purchase %}
+
+            <p>Minimum: {{ ticket.minimum_purchase }}</p>
+
+            {% endif %} {% if ticket.maximum_purchase %}
+
+            <p>Maximum: {{ ticket.maximum_purchase }} per purchase</p>
+
+            {% endif %}
+          </div>
+
+          <!-- PRICE -->
+
+          <div class="ticket-price">
+            {% if ticket.price == 0 %} Free {% else %} ${{
+            "%.2f"|format(ticket.price) }} {% endif %}
+          </div>
+
+          <!-- PURCHASE AREA -->
+
+          {% if ticket.available_quantity > 0 %} {% if
+          request.session.get("user_id") %}
+
+          <form
+            method="POST"
+            action="/site/buy/{{ ticket.ticket_type_id }}"
+            style="display: flex; gap: 8px; align-items: center"
+          >
+            <!-- CSRF PROTECTION -->
+
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+
+            <!-- QUANTITY -->
+
+            <input
+              type="number"
+              name="quantity"
+              value="{{ ticket.minimum_purchase or 1 }}"
+              min="{{ ticket.minimum_purchase or 1 }}"
+              {%
+              if
+              ticket.maximum_purchase
+              %}
+              max="{{ ticket.maximum_purchase }}"
+              {%
+              endif
+              %}
+              style="
+                width: 70px;
+                padding: 10px;
+                border: 1px solid #d5d8de;
+                border-radius: 8px;
+              "
+              required
+            />
+
+            <!-- BUY BUTTON -->
+
+            <button class="button" type="submit">Buy</button>
+          </form>
+
+          {% else %}
+
+          <!-- NOT LOGGED IN -->
+
+          <a href="/site/login" class="button"> Login to Buy </a>
+
+          {% endif %} {% else %}
+
+          <!-- SOLD OUT -->
+
+          <span style="font-weight: 700; color: #9b1c1c"> Sold Out </span>
+
+          {% endif %}
+        </div>
+
+        {% endfor %} {% else %}
+
+        <p>No tickets are currently available.</p>
+
+        {% endif %}
+      </section>
+
+      <!-- REVIEWS -->
+
+      <section class="info-panel review-panel">
+        <div class="review-header">
+          <h2>Reviews</h2>
+
+          {% if average_rating is not none %}
+
+          <div class="review-summary">
+            <strong> {{ "%.1f"|format(average_rating) }} / 5 </strong>
+
+            <span>
+              {{ review_count }} review{% if review_count != 1 %}s{% endif %}
+            </span>
+          </div>
+
+          {% endif %}
+        </div>
+
+        <!-- REVIEW FORM -->
+
+        {% if request.session.get("user_id") %}
+
+        <div class="review-form-section">
+          <h3>Leave a Review</h3>
+
+          <form
+            method="POST"
+            action="/site/events/{{ event.event_id }}/reviews"
+            class="review-form"
+          >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+
+            <div class="review-form-field">
+              <label for="rating"> Rating </label>
+
+              <select id="rating" name="rating" required>
+                <option value="">Select a rating</option>
+                <option value="5">5 - Excellent</option>
+                <option value="4">4 - Very Good</option>
+                <option value="3">3 - Good</option>
+                <option value="2">2 - Fair</option>
+                <option value="1">1 - Poor</option>
+              </select>
+            </div>
+
+            <div class="review-form-field">
+              <label for="comment"> Review </label>
+
+              <textarea
+                id="comment"
+                name="comment"
+                rows="4"
+                maxlength="1000"
+                placeholder="Share your experience..."
+                required
+              ></textarea>
+            </div>
+
+            <button type="submit" class="button">Submit Review</button>
+          </form>
+        </div>
+
+        {% else %}
+
+        <div class="review-login-message">
+          <p>
+            Want to leave a review?
+            <a href="/site/login">Log in</a>
+            to share your experience.
+          </p>
+        </div>
+
+        {% endif %}
+
+        <!-- REVIEW LIST -->
+        {% if reviews %}
+
+        <div class="review-list">
+          {% for review in reviews %}
+
+          <article class="review-card">
+            <div class="review-card-header">
+              <strong> {{ review.reviewer_name }} </strong>
+
+              <span class="review-rating"> {{ review.rating }} / 5 </span>
+            </div>
+
+            <p>{{ review.comment }}</p>
+
+            {% if review.createdAt %}
+
+            <span class="review-date">
+              {% if review.createdAt is string %} {{ review.createdAt[:10] }} {%
+              else %} {{ review.createdAt.strftime("%B %d, %Y") }} {% endif %}
+            </span>
+
+            {% endif %}
+          </article>
+
+          {% endfor %}
+        </div>
+
+        {% else %}
+
+        <p>No reviews yet. Be the first to review this event.</p>
+
+        {% endif %}
+      </section>
     </div>
 
-</section>
+    <!-- RIGHT SIDE -->
+    <div class="detail-sidebar">
+      <aside class="summary-card">
+        <p class="small-label">Event</p>
 
+        <h2>{{ event.title }}</h2>
+
+        <p>{{ event.venue_name }}</p>
+
+        <p>{{ event.start_datetime.strftime( "%B %d, %Y" ) }}</p>
+
+        <p>{{ event.start_datetime.strftime( "%I:%M %p" ) }}</p>
+
+        {% if request.session.get("user_id") %}
+
+        <a href="/site/account" class="button button-full"> My Account </a>
+
+        {% else %}
+
+        <a href="/site/login" class="button button-full">
+          Sign In to Purchase
+        </a>
+
+        {% endif %}
+      </aside>
+
+      <aside class="redis-demo-card">
+        <p class="small-label">Redis Cache Demo</p>
+
+        <div class="redis-demo-row">
+          <span>Cache Status</span>
+
+          <strong>
+            {% if event.cache_hit %} HIT {% else %} MISS {% endif %}
+          </strong>
+        </div>
+
+        <div class="redis-demo-row">
+          <span>Redis Key</span>
+
+          <strong>event:{{ event.event_id }}</strong>
+        </div>
+
+        <div class="redis-demo-row">
+          <span>TTL Remaining</span>
+
+          <strong>{{ ttl_remaining }} seconds</strong>
+        </div>
+
+        <div class="redis-demo-row">
+          <span>Request Time</span>
+
+          <strong>{{ "%.2f"|format(request_time_ms) }} ms</strong>
+        </div>
+
+        <div class="redis-demo-row">
+          <span>Popularity</span>
+
+          <strong>{{ event.popularity_score|int }} views</strong>
+        </div>
+
+        <div class="redis-demo-row">
+          <span>Data Source</span>
+
+          <strong>
+            {% if event.cache_hit %} Redis Cache {% else %} PostgreSQL + MongoDB
+            {% endif %}
+          </strong>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
 
 {% endblock %}

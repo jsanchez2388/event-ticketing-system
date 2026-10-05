@@ -5,19 +5,24 @@ from app.services.cache_service import get_ttl_remaining
 
 from fastapi import (
     APIRouter,
+    Form,
     HTTPException,
     Request
 )
+from fastapi.responses import RedirectResponse
 
 from fastapi.templating import Jinja2Templates
 
-from app.security import get_csrf_token
+from app.security import get_csrf_token, validate_csrf_token
 
 from app.services.web_service import (
     get_event_cards,
     get_event_page_details,
     get_trending_event_cards
 )
+
+from app.models.event_content import ReviewCreate
+from app.services.content_service import add_review
 
 
 router = APIRouter(
@@ -118,6 +123,62 @@ def website_event_details(
             "request_time_ms": request_time_ms,
             "ttl_remaining": ttl_remaining
         }
+    )
+
+
+
+# ============================================================
+# SUBMIT EVENT REVIEW
+
+@router.post("/site/events/{event_id}/reviews")
+def website_submit_review(
+    request: Request,
+    event_id: int,
+    rating: int = Form(...),
+    comment: str = Form(...),
+    csrf_token: str = Form(...)
+):
+    user_id = request.session.get("user_id")
+
+    if user_id is None:
+        raise HTTPException(
+            status_code=401,
+            detail="You must be logged in to leave a review"
+        )
+
+    validate_csrf_token(
+        request,
+        csrf_token
+    )
+
+    if rating < 1 or rating > 5:
+        raise HTTPException(
+            status_code=400,
+            detail="Rating must be between 1 and 5"
+        )
+
+    comment = comment.strip()
+
+    if not comment:
+        raise HTTPException(
+            status_code=400,
+            detail="Review comment cannot be empty"
+        )
+
+    review = ReviewCreate(
+        userId=user_id,
+        rating=rating,
+        comment=comment
+    )
+
+    add_review(
+        event_id,
+        review
+    )
+
+    return RedirectResponse(
+        url=f"/site/events/{event_id}",
+        status_code=303
     )
 
 
