@@ -1,3 +1,4 @@
+from annotated_doc import main
 from app.services.cache_benchmark_service import run_cache_benchmark
 from pathlib import Path
 from time import perf_counter
@@ -145,7 +146,6 @@ def website_event_details(
 # ============================================================
 
 @router.get("/mongo")
-@router.get("/site/mongo-demo")
 def website_mongo_demo(request: Request):
     csrf_token = get_csrf_token(request)
 
@@ -156,6 +156,23 @@ def website_mongo_demo(request: Request):
             "csrf_token": csrf_token
         }
     )
+
+# ============================================================
+# POSTGRES QUERIES DEMO
+# ============================================================
+
+@router.get("/postgres")
+def website_postgres_demo(request: Request):
+    csrf_token = get_csrf_token(request)
+
+    return templates.TemplateResponse(
+        request=request,
+        name="postgres_demo.html",
+        context={
+            "csrf_token": csrf_token
+        }
+    )
+
 # ============================================================
 # ADMIN DASHBOARD
 # ============================================================
