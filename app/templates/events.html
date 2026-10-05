@@ -194,6 +194,23 @@ Events | EventHub
 
                 </div>
 
+                
+                {% if event.tags %}
+
+                <div class="event-tags">
+
+                    {% for tag in event.tags %}
+
+                    <span class="event-tag">
+                        {{ tag }}
+                    </span>
+
+                    {% endfor %}
+
+                </div>
+
+                {% endif %}
+
 
 
                 <div class="event-card-bottom">

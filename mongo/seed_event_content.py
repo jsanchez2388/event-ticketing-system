@@ -171,6 +171,22 @@ SAMPLE_DOCUMENTS = [
             }
         ],
         "reviews": []
+    },
+    {
+        "eventId": 107,
+        "eventType": "Sporting Event",
+        "title": "Batman Vs Bane",
+        "tags": ["Fighting", "Superhero", "Live Sports"],
+        "teams": {
+            "home": "Batman",
+            "away": "Bane"
+        },
+        "promotions": ["Free Cape Giveaways"],
+        "stadium_rules": {
+            "weaponsAllowed": False,
+            "clearBagPolicy": True
+        },
+        "reviews": []
     }
 ]
 

@@ -1,6 +1,8 @@
 from app.database.postgres import get_connection
 from app.services.event_service import get_event_detail, get_events_by_ids
 from app.services.trending_service import get_top_trending
+from app.services.content_service import get_event_content_by_ids
+from app.services.user_service import get_users_by_ids
 
 
 def get_event_cards():
@@ -52,6 +54,17 @@ def get_event_cards():
 
         events = cursor.fetchall()
         cursor.close()
+
+        event_ids = [
+            event["event_id"]
+            for event in events
+        ]
+
+        mongo_content = get_event_content_by_ids(event_ids)
+
+        for event in events:
+            content = mongo_content.get(event["event_id"], {})
+            event["tags"] = content.get("tags", [])
 
         return events
 
@@ -157,12 +170,44 @@ def get_event_page_details(event_id: int):
             for row in category_rows
         ]
 
+        # Reviews are already included in the MongoDB event document
+        reviews = event.get("reviews", [])
+
+        reviewer_ids = list({
+            review["userId"]
+            for review in reviews
+            if review.get("userId") is not None
+        })
+
+        users_by_id = get_users_by_ids(reviewer_ids)
+
+        for review in reviews:
+            user = users_by_id.get(review.get("userId"))
+
+            if user is not None:
+                review["reviewer_name"] = (
+                    f'{user["first_name"]} {user["last_name"]}'
+                )
+            else:
+                review["reviewer_name"] = "Unknown User"
+
+        if reviews:
+            average_rating = sum(
+                review.get("rating", 0)
+                for review in reviews
+            ) / len(reviews)
+        else:
+            average_rating = None
+
         cursor.close()
 
         return {
-            "event": event,
-            "ticket_types": ticket_types,
-            "categories": categories
+        "event": event,
+        "ticket_types": ticket_types,
+        "categories": categories,
+        "reviews": reviews,
+        "average_rating": average_rating,
+        "review_count": len(reviews)
         }
 
     finally:

@@ -27,6 +27,39 @@ def get_event_content(event_id: int) -> dict | None:
 
     return document
 
+
+def get_event_content_by_ids(event_ids: list[int]) -> dict[int, dict]:
+    """
+    Return content documents for multiple events in a single MongoDB query.
+
+    Args:
+        event_ids (list[int]): The event IDs to retrieve content for.
+
+    Returns:
+        dict[int, dict]: Content documents keyed by event ID.
+    """
+    if not event_ids:
+        return {}
+
+    collection = get_event_content_collection()
+
+    documents = collection.find(
+        {
+            "eventId": {
+                "$in": event_ids
+            }
+        },
+        {
+            "_id": 0
+        }
+    )
+
+    return {
+        document["eventId"]: document
+        for document in documents
+    }
+
+
 def add_review(event_id: int, review: ReviewCreate) -> dict | None:
     """
     Add a review to the given event's content document.

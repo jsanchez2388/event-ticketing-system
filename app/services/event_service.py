@@ -3,7 +3,11 @@ from app.database.postgres import get_connection
 from app.services.content_service import get_event_content
 
 
-from app.services.cache_service import (get_cached_event, set_cached_event)
+from app.services.cache_service import (
+    get_cached_event,
+    set_cached_event,
+    is_event_cache_enabled,
+)
 from app.services.trending_service import (record_view, get_event_score)
 
 
@@ -185,7 +189,10 @@ def build_event_detail(event_id: int, conn=None):
 def get_event_detail(event_id: int, use_cache: bool = True):
     event_detail = None
     cache_hit = False
-
+    use_cache = (
+        use_cache
+        and is_event_cache_enabled()
+    )
     # Check the cache first
     if use_cache:
         event_detail = get_cached_event(event_id)
