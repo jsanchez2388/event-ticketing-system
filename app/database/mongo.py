@@ -60,6 +60,12 @@ def init_client() -> MongoClient:
 
 
 def get_client() -> MongoClient:
+    # Connect on first use so the standalone scripts under mongo/ keep working
+    # without an explicit init_client() call. The cooldown inside
+    # _try_reconnect stops a down cluster from being retried on every read.
+    if _client is None:
+        _try_reconnect()
+
     if _client is None:
         raise RuntimeError(
             "MongoDB client has not been initialized."

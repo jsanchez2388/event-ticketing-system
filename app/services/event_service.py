@@ -1,4 +1,5 @@
 
+from app.database import mongo as mongo_db
 from app.database.postgres import get_connection
 from app.services.content_service import get_event_content
 
@@ -207,7 +208,10 @@ def get_event_detail(event_id: int, use_cache: bool = True):
         if event_detail is None:
             return None
 
-        if use_cache:
+        # An event built while Mongo was unavailable is missing its content
+        # sections, so caching it would keep serving a stripped page for the
+        # whole TTL after Mongo comes back.
+        if use_cache and mongo_db.is_available():
             set_cached_event(event_id, event_detail)
 
     record_view(event_id)

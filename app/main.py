@@ -20,8 +20,15 @@ from app.routers.mongo_queries import router as mongo_queries_router
 # MongoDB and Redis connection lifecycle
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    mongo_db.init_client()
-    print("MongoDB initialized.")
+    try:
+        mongo_db.init_client()
+        print("MongoDB initialized.")
+
+    except Exception as exc:
+        # Mongo carries optional event content, not the system of record, so
+        # the app starts without it and reconnects on the first read that
+        # needs it.
+        print(f"MongoDB unavailable, continuing without event content: {exc}")
 
     redis_ready = False
 

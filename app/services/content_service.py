@@ -5,10 +5,11 @@
 #   (descriptions, speakers, schedules, performers, reviews).
 
 from datetime import datetime, timezone
-from app.database.mongo import get_event_content_collection
+from app.database.mongo import get_event_content_collection, optional
 from app.models.event_content import ReviewCreate
 from app.services.cache_service import invalidate_event
 
+@optional(fallback=None)
 def get_event_content(event_id: int) -> dict | None:
     """
     Return the content document for the given event, or None if not found.
@@ -28,6 +29,7 @@ def get_event_content(event_id: int) -> dict | None:
     return document
 
 
+@optional(fallback=dict)
 def get_event_content_by_ids(event_ids: list[int]) -> dict[int, dict]:
     """
     Return content documents for multiple events in a single MongoDB query.
@@ -222,6 +224,7 @@ def delete_event_content(event_id: int) -> bool:
 
     return False
 
+@optional(fallback=None)
 def get_average_rating(event_id: int) -> float | None:
     """
     Calculate the average rating for the given event.
