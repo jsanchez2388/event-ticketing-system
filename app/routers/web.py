@@ -1,5 +1,6 @@
 from pathlib import Path
 from time import perf_counter
+from app.database import redis as redis_db
 from app.services.cache_service import get_ttl_remaining
 
 
@@ -17,6 +18,18 @@ from app.services.web_service import (
     get_event_cards,
     get_event_page_details,
     get_trending_event_cards
+)
+
+from app.services.benchmark_service import (
+    ARM_DATABASE,
+    ARM_DATABASE_WARM,
+    ARM_LABELS,
+    ARM_REDIS,
+    chart_available,
+    load_results,
+    results_generated_at,
+    speedup,
+    summarize_all
 )
 
 
@@ -116,7 +129,50 @@ def website_event_details(
             **data,
             "csrf_token": csrf_token,
             "request_time_ms": request_time_ms,
-            "ttl_remaining": ttl_remaining
+            "ttl_remaining": ttl_remaining,
+            "cache_available": redis_db.is_available()
+        }
+    )
+
+
+# ============================================================
+# CACHE BENCHMARK RESULTS
+# ============================================================
+
+@router.get("/site/benchmark")
+def website_benchmark(request: Request):
+
+    results = load_results()
+
+    summaries = summarize_all(results)
+
+    metrics = [
+        ("Minimum", "minimum"),
+        ("Maximum", "maximum"),
+        ("Average", "average"),
+        ("Median", "median"),
+        ("Std dev", "stdev")
+    ]
+
+    csrf_token = get_csrf_token(
+        request
+    )
+
+    return templates.TemplateResponse(
+        request=request,
+        name="benchmark.html",
+        context={
+            "csrf_token": csrf_token,
+            "arms": list(summaries),
+            "arm_labels": ARM_LABELS,
+            "summaries": summaries,
+            "metrics": metrics,
+            "run_count": len(results.get(ARM_REDIS, [])),
+            "cache_speedup": speedup(results, ARM_DATABASE, ARM_REDIS),
+            "connection_speedup": speedup(results, ARM_DATABASE, ARM_DATABASE_WARM),
+            "datastore_speedup": speedup(results, ARM_DATABASE_WARM, ARM_REDIS),
+            "chart_available": chart_available(),
+            "generated_at": results_generated_at()
         }
     )
 

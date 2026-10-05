@@ -9,3 +9,4 @@ itsdangerous
 email-validator
 pymongo
 redis
+matplotlib

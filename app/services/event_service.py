@@ -42,51 +42,62 @@ def get_all_events():
         conn.close()
 
 
-def get_event_by_id(event_id: int):
-    conn = get_connection()
+EVENT_BY_ID_SQL = """
+    SELECT
+        e.event_id,
+        e.title,
+        e.event_type,
+        e.start_datetime,
+        e.end_datetime,
+        e.status,
+        v.venue_id,
+        v.venue_name,
+        v.street,
+        v.city,
+        v.state,
+        v.zip_code,
+        COALESCE(
+            SUM(tt.available_quantity),
+            0
+        ) AS remaining_inventory
+    FROM events AS e
+    JOIN venues AS v
+        ON e.venue_id = v.venue_id
+    LEFT JOIN ticket_types AS tt
+        ON e.event_id = tt.event_id
+    WHERE e.event_id = %s
+    GROUP BY
+        e.event_id,
+        e.title,
+        e.event_type,
+        e.start_datetime,
+        e.end_datetime,
+        e.status,
+        v.venue_id,
+        v.venue_name,
+        v.street,
+        v.city,
+        v.state,
+        v.zip_code;
+"""
+
+
+def get_event_by_id(event_id: int, conn=None):
+    """Return one event joined to its venue, with remaining inventory summed.
+
+    Pass an open `conn` to reuse it; otherwise a new connection is opened
+    and closed for this call.
+    """
+    owns_connection = conn is None
+
+    if owns_connection:
+        conn = get_connection()
 
     try:
         cursor = conn.cursor()
 
         cursor.execute(
-            """
-            SELECT
-                e.event_id,
-                e.title,
-                e.event_type,
-                e.start_datetime,
-                e.end_datetime,
-                e.status,
-                v.venue_id,
-                v.venue_name,
-                v.street,
-                v.city,
-                v.state,
-                v.zip_code,
-                COALESCE(
-                    SUM(tt.available_quantity),
-                    0
-                ) AS remaining_inventory
-            FROM events AS e
-            JOIN venues AS v
-                ON e.venue_id = v.venue_id
-            LEFT JOIN ticket_types AS tt
-                ON e.event_id = tt.event_id
-            WHERE e.event_id = %s
-            GROUP BY
-                e.event_id,
-                e.title,
-                e.event_type,
-                e.start_datetime,
-                e.end_datetime,
-                e.status,
-                v.venue_id,
-                v.venue_name,
-                v.street,
-                v.city,
-                v.state,
-                v.zip_code;
-            """,
+            EVENT_BY_ID_SQL,
             (event_id,)
         )
 
@@ -96,7 +107,8 @@ def get_event_by_id(event_id: int):
         return event
 
     finally:
-        conn.close()
+        if owns_connection:
+            conn.close()
 
 
 # Will be used to collect all the event details for the trending page
@@ -145,8 +157,9 @@ def get_event_content_from_mongo(event_id: int):
 
 
 # Builds a complete event detail by combining PostgreSQL + MongoDB data. NO Redis involved. Redis will cache the result of this function.
-def build_event_detail(event_id: int):
-    event = get_event_by_id(event_id)
+def build_event_detail(event_id: int, conn=None):
+    """Combine PostgreSQL and MongoDB data for one event. No Redis involved."""
+    event = get_event_by_id(event_id, conn=conn)
 
     if event is None:
         return None

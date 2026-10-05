@@ -10,6 +10,7 @@ def event_member(event_id: int) -> str:
 
 
 
+@redis_db.optional()
 def record_view(event_id: int) -> float:
     redis_client = redis_db.get_redis()
     member = event_member(event_id)
@@ -25,6 +26,7 @@ def record_view(event_id: int) -> float:
 
 
 # Get the top N trending events, if no limit is provided, it defaults to 10. 
+@redis_db.optional(fallback=list)
 def get_top_trending(limit: int = DEFAULT_TOP_N) -> list[dict]:
     redis_client = redis_db.get_redis()
 
@@ -54,6 +56,7 @@ def get_top_trending(limit: int = DEFAULT_TOP_N) -> list[dict]:
 
 
 # Get the score of a specific event 
+@redis_db.optional()
 def get_event_score(event_id: int) -> float | None:
     redis_client = redis_db.get_redis()
     member = event_member(event_id)
@@ -65,6 +68,7 @@ def get_event_score(event_id: int) -> float | None:
 
 
 # Remove an event from the trending list. This is useful if an event is deleted or no longer relevant.
+@redis_db.optional()
 def remove_event(event_id: int) -> None:
     redis_client = redis_db.get_redis()
     member = event_member(event_id)
@@ -76,6 +80,7 @@ def remove_event(event_id: int) -> None:
 
 
 # Reset the trending list, for the demo
+@redis_db.optional()
 def reset_trending() -> None:
     redis_client = redis_db.get_redis()
 

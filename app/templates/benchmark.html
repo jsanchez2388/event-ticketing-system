@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}Cache Performance Experiment{% endblock %}
+
+{% block content %}
+
+<section class="page-header">
+  <h1>Cache Performance Experiment</h1>
+  <p>How long it takes to retrieve one event, with and without the Redis cache.</p>
+</section>
+
+<section class="benchmark-section">
+
+  {% if summaries %}
+
+  <div class="benchmark-intro">
+    <p>
+      The same event was retrieved {{ run_count }} times by each method, timed with
+      <code>time.perf_counter()</code>. The third method is included so the result can be
+      explained rather than just reported: it runs the identical PostgreSQL and MongoDB
+      queries on a connection that is already open, which separates the cost of opening a
+      new database connection from the cost of the query itself.
+    </p>
+  </div>
+
+  {% if cache_speedup %}
+  <div class="benchmark-callouts">
+
+    <div class="benchmark-callout">
+      <span class="benchmark-callout-value">{{ "%.0f"|format(cache_speedup) }}&times;</span>
+      <span class="benchmark-callout-label">faster overall with the cache</span>
+    </div>
+
+    {% if connection_speedup %}
+    <div class="benchmark-callout">
+      <span class="benchmark-callout-value">{{ "%.1f"|format(connection_speedup) }}&times;</span>
+      <span class="benchmark-callout-label">comes from reusing the database connection</span>
+    </div>
+    {% endif %}
+
+    {% if datastore_speedup %}
+    <div class="benchmark-callout">
+      <span class="benchmark-callout-value">{{ "%.0f"|format(datastore_speedup) }}&times;</span>
+      <span class="benchmark-callout-label">comes from avoiding the remaining network round trips</span>
+    </div>
+    {% endif %}
+
+  </div>
+  {% endif %}
+
+  {% if chart_available %}
+  <div class="benchmark-chart">
+    <img src="/static/img/cache_benchmark.png" alt="Latency comparison chart">
+  </div>
+  {% endif %}
+
+  <div class="benchmark-table-wrap">
+    <table class="benchmark-table">
+      <thead>
+        <tr>
+          <th>Metric</th>
+          {% for arm in arms %}
+          <th>{{ arm_labels[arm] }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for label, key in metrics %}
+        <tr>
+          <th scope="row">{{ label }}</th>
+          {% for arm in arms %}
+          <td>{{ "%.3f"|format(summaries[arm][key]) }} ms</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="benchmark-method">
+    <h2>Method</h2>
+    <ul>
+      <li>{{ run_count }} timed runs per method, interleaved so network variation is shared evenly.</li>
+      <li>Three untimed warm-up runs per method are discarded first.</li>
+      <li>PostgreSQL is hosted on Neon and MongoDB is hosted remotely, so both are reached over the network. Redis runs locally in Docker.</li>
+      <li>The application opens a new PostgreSQL connection on every request, which is why the first column is so much slower than the third.</li>
+      <li>The third column still crosses the network for both queries, so the gap between it and Redis is the cost of two remote round trips against one local in-memory read &mdash; not a claim that the Redis engine is faster than PostgreSQL at equal distance.</li>
+      <li>The benchmark reads the cache directly and never records a view, so it does not affect the trending rankings.</li>
+    </ul>
+    {% if generated_at %}
+    <p class="benchmark-timestamp">Results generated {{ generated_at.strftime("%B %d, %Y at %I:%M %p") }}.</p>
+    {% endif %}
+  </div>
+
+  {% else %}
+
+  <div class="benchmark-empty">
+    <h2>No results yet</h2>
+    <p>Run the experiment from the repository root, then reload this page:</p>
+    <pre><code>python -m experiments.cache_benchmark
+python -m experiments.plot_results</code></pre>
+  </div>
+
+  {% endif %}
+
+</section>
+
+<style>
+  .benchmark-section {
+    width: min(1180px, 92%);
+    margin: 0 auto 90px;
+  }
+
+  .benchmark-intro p {
+    max-width: 70ch;
+    margin: 0 0 28px;
+    color: #4b5563;
+    line-height: 1.65;
+  }
+
+  .benchmark-intro code {
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-size: 0.9em;
+  }
+
+  .benchmark-callouts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-bottom: 32px;
+  }
+
+  .benchmark-callout {
+    flex: 1 1 220px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    padding: 22px 24px;
+  }
+
+  .benchmark-callout-value {
+    display: block;
+    font-size: 2.4rem;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    color: #111827;
+  }
+
+  .benchmark-callout-label {
+    display: block;
+    margin-top: 4px;
+    color: #6b7280;
+    font-size: 0.95rem;
+  }
+
+  .benchmark-chart {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 32px;
+  }
+
+  .benchmark-chart img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .benchmark-table-wrap {
+    overflow-x: auto;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    margin-bottom: 32px;
+  }
+
+  .benchmark-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .benchmark-table th,
+  .benchmark-table td {
+    padding: 14px 20px;
+    text-align: left;
+    border-bottom: 1px solid #f3f4f6;
+    white-space: nowrap;
+  }
+
+  .benchmark-table thead th {
+    background: #f9fafb;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6b7280;
+  }
+
+  .benchmark-table tbody tr:last-child th,
+  .benchmark-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .benchmark-table tbody th {
+    color: #111827;
+  }
+
+  .benchmark-table tbody td {
+    font-variant-numeric: tabular-nums;
+    color: #374151;
+  }
+
+  .benchmark-method {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    padding: 26px 28px;
+  }
+
+  .benchmark-method h2 {
+    margin: 0 0 14px;
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+  }
+
+  .benchmark-method ul {
+    margin: 0;
+    padding-left: 20px;
+    color: #4b5563;
+    line-height: 1.7;
+  }
+
+  .benchmark-timestamp {
+    margin: 18px 0 0;
+    color: #9ca3af;
+    font-size: 0.88rem;
+  }
+
+  .benchmark-empty {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    padding: 40px;
+    text-align: center;
+  }
+
+  .benchmark-empty h2 {
+    margin: 0 0 10px;
+    letter-spacing: -0.02em;
+  }
+
+  .benchmark-empty p {
+    color: #6b7280;
+    margin: 0 0 18px;
+  }
+
+  .benchmark-empty pre {
+    display: inline-block;
+    text-align: left;
+    background: #111827;
+    color: #e5e7eb;
+    padding: 16px 22px;
+    border-radius: 12px;
+    margin: 0;
+  }
+</style>
+
+{% endblock %}

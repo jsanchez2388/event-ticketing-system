@@ -416,7 +416,11 @@
 
                     <strong>
 
-                        {% if event.cache_hit %}
+                        {% if not cache_available %}
+
+                            UNAVAILABLE
+
+                        {% elif event.cache_hit %}
 
                             HIT
 
@@ -442,7 +446,19 @@
 
                     <span>TTL Remaining</span>
 
-                    <strong>{{ ttl_remaining }} seconds</strong>
+                    <strong>
+
+                        {% if cache_available and ttl_remaining >= 0 %}
+
+                            {{ ttl_remaining }} seconds
+
+                        {% else %}
+
+                            &mdash;
+
+                        {% endif %}
+
+                    </strong>
 
                 </div>
 
@@ -458,7 +474,19 @@
 
                     <span>Popularity</span>
 
-                    <strong>{{ event.popularity_score|int }} views</strong>
+                    <strong>
+
+                        {% if cache_available %}
+
+                            {{ event.popularity_score|int }} views
+
+                        {% else %}
+
+                            &mdash;
+
+                        {% endif %}
+
+                    </strong>
 
                 </div>
 
@@ -475,6 +503,12 @@
                         {% else %}
 
                             PostgreSQL + MongoDB
+
+                        {% endif %}
+
+                        {% if not cache_available %}
+
+                            (cache offline)
 
                         {% endif %}
 

@@ -12,6 +12,7 @@ def event_cache_key(event_id: int) -> str:
     return f"{EVENT_CACHE_PREFIX}{event_id}"
 
 # Reading from the cache
+@redis_db.optional()
 def get_cached_event(event_id: int) -> dict | None:
     redis_client = redis_db.get_redis()
     key = event_cache_key(event_id)
@@ -37,6 +38,7 @@ def get_cached_event(event_id: int) -> dict | None:
     return data
 
 # We can pass in a custom TTL for the DEMO if needed. If not, it will default to the value in config.py
+@redis_db.optional()
 def set_cached_event(
     event_id: int,
     data: dict,
@@ -55,6 +57,7 @@ def set_cached_event(
 
 
 # Invalidate the cache for an event. This will be called after ticket purchases, admin event or ticket type updates.
+@redis_db.optional()
 def invalidate_event(event_id: int) -> None:
     redis_client = redis_db.get_redis()
     key = event_cache_key(event_id)
@@ -63,6 +66,7 @@ def invalidate_event(event_id: int) -> None:
 
 
 # Return the TTL of the key to show that expiry is set. This is just for the demo.
+@redis_db.optional(fallback=-2)
 def get_ttl_remaining(event_id: int) -> int:
     redis_client = redis_db.get_redis()
     key = event_cache_key(event_id)
