@@ -68,3 +68,50 @@ def get_ttl_remaining(event_id: int) -> int:
     key = event_cache_key(event_id)
 
     return redis_client.ttl(key)
+
+# ============================================================
+# ADMIN CACHE CONTROL
+# ============================================================
+
+CACHE_ENABLED_KEY = "admin:event_cache_enabled"
+
+
+def is_event_cache_enabled() -> bool:
+    redis_client = redis_db.get_redis()
+
+    value = redis_client.get(CACHE_ENABLED_KEY)
+
+    # Cache is ON by default.
+    if value is None:
+        return True
+
+    return value == "1"
+
+
+def clear_event_cache() -> int:
+    redis_client = redis_db.get_redis()
+
+    keys = list(
+        redis_client.scan_iter(
+            match=f"{EVENT_CACHE_PREFIX}*"
+        )
+    )
+
+    if keys:
+        redis_client.delete(*keys)
+
+    return len(keys)
+
+
+def set_event_cache_enabled(enabled: bool) -> None:
+    redis_client = redis_db.get_redis()
+
+    redis_client.set(
+        CACHE_ENABLED_KEY,
+        "1" if enabled else "0"
+    )
+
+    # When turning caching off, remove old event cache entries.
+    # This does NOT remove Redis trending data.
+    if not enabled:
+        clear_event_cache()
