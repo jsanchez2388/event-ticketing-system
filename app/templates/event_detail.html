@@ -608,7 +608,7 @@ endblock %} {% block content %}
         {% endif %}
       </aside>
 
-      {% if request.session.get("is_admin") %}
+      {% if request.session.get("role") == "admin" %}
       <aside class="redis-demo-card">
         <p class="small-label">Redis Cache Demo</p>
 
