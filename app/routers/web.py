@@ -629,6 +629,418 @@ def website_admin_create_event_form(
     )
 
 
+
+def _split_form_list(value: str) -> list[str]:
+
+    if not value:
+        return []
+
+    value = value.replace("\n", ",")
+
+    return [
+        item.strip()
+        for item in value.split(",")
+        if item.strip()
+    ]
+
+
+def _build_speakers(
+    names: list[str] | None,
+    organizations: list[str] | None,
+    topics: list[str] | None,
+) -> list[dict]:
+
+    names = names or []
+    organizations = organizations or []
+    topics = topics or []
+
+    speakers = []
+
+    count = max(
+        len(names),
+        len(organizations),
+        len(topics),
+        0,
+    )
+
+    for index in range(count):
+
+        name = (
+            names[index].strip()
+            if index < len(names)
+            else ""
+        )
+
+        organization = (
+            organizations[index].strip()
+            if index < len(organizations)
+            else ""
+        )
+
+        topic_text = (
+            topics[index]
+            if index < len(topics)
+            else ""
+        )
+
+        if (
+            not name
+            and not organization
+            and not topic_text.strip()
+        ):
+            continue
+
+        speaker = {}
+
+        if name:
+            speaker["name"] = name
+
+        if organization:
+            speaker["organization"] = organization
+
+        parsed_topics = _split_form_list(
+            topic_text
+        )
+
+        if parsed_topics:
+            speaker["topics"] = parsed_topics
+
+        speakers.append(speaker)
+
+    return speakers
+
+
+def _build_schedule(
+    times: list[str] | None,
+    sessions: list[str] | None,
+    rooms: list[str] | None,
+) -> list[dict]:
+
+    times = times or []
+    sessions = sessions or []
+    rooms = rooms or []
+
+    schedule = []
+
+    count = max(
+        len(times),
+        len(sessions),
+        len(rooms),
+        0,
+    )
+
+    for index in range(count):
+
+        time_value = (
+            times[index].strip()
+            if index < len(times)
+            else ""
+        )
+
+        session_value = (
+            sessions[index].strip()
+            if index < len(sessions)
+            else ""
+        )
+
+        room_value = (
+            rooms[index].strip()
+            if index < len(rooms)
+            else ""
+        )
+
+        if (
+            not time_value
+            and not session_value
+            and not room_value
+        ):
+            continue
+
+        schedule_item = {}
+
+        if time_value:
+            schedule_item["time"] = time_value
+
+        if session_value:
+            schedule_item["session"] = session_value
+
+        if room_value:
+            schedule_item["room"] = room_value
+
+        schedule.append(schedule_item)
+
+    return schedule
+
+
+def _build_custom_metadata(
+    keys: list[str] | None,
+    values: list[str] | None,
+) -> dict:
+
+    keys = keys or []
+    values = values or []
+
+    metadata = {}
+
+    for index, key in enumerate(keys):
+
+        key = key.strip()
+
+        if not key:
+            continue
+
+        value = (
+            values[index].strip()
+            if index < len(values)
+            else ""
+        )
+
+        if value:
+            metadata[key] = value
+
+    return metadata
+
+
+def _build_mongo_event_content(
+    *,
+    event_id: int,
+    title: str,
+    event_type: str,
+    description: str,
+    tags: str,
+
+    performers: str,
+    genres: str,
+    age_restriction: str,
+
+    speaker_names: list[str] | None,
+    speaker_organizations: list[str] | None,
+    speaker_topics: list[str] | None,
+
+    schedule_times: list[str] | None,
+    schedule_sessions: list[str] | None,
+    schedule_rooms: list[str] | None,
+
+    home_team: str,
+    away_team: str,
+    sport_name: str,
+    league: str,
+
+    department_organization: str,
+
+    skill_level: str,
+    materials_needed: str,
+
+    organizer: str,
+    community_category: str,
+
+    metadata_keys: list[str] | None,
+    metadata_values: list[str] | None,
+) -> dict:
+
+    content = {
+        "eventId": event_id,
+        "title": title.strip(),
+        "eventType": event_type.strip(),
+    }
+
+    # ========================================================
+    # COMMON MONGODB CONTENT
+    # ========================================================
+
+    if description.strip():
+
+        content["description"] = (
+            description.strip()
+        )
+
+    parsed_tags = _split_form_list(tags)
+
+    if parsed_tags:
+        content["tags"] = parsed_tags
+
+
+    event_type_clean = (
+        event_type.strip().lower()
+    )
+
+    metadata = _build_custom_metadata(
+        metadata_keys,
+        metadata_values,
+    )
+
+
+    # ========================================================
+    # CONCERT
+    # ========================================================
+
+    if event_type_clean == "concert":
+
+        parsed_performers = (
+            _split_form_list(performers)
+        )
+
+        parsed_genres = (
+            _split_form_list(genres)
+        )
+
+        if parsed_performers:
+            content["performers"] = (
+                parsed_performers
+            )
+
+        if parsed_genres:
+            content["genres"] = (
+                parsed_genres
+            )
+
+        if age_restriction.strip():
+
+            age = int(
+                age_restriction
+            )
+
+            if age < 0:
+                raise ValueError(
+                    "Age restriction cannot "
+                    "be negative."
+                )
+
+            content["ageRestriction"] = age
+
+
+    # ========================================================
+    # SPEAKER-BASED EVENTS
+    # ========================================================
+
+    if event_type_clean in {
+        "conference",
+        "university",
+        "workshop",
+    }:
+
+        speakers = _build_speakers(
+            speaker_names,
+            speaker_organizations,
+            speaker_topics,
+        )
+
+        if speakers:
+            content["speakers"] = speakers
+
+
+    # ========================================================
+    # SCHEDULE-BASED EVENTS
+    # ========================================================
+
+    if event_type_clean in {
+        "conference",
+        "university",
+        "workshop",
+        "community",
+    }:
+
+        schedule = _build_schedule(
+            schedule_times,
+            schedule_sessions,
+            schedule_rooms,
+        )
+
+        if schedule:
+            content["schedule"] = schedule
+
+
+    # ========================================================
+    # SPORT
+    # ========================================================
+
+    if event_type_clean == "sport":
+
+        if home_team.strip():
+            metadata["homeTeam"] = (
+                home_team.strip()
+            )
+
+        if away_team.strip():
+            metadata["awayTeam"] = (
+                away_team.strip()
+            )
+
+        if sport_name.strip():
+            metadata["sport"] = (
+                sport_name.strip()
+            )
+
+        if league.strip():
+            metadata["league"] = (
+                league.strip()
+            )
+
+
+    # ========================================================
+    # UNIVERSITY EVENT
+    # ========================================================
+
+    if event_type_clean == "university":
+
+        if department_organization.strip():
+
+            metadata[
+                "departmentOrganization"
+            ] = (
+                department_organization.strip()
+            )
+
+
+    # ========================================================
+    # WORKSHOP
+    # ========================================================
+
+    if event_type_clean == "workshop":
+
+        if skill_level.strip():
+
+            metadata["skillLevel"] = (
+                skill_level.strip()
+            )
+
+        materials = _split_form_list(
+            materials_needed
+        )
+
+        if materials:
+            metadata[
+                "materialsNeeded"
+            ] = materials
+
+
+    # ========================================================
+    # COMMUNITY EVENT
+    # ========================================================
+
+    if event_type_clean == "community":
+
+        if organizer.strip():
+
+            metadata["organizer"] = (
+                organizer.strip()
+            )
+
+        if community_category.strip():
+
+            metadata[
+                "communityCategory"
+            ] = (
+                community_category.strip()
+            )
+
+
+    if metadata:
+        content["metadata"] = metadata
+
+    return content
+
+
 # ============================================================
 # ADMIN - CREATE EVENT
 # ============================================================
@@ -695,7 +1107,6 @@ def _parse_age_restriction(value: str):
 
     return age
 
-
 @router.post("/site/admin/events/create")
 def website_admin_create_event(
     request: Request,
@@ -706,16 +1117,49 @@ def website_admin_create_event(
     start_datetime: str = Form(...),
     end_datetime: str = Form(...),
     status: str = Form("scheduled"),
+    csrf_token: str = Form(...),
 
-    # MongoDB metadata fields
+    # MongoDB common fields
+    description: str = Form(""),
     tags: str = Form(""),
+
+    # Concert
+    performers: str = Form(""),
     genres: str = Form(""),
     age_restriction: str = Form(""),
-    speakers_json: str = Form("[]"),
-    schedule_json: str = Form("[]"),
 
-    csrf_token: str = Form(...),
+    # Speakers
+    speaker_name: list[str] | None = Form(None),
+    speaker_organization: list[str] | None = Form(None),
+    speaker_topics: list[str] | None = Form(None),
+
+    # Schedule
+    schedule_time: list[str] | None = Form(None),
+    schedule_session: list[str] | None = Form(None),
+    schedule_room: list[str] | None = Form(None),
+
+    # Sport
+    home_team: str = Form(""),
+    away_team: str = Form(""),
+    sport_name: str = Form(""),
+    league: str = Form(""),
+
+    # University
+    department_organization: str = Form(""),
+
+    # Workshop
+    skill_level: str = Form(""),
+    materials_needed: str = Form(""),
+
+    # Community
+    organizer: str = Form(""),
+    community_category: str = Form(""),
+
+    # Extra flexible metadata
+    metadata_key: list[str] | None = Form(None),
+    metadata_value: list[str] | None = Form(None),
 ):
+
     if request.session.get("role") != "admin":
         raise HTTPException(
             status_code=403,
@@ -734,6 +1178,7 @@ def website_admin_create_event(
     venues = get_all_venues()
 
     try:
+
         if not title.strip():
             raise ValueError(
                 "Event title is required."
@@ -752,30 +1197,14 @@ def website_admin_create_event(
             end_datetime
         )
 
-        # Validate Mongo metadata before creating event.
-        tag_values = _parse_csv_metadata(tags)
+        if end_value <= start_value:
+            raise ValueError(
+                "End date must be after start date."
+            )
 
-        genre_values = _parse_csv_metadata(
-            genres
-        )
-
-        speaker_values = _parse_json_list_metadata(
-            speakers_json,
-            "Speakers",
-        )
-
-        schedule_values = _parse_json_list_metadata(
-            schedule_json,
-            "Schedule",
-        )
-
-        age_value = _parse_age_restriction(
-            age_restriction
-        )
-
-        # ----------------------------------------------------
-        # PostgreSQL
-        # ----------------------------------------------------
+        # --------------------------------------------------
+        # CREATE POSTGRESQL EVENT
+        # --------------------------------------------------
 
         new_event = create_event(
             venue_id=venue_id,
@@ -788,34 +1217,59 @@ def website_admin_create_event(
 
         event_id = new_event["event_id"]
 
-        # ----------------------------------------------------
-        # MongoDB
-        # ----------------------------------------------------
+        # --------------------------------------------------
+        # BUILD FLEXIBLE MONGODB DOCUMENT
+        # --------------------------------------------------
 
-        mongo_document = {
-            "eventId": event_id,
-            "title": title.strip(),
-            "eventType": event_type.strip(),
-            "tags": tag_values,
-            "genres": genre_values,
-            "ageRestriction": age_value,
-            "speakers": speaker_values,
-            "schedule": schedule_values,
-            "reviews": [],
-        }
+        mongo_content = _build_mongo_event_content(
+            event_id=event_id,
+            title=title,
+            event_type=event_type,
+            description=description,
+            tags=tags,
 
-        created = create_event_content(
-            mongo_document
+            performers=performers,
+            genres=genres,
+            age_restriction=age_restriction,
+
+            speaker_names=speaker_name,
+            speaker_organizations=speaker_organization,
+            speaker_topics=speaker_topics,
+
+            schedule_times=schedule_time,
+            schedule_sessions=schedule_session,
+            schedule_rooms=schedule_room,
+
+            home_team=home_team,
+            away_team=away_team,
+            sport_name=sport_name,
+            league=league,
+
+            department_organization=(
+                department_organization
+            ),
+
+            skill_level=skill_level,
+            materials_needed=materials_needed,
+
+            organizer=organizer,
+            community_category=(
+                community_category
+            ),
+
+            metadata_keys=metadata_key,
+            metadata_values=metadata_value,
         )
 
-        if not created:
-            raise RuntimeError(
-                "PostgreSQL event was created, "
-                "but MongoDB metadata could not "
-                "be created."
-            )
+        # Reviews belong to customers.
+        mongo_content["reviews"] = []
+
+        create_event_content(
+            mongo_content
+        )
 
     except Exception as error:
+
         return templates.TemplateResponse(
             request=request,
             name="admin_event_create.html",
@@ -825,6 +1279,7 @@ def website_admin_create_event(
                     request
                 ),
                 "error": str(error),
+                "mongo_content": {},
             },
             status_code=400,
         )
@@ -837,16 +1292,14 @@ def website_admin_create_event(
         status_code=303,
     )
 
-
 # ============================================================
 # ADMIN - EDIT EVENT FORM
 # ============================================================
 
-
 @router.get("/site/admin/events/{event_id}/edit")
 def website_admin_edit_event_form(
     request: Request,
-    event_id: int
+    event_id: int,
 ):
     if request.session.get("role") != "admin":
         raise HTTPException(
@@ -868,21 +1321,10 @@ def website_admin_edit_event_form(
         event_id
     )
 
-    mongo_error = None
-
-    try:
-        metadata = (
-            get_event_content(event_id)
-            or {}
-        )
-
-    except Exception as error:
-        metadata = {}
-
-        mongo_error = (
-            "MongoDB metadata could not be "
-            f"loaded: {error}"
-        )
+    mongo_content = (
+        get_event_content(event_id)
+        or {}
+    )
 
     return templates.TemplateResponse(
         request=request,
@@ -891,34 +1333,11 @@ def website_admin_edit_event_form(
             "event": event,
             "venues": venues,
             "ticket_types": ticket_types,
-            "metadata": metadata,
-            "speakers_json": json.dumps(
-                metadata.get(
-                    "speakers",
-                    []
-                ),
-                indent=2,
-            ),
-            "schedule_json": json.dumps(
-                metadata.get(
-                    "schedule",
-                    []
-                ),
-                indent=2,
-            ),
-            "age_restriction": (
-                metadata.get(
-                    "ageRestriction"
-                )
-                if metadata.get(
-                    "ageRestriction"
-                ) is not None
-                else ""
-            ),
+            "mongo_content": mongo_content,
             "csrf_token": get_csrf_token(
                 request
             ),
-            "error": mongo_error,
+            "error": None,
         }
     )
 
@@ -927,8 +1346,9 @@ def website_admin_edit_event_form(
 # ADMIN - EDIT EVENT SUBMIT
 # ============================================================
 
-
-@router.post("/site/admin/events/{event_id}/edit")
+@router.post(
+    "/site/admin/events/{event_id}/edit"
+)
 def website_admin_edit_event(
     request: Request,
     event_id: int,
@@ -939,29 +1359,66 @@ def website_admin_edit_event(
     start_datetime: str = Form(...),
     end_datetime: str = Form(...),
     status: str = Form(...),
+    csrf_token: str = Form(...),
 
-    # MongoDB metadata fields
+    # MongoDB common fields
+    description: str = Form(""),
     tags: str = Form(""),
+
+    # Concert
+    performers: str = Form(""),
     genres: str = Form(""),
     age_restriction: str = Form(""),
-    speakers_json: str = Form("[]"),
-    schedule_json: str = Form("[]"),
 
-    csrf_token: str = Form(...),
+    # Speakers
+    speaker_name: list[str] | None = Form(None),
+    speaker_organization: list[str] | None = Form(None),
+    speaker_topics: list[str] | None = Form(None),
+
+    # Schedule
+    schedule_time: list[str] | None = Form(None),
+    schedule_session: list[str] | None = Form(None),
+    schedule_room: list[str] | None = Form(None),
+
+    # Sport
+    home_team: str = Form(""),
+    away_team: str = Form(""),
+    sport_name: str = Form(""),
+    league: str = Form(""),
+
+    # University
+    department_organization: str = Form(""),
+
+    # Workshop
+    skill_level: str = Form(""),
+    materials_needed: str = Form(""),
+
+    # Community
+    organizer: str = Form(""),
+    community_category: str = Form(""),
+
+    # Additional metadata
+    metadata_key: list[str] | None = Form(None),
+    metadata_value: list[str] | None = Form(None),
 ):
+
     if request.session.get("role") != "admin":
         raise HTTPException(
             status_code=403,
             detail="Administrator access required"
         )
 
-    if csrf_token != get_csrf_token(request):
+    if not validate_csrf_token(
+        request,
+        csrf_token
+    ):
         raise HTTPException(
             status_code=403,
             detail="Invalid CSRF token"
         )
 
     try:
+
         if not title.strip():
             raise ValueError(
                 "Event title is required."
@@ -972,97 +1429,108 @@ def website_admin_edit_event(
                 "Event type is required."
             )
 
-        tag_values = _parse_csv_metadata(
-            tags
+        start_value = datetime.fromisoformat(
+            start_datetime
         )
 
-        genre_values = _parse_csv_metadata(
-            genres
+        end_value = datetime.fromisoformat(
+            end_datetime
         )
 
-        speaker_values = (
-            _parse_json_list_metadata(
-                speakers_json,
-                "Speakers",
+        if end_value <= start_value:
+            raise ValueError(
+                "End date must be after start date."
             )
-        )
 
-        schedule_values = (
-            _parse_json_list_metadata(
-                schedule_json,
-                "Schedule",
-            )
-        )
-
-        age_value = _parse_age_restriction(
-            age_restriction
-        )
-
-        # ----------------------------------------------------
-        # PostgreSQL update
-        # ----------------------------------------------------
+        # --------------------------------------------------
+        # UPDATE POSTGRESQL
+        # --------------------------------------------------
 
         update_event(
             event_id=event_id,
             venue_id=venue_id,
             title=title.strip(),
             event_type=event_type.strip(),
-            start_datetime=datetime.fromisoformat(
-                start_datetime
-            ),
-            end_datetime=datetime.fromisoformat(
-                end_datetime
-            ),
+            start_datetime=start_value,
+            end_datetime=end_value,
             status=status,
         )
 
-        # ----------------------------------------------------
-        # MongoDB update
-        # ----------------------------------------------------
+        # --------------------------------------------------
+        # BUILD CURRENT FLEXIBLE MONGO CONTENT
+        # --------------------------------------------------
 
-        metadata_updates = {
-            "title": title.strip(),
-            "eventType": event_type.strip(),
-            "tags": tag_values,
-            "genres": genre_values,
-            "ageRestriction": age_value,
-            "speakers": speaker_values,
-            "schedule": schedule_values,
-        }
+        mongo_content = _build_mongo_event_content(
+            event_id=event_id,
+            title=title,
+            event_type=event_type,
+            description=description,
+            tags=tags,
+
+            performers=performers,
+            genres=genres,
+            age_restriction=age_restriction,
+
+            speaker_names=speaker_name,
+            speaker_organizations=(
+                speaker_organization
+            ),
+            speaker_topics=speaker_topics,
+
+            schedule_times=schedule_time,
+            schedule_sessions=(
+                schedule_session
+            ),
+            schedule_rooms=schedule_room,
+
+            home_team=home_team,
+            away_team=away_team,
+            sport_name=sport_name,
+            league=league,
+
+            department_organization=(
+                department_organization
+            ),
+
+            skill_level=skill_level,
+            materials_needed=(
+                materials_needed
+            ),
+
+            organizer=organizer,
+            community_category=(
+                community_category
+            ),
+
+            metadata_keys=metadata_key,
+            metadata_values=metadata_value,
+        )
 
         existing_content = get_event_content(
             event_id
         )
 
         if existing_content is None:
-            created = create_event_content(
-                {
-                    "eventId": event_id,
-                    **metadata_updates,
-                    "reviews": [],
-                }
-            )
 
-            if not created:
-                raise RuntimeError(
-                    "Could not create MongoDB "
-                    "metadata."
-                )
+            mongo_content["reviews"] = []
+
+            create_event_content(
+                mongo_content
+            )
 
         else:
-            updated = update_event_content(
+
+            update_event_content(
                 event_id,
-                metadata_updates,
+                mongo_content,
+                replace_flexible=True,
             )
 
-            if not updated:
-                raise RuntimeError(
-                    "Could not update MongoDB "
-                    "metadata."
-                )
-
     except Exception as error:
-        event = get_admin_event(event_id)
+
+        event = get_admin_event(
+            event_id
+        )
 
         venues = get_all_venues()
 
@@ -1070,14 +1538,10 @@ def website_admin_edit_event(
             event_id
         )
 
-        try:
-            metadata = (
-                get_event_content(event_id)
-                or {}
-            )
-
-        except Exception:
-            metadata = {}
+        mongo_content = (
+            get_event_content(event_id)
+            or {}
+        )
 
         return templates.TemplateResponse(
             request=request,
@@ -1086,30 +1550,7 @@ def website_admin_edit_event(
                 "event": event,
                 "venues": venues,
                 "ticket_types": ticket_types,
-                "metadata": metadata,
-                "speakers_json": json.dumps(
-                    metadata.get(
-                        "speakers",
-                        []
-                    ),
-                    indent=2,
-                ),
-                "schedule_json": json.dumps(
-                    metadata.get(
-                        "schedule",
-                        []
-                    ),
-                    indent=2,
-                ),
-                "age_restriction": (
-                    metadata.get(
-                        "ageRestriction"
-                    )
-                    if metadata.get(
-                        "ageRestriction"
-                    ) is not None
-                    else ""
-                ),
+                "mongo_content": mongo_content,
                 "csrf_token": get_csrf_token(
                     request
                 ),
@@ -1125,7 +1566,6 @@ def website_admin_edit_event(
         ),
         status_code=303
     )
-
 
 # ============================================================
 # ADMIN - EDIT TICKET TYPE FORM

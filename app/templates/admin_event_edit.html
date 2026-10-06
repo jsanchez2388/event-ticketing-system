@@ -32,14 +32,67 @@
             required
         >
 
-        <label>Event Type</label>
 
-        <input
-            type="text"
-            name="event_type"
-            value="{{ event.event_type }}"
-            required
-        >
+
+
+
+
+
+
+
+        <label for="event_type">
+    Event Type
+</label>
+
+<select
+    id="event_type"
+    name="event_type"
+    required
+>
+
+    <option
+        value="Concert"
+        {% if event.event_type == "Concert" %}selected{% endif %}
+    >
+        Concert
+    </option>
+
+    <option
+        value="Conference"
+        {% if event.event_type == "Conference" %}selected{% endif %}
+    >
+        Conference
+    </option>
+
+    <option
+        value="Sport"
+        {% if event.event_type == "Sport" %}selected{% endif %}
+    >
+        Sporting Event
+    </option>
+
+    <option
+        value="University"
+        {% if event.event_type == "University" %}selected{% endif %}
+    >
+        University Event
+    </option>
+
+    <option
+        value="Workshop"
+        {% if event.event_type == "Workshop" %}selected{% endif %}
+    >
+        Workshop
+    </option>
+
+    <option
+        value="Community"
+        {% if event.event_type == "Community" %}selected{% endif %}
+    >
+        Community Event
+    </option>
+
+</select>
 
         <label>Venue</label>
 
@@ -107,105 +160,7 @@
             </option>
 
         </select>
-
-        <hr class="section-divider">
-
-        <h2>MongoDB Event Metadata</h2>
-
-        <p class="section-help">
-            Edit the flexible event information stored in MongoDB.
-        </p>
-
-
-        <label for="tags">
-            Tags
-        </label>
-
-        <input
-            type="text"
-            id="tags"
-            name="tags"
-            value="{{ metadata.get('tags', []) | join(', ') }}"
-            placeholder="Tech, AI, Outdoors"
-        >
-
-        <small>
-            Separate tags with commas.
-        </small>
-
-
-        <label for="genres">
-            Genres
-        </label>
-
-        <input
-            type="text"
-            id="genres"
-            name="genres"
-            value="{{ metadata.get('genres', []) | join(', ') }}"
-            placeholder="Pop, Rock, Alternative"
-        >
-
-        <small>
-            Used mainly for concert events.
-        </small>
-
-
-        <label for="age_restriction">
-            Age Restriction
-        </label>
-
-        <input
-            type="number"
-            id="age_restriction"
-            name="age_restriction"
-            min="0"
-            value="{{ age_restriction }}"
-            placeholder="18"
-        >
-
-        <small>
-            Leave blank if there is no age restriction.
-        </small>
-
-
-        <label for="speakers_json">
-            Speakers
-        </label>
-
-        <textarea
-            id="speakers_json"
-            name="speakers_json"
-            rows="10"
-        >{{ speakers_json }}</textarea>
-
-        <small>
-            Each speaker can contain name, organization,
-            and topics.
-        </small>
-
-
-        <label for="schedule_json">
-            Schedule
-        </label>
-
-        <textarea
-            id="schedule_json"
-            name="schedule_json"
-            rows="10"
-        >{{ schedule_json }}</textarea>
-
-        <small>
-            Each schedule entry can contain time,
-            session, and room.
-        </small>
-
-
-        <p class="section-help">
-            Reviews are managed by users and are not edited here.
-        </p>
-
-
+        {% include "_event_mongo_fields.html" %}
         <div class="form-actions">
 
             <button type="submit">
@@ -241,31 +196,9 @@
 }
 
 .form-page input,
-.form-page select,
-.form-page textarea {
+.form-page select {
     padding: 10px;
     font-size: 1rem;
-}
-
-
-.form-page textarea {
-    resize: vertical;
-    font-family: monospace;
-    padding: 10px;
-    font-size: 0.95rem;
-}
-
-.form-page small {
-    opacity: 0.75;
-    margin-bottom: 8px;
-}
-
-.section-divider {
-    margin: 30px 0 15px 0;
-}
-
-.section-help {
-    margin-bottom: 15px;
 }
 
 .form-actions {

@@ -177,27 +177,60 @@ def create_event_content(document: dict) -> bool:
     return result.inserted_id is not None
 
 
-def update_event_content(event_id: int, updates: dict) -> bool:
+def update_event_content(
+    event_id: int,
+    updates: dict,
+    replace_flexible: bool = False
+) -> bool:
     """
-    Update the content document for the given event.
-    Args:
-        event_id (int): The ID of the event to update the content for.
-        updates (dict): The updates to apply to the content document.
+    Update MongoDB event content.
 
-    Returns:
-        bool: True if the content was successfully updated, otherwise False.
+    When replace_flexible is True, Mongo fields that no longer
+    apply to the selected event type are removed.
+
+    Customer reviews are not removed here.
     """
+
     collection = get_event_content_collection()
 
+    update_operation = {
+        "$set": updates
+    }
+
+    if replace_flexible:
+
+        flexible_fields = [
+            "description",
+            "tags",
+            "speakers",
+            "schedule",
+            "performers",
+            "genres",
+            "ageRestriction",
+            "metadata",
+        ]
+
+        fields_to_remove = {}
+
+        for field in flexible_fields:
+
+            if field not in updates:
+                fields_to_remove[field] = ""
+
+        if fields_to_remove:
+            update_operation["$unset"] = fields_to_remove
+
     result = collection.update_one(
-        {"eventId": event_id},
         {
-            "$set": updates
-        }
+            "eventId": event_id
+        },
+        update_operation
     )
 
     if result.matched_count > 0:
+
         invalidate_event(event_id)
+
         return True
 
     return False
