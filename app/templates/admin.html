@@ -240,6 +240,7 @@
                     <th>Revenue</th>
                     <th>Trending Score</th>
                     <th>Average Rating</th>
+                    <th>Action</th>
                 </tr>
 
             </thead>
@@ -292,6 +293,15 @@
 
                         {% endif %}
 
+                    </td>
+
+                    <td>
+                        <a
+                            href="/site/admin/events/{{ event.event_id }}/edit"
+                            class="button"
+                        >
+                            Edit Event
+                        </a>
                     </td>
 
                 </tr>

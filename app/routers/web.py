@@ -1,10 +1,20 @@
 from app.services.cache_benchmark_service import run_cache_benchmark
+import json
 from pathlib import Path
 from time import perf_counter
 from datetime import datetime
 
 from app.database import redis as redis_db
-from app.services.analytics_service import get_event_inventory
+from app.services.analytics_service import (
+    get_events_by_venue,
+    get_user_tickets,
+    get_tickets_sold,
+    get_event_inventory,
+    get_event_revenue,
+    get_top_customers,
+    get_events_over_threshold,
+    get_monthly_revenue,
+)
 from app.services.cache_service import (
     get_ttl_remaining,
     is_event_cache_enabled,
@@ -44,7 +54,12 @@ from app.services.benchmark_service import (
 )
 
 from app.models.event_content import ReviewCreate
-from app.services.content_service import add_review
+from app.services.content_service import (
+    add_review,
+    get_event_content,
+    create_event_content,
+    update_event_content,
+)
 
 from app.services.admin_service import (
     get_admin_dashboard_data,
@@ -256,12 +271,178 @@ def website_submit_review(
     )
 
 
+
+# ============================================================
+# POSTGRESQL QUERY DEMO
+# ============================================================
+
+
+@router.get("/site/postgres-demo")
+def website_postgres_demo(request: Request):
+
+    if request.session.get("role") != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Administrator access required"
+        )
+
+    def optional_int(name):
+        value = request.query_params.get(name)
+
+        if value is None or value.strip() == "":
+            return None
+
+        try:
+            return int(value)
+        except ValueError:
+            return None
+
+    def safe_query(function):
+        try:
+            return function(), None
+        except Exception as error:
+            return [], str(error)
+
+    venue_id = optional_int("venue_id")
+    user_id = optional_int("user_id")
+    event_id = optional_int("event_id")
+
+    try:
+        limit = int(
+            request.query_params.get(
+                "limit",
+                "10"
+            )
+        )
+    except ValueError:
+        limit = 10
+
+    limit = max(
+        1,
+        min(limit, 100)
+    )
+
+    try:
+        threshold = float(
+            request.query_params.get(
+                "threshold",
+                "0"
+            )
+        )
+    except ValueError:
+        threshold = 0.0
+
+    # Query 1
+    if venue_id is not None:
+        q1, q1_error = safe_query(
+            lambda: get_events_by_venue(
+                venue_id
+            )
+        )
+    else:
+        q1 = []
+        q1_error = None
+
+    # Query 2
+    if user_id is not None:
+        q2, q2_error = safe_query(
+            lambda: get_user_tickets(
+                user_id
+            )
+        )
+    else:
+        q2 = []
+        q2_error = None
+
+    # Query 3
+    q3, q3_error = safe_query(
+        get_tickets_sold
+    )
+
+    # Query 4
+    if event_id is not None:
+        q4, q4_error = safe_query(
+            lambda: get_event_inventory(
+                event_id
+            )
+        )
+    else:
+        q4 = []
+        q4_error = None
+
+    # Query 5
+    q5, q5_error = safe_query(
+        get_event_revenue
+    )
+
+    # Query 6
+    q6, q6_error = safe_query(
+        lambda: get_top_customers(
+            limit
+        )
+    )
+
+    # Query 7
+    q7, q7_error = safe_query(
+        lambda: get_events_over_threshold(
+            threshold
+        )
+    )
+
+    # Query 8
+    q8, q8_error = safe_query(
+        get_monthly_revenue
+    )
+
+    return templates.TemplateResponse(
+        request=request,
+        name="postgres_demo.html",
+        context={
+            "csrf_token":
+                get_csrf_token(request),
+
+            "venue_id": venue_id,
+            "user_id": user_id,
+            "event_id": event_id,
+            "limit": limit,
+            "threshold": threshold,
+
+            "q1": q1,
+            "q2": q2,
+            "q3": q3,
+            "q4": q4,
+            "q5": q5,
+            "q6": q6,
+            "q7": q7,
+            "q8": q8,
+
+            "errors": {
+                "q1": q1_error,
+                "q2": q2_error,
+                "q3": q3_error,
+                "q4": q4_error,
+                "q5": q5_error,
+                "q6": q6_error,
+                "q7": q7_error,
+                "q8": q8_error,
+            },
+        }
+    )
+
+
 # ============================================================
 # MONGO QUERIES DEMO
 # ============================================================
 
 @router.get("/mongo")
 def website_mongo_demo(request: Request):
+
+    if request.session.get("role") != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Administrator access required"
+        )
+
     csrf_token = get_csrf_token(request)
 
     return templates.TemplateResponse(
@@ -341,7 +522,10 @@ def website_admin_toggle_cache(
             detail="Administrator access required"
         )
 
-    if csrf_token != get_csrf_token(request):
+    if not validate_csrf_token(
+        request,
+        csrf_token
+    ):
         raise HTTPException(
             status_code=403,
             detail="Invalid CSRF token"
@@ -449,6 +633,69 @@ def website_admin_create_event_form(
 # ADMIN - CREATE EVENT
 # ============================================================
 
+def _parse_csv_metadata(value: str) -> list[str]:
+    """
+    Convert comma-separated form input into a clean list.
+    """
+    if not value.strip():
+        return []
+
+    return [
+        item.strip()
+        for item in value.split(",")
+        if item.strip()
+    ]
+
+
+def _parse_json_list_metadata(
+    value: str,
+    field_name: str,
+) -> list:
+    """
+    Convert JSON textarea input into a Python list.
+    """
+    if not value.strip():
+        return []
+
+    try:
+        parsed = json.loads(value)
+
+    except json.JSONDecodeError as error:
+        raise ValueError(
+            f"{field_name} must contain valid JSON."
+        ) from error
+
+    if not isinstance(parsed, list):
+        raise ValueError(
+            f"{field_name} must be a JSON list."
+        )
+
+    return parsed
+
+
+def _parse_age_restriction(value: str):
+    """
+    Convert optional age restriction into an integer.
+    """
+    if not value.strip():
+        return None
+
+    try:
+        age = int(value)
+
+    except ValueError as error:
+        raise ValueError(
+            "Age restriction must be a number."
+        ) from error
+
+    if age < 0:
+        raise ValueError(
+            "Age restriction cannot be negative."
+        )
+
+    return age
+
+
 @router.post("/site/admin/events/create")
 def website_admin_create_event(
     request: Request,
@@ -459,23 +706,25 @@ def website_admin_create_event(
     start_datetime: str = Form(...),
     end_datetime: str = Form(...),
     status: str = Form("scheduled"),
+
+    # MongoDB metadata fields
+    tags: str = Form(""),
+    genres: str = Form(""),
+    age_restriction: str = Form(""),
+    speakers_json: str = Form("[]"),
+    schedule_json: str = Form("[]"),
+
     csrf_token: str = Form(...),
 ):
-
     if request.session.get("role") != "admin":
         raise HTTPException(
             status_code=403,
             detail="Administrator access required"
         )
 
-    # Validate CSRF token.
-    session_token = request.session.get(
-        "csrf_token"
-    )
-
-    if (
-        not session_token
-        or csrf_token != session_token
+    if not validate_csrf_token(
+        request,
+        csrf_token
     ):
         raise HTTPException(
             status_code=403,
@@ -485,6 +734,15 @@ def website_admin_create_event(
     venues = get_all_venues()
 
     try:
+        if not title.strip():
+            raise ValueError(
+                "Event title is required."
+            )
+
+        if not event_type.strip():
+            raise ValueError(
+                "Event type is required."
+            )
 
         start_value = datetime.fromisoformat(
             start_datetime
@@ -493,6 +751,31 @@ def website_admin_create_event(
         end_value = datetime.fromisoformat(
             end_datetime
         )
+
+        # Validate Mongo metadata before creating event.
+        tag_values = _parse_csv_metadata(tags)
+
+        genre_values = _parse_csv_metadata(
+            genres
+        )
+
+        speaker_values = _parse_json_list_metadata(
+            speakers_json,
+            "Speakers",
+        )
+
+        schedule_values = _parse_json_list_metadata(
+            schedule_json,
+            "Schedule",
+        )
+
+        age_value = _parse_age_restriction(
+            age_restriction
+        )
+
+        # ----------------------------------------------------
+        # PostgreSQL
+        # ----------------------------------------------------
 
         new_event = create_event(
             venue_id=venue_id,
@@ -503,8 +786,36 @@ def website_admin_create_event(
             status=status,
         )
 
-    except Exception as error:
+        event_id = new_event["event_id"]
 
+        # ----------------------------------------------------
+        # MongoDB
+        # ----------------------------------------------------
+
+        mongo_document = {
+            "eventId": event_id,
+            "title": title.strip(),
+            "eventType": event_type.strip(),
+            "tags": tag_values,
+            "genres": genre_values,
+            "ageRestriction": age_value,
+            "speakers": speaker_values,
+            "schedule": schedule_values,
+            "reviews": [],
+        }
+
+        created = create_event_content(
+            mongo_document
+        )
+
+        if not created:
+            raise RuntimeError(
+                "PostgreSQL event was created, "
+                "but MongoDB metadata could not "
+                "be created."
+            )
+
+    except Exception as error:
         return templates.TemplateResponse(
             request=request,
             name="admin_event_create.html",
@@ -519,13 +830,18 @@ def website_admin_create_event(
         )
 
     return RedirectResponse(
-        url=f"/site/admin/events/{new_event['event_id']}/ticket-types/create",
+        url=(
+            f"/site/admin/events/"
+            f"{event_id}/ticket-types/create"
+        ),
         status_code=303,
     )
+
 
 # ============================================================
 # ADMIN - EDIT EVENT FORM
 # ============================================================
+
 
 @router.get("/site/admin/events/{event_id}/edit")
 def website_admin_edit_event_form(
@@ -548,7 +864,25 @@ def website_admin_edit_event_form(
 
     venues = get_all_venues()
 
-    ticket_types = get_event_inventory(event_id)
+    ticket_types = get_event_inventory(
+        event_id
+    )
+
+    mongo_error = None
+
+    try:
+        metadata = (
+            get_event_content(event_id)
+            or {}
+        )
+
+    except Exception as error:
+        metadata = {}
+
+        mongo_error = (
+            "MongoDB metadata could not be "
+            f"loaded: {error}"
+        )
 
     return templates.TemplateResponse(
         request=request,
@@ -557,25 +891,62 @@ def website_admin_edit_event_form(
             "event": event,
             "venues": venues,
             "ticket_types": ticket_types,
-            "csrf_token": get_csrf_token(request),
-            "error": None,
+            "metadata": metadata,
+            "speakers_json": json.dumps(
+                metadata.get(
+                    "speakers",
+                    []
+                ),
+                indent=2,
+            ),
+            "schedule_json": json.dumps(
+                metadata.get(
+                    "schedule",
+                    []
+                ),
+                indent=2,
+            ),
+            "age_restriction": (
+                metadata.get(
+                    "ageRestriction"
+                )
+                if metadata.get(
+                    "ageRestriction"
+                ) is not None
+                else ""
+            ),
+            "csrf_token": get_csrf_token(
+                request
+            ),
+            "error": mongo_error,
         }
     )
+
 
 # ============================================================
 # ADMIN - EDIT EVENT SUBMIT
 # ============================================================
 
+
 @router.post("/site/admin/events/{event_id}/edit")
 def website_admin_edit_event(
     request: Request,
     event_id: int,
+
     venue_id: int = Form(...),
     title: str = Form(...),
     event_type: str = Form(...),
     start_datetime: str = Form(...),
     end_datetime: str = Form(...),
     status: str = Form(...),
+
+    # MongoDB metadata fields
+    tags: str = Form(""),
+    genres: str = Form(""),
+    age_restriction: str = Form(""),
+    speakers_json: str = Form("[]"),
+    schedule_json: str = Form("[]"),
+
     csrf_token: str = Form(...),
 ):
     if request.session.get("role") != "admin":
@@ -592,10 +963,44 @@ def website_admin_edit_event(
 
     try:
         if not title.strip():
-            raise ValueError("Event title is required.")
+            raise ValueError(
+                "Event title is required."
+            )
 
         if not event_type.strip():
-            raise ValueError("Event type is required.")
+            raise ValueError(
+                "Event type is required."
+            )
+
+        tag_values = _parse_csv_metadata(
+            tags
+        )
+
+        genre_values = _parse_csv_metadata(
+            genres
+        )
+
+        speaker_values = (
+            _parse_json_list_metadata(
+                speakers_json,
+                "Speakers",
+            )
+        )
+
+        schedule_values = (
+            _parse_json_list_metadata(
+                schedule_json,
+                "Schedule",
+            )
+        )
+
+        age_value = _parse_age_restriction(
+            age_restriction
+        )
+
+        # ----------------------------------------------------
+        # PostgreSQL update
+        # ----------------------------------------------------
 
         update_event(
             event_id=event_id,
@@ -611,23 +1016,113 @@ def website_admin_edit_event(
             status=status,
         )
 
+        # ----------------------------------------------------
+        # MongoDB update
+        # ----------------------------------------------------
+
+        metadata_updates = {
+            "title": title.strip(),
+            "eventType": event_type.strip(),
+            "tags": tag_values,
+            "genres": genre_values,
+            "ageRestriction": age_value,
+            "speakers": speaker_values,
+            "schedule": schedule_values,
+        }
+
+        existing_content = get_event_content(
+            event_id
+        )
+
+        if existing_content is None:
+            created = create_event_content(
+                {
+                    "eventId": event_id,
+                    **metadata_updates,
+                    "reviews": [],
+                }
+            )
+
+            if not created:
+                raise RuntimeError(
+                    "Could not create MongoDB "
+                    "metadata."
+                )
+
+        else:
+            updated = update_event_content(
+                event_id,
+                metadata_updates,
+            )
+
+            if not updated:
+                raise RuntimeError(
+                    "Could not update MongoDB "
+                    "metadata."
+                )
+
     except Exception as error:
         event = get_admin_event(event_id)
-        ticket_types = get_event_inventory(event_id)
+
+        venues = get_all_venues()
+
+        ticket_types = get_event_inventory(
+            event_id
+        )
+
+        try:
+            metadata = (
+                get_event_content(event_id)
+                or {}
+            )
+
+        except Exception:
+            metadata = {}
+
         return templates.TemplateResponse(
             request=request,
             name="admin_event_edit.html",
             context={
                 "event": event,
+                "venues": venues,
                 "ticket_types": ticket_types,
-                "csrf_token": get_csrf_token(request),
+                "metadata": metadata,
+                "speakers_json": json.dumps(
+                    metadata.get(
+                        "speakers",
+                        []
+                    ),
+                    indent=2,
+                ),
+                "schedule_json": json.dumps(
+                    metadata.get(
+                        "schedule",
+                        []
+                    ),
+                    indent=2,
+                ),
+                "age_restriction": (
+                    metadata.get(
+                        "ageRestriction"
+                    )
+                    if metadata.get(
+                        "ageRestriction"
+                    ) is not None
+                    else ""
+                ),
+                "csrf_token": get_csrf_token(
+                    request
+                ),
                 "error": str(error),
             },
             status_code=400,
         )
 
     return RedirectResponse(
-        url="/site/admin",
+        url=(
+            f"/site/admin/events/"
+            f"{event_id}/edit"
+        ),
         status_code=303
     )
 
