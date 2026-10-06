@@ -1,135 +1,433 @@
 {% extends "base.html" %}
 
 {% block title %}
-PostgreSQL Queries | EventHub
+PostgreSQL Demo | EventHub
 {% endblock %}
 
 {% block content %}
-<section class="hero" style="padding: 40px 0 35px;">
-    <div class="container">
-        <h1 style="font-size: 2.2rem; margin: 0;">PostgreSQL Queries</h1>
-    </div>
-</section>
 
-<section class="container" style="padding: 30px 20px 70px; max-width: 860px;">
-    <div style="display: grid; gap: 16px;">
+<div class="postgres-demo">
 
-        <!-- QUERY 1 -->
-        <div class="info-panel">
-            <h3 style="margin: 0 0 10px; font-size: 1.05rem;">Query 1: Events At Venue</h3>
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-family: monospace; font-size: 0.82rem; color: #1e293b; overflow-x: auto;">
-                SELECT e.event_id, e.title, v.venue_name FROM events e JOIN venues v ON e.venue_id = v.venue_id WHERE e.venue_id = %s
-            </div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <input type="number" id="q1_venue" value="1" placeholder="Venue ID" style="flex: 1; min-width: 180px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem;">
-                <button class="button" onclick="runQuery('q1', `/venues/${document.getElementById('q1_venue').value}/events`)">Run</button>
-            </div>
-            <pre id="q1_out" style="display: none; margin-top: 12px; background: #17191c; color: #e5e7eb; padding: 12px 14px; border-radius: 8px; font-size: 0.82rem; overflow-x: auto; max-height: 220px; font-family: monospace;"></pre>
+    <h1>PostgreSQL Query Demo</h1>
+
+    <p>
+        This page demonstrates the eight required
+        relational database queries used by the
+        EventHub application.
+    </p>
+
+
+    {% macro result_table(rows) %}
+
+        {% if rows %}
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+                    <tr>
+
+                        {% for key in rows[0].keys() %}
+
+                        <th>
+                            {{ key
+                                | replace("_", " ")
+                                | title }}
+                        </th>
+
+                        {% endfor %}
+
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for row in rows %}
+
+                    <tr>
+
+                        {% for key in rows[0].keys() %}
+
+                        <td>
+                            {{ row[key] }}
+                        </td>
+
+                        {% endfor %}
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
         </div>
 
-        <!-- QUERY 2 -->
-        <div class="info-panel">
-            <h3 style="margin: 0 0 10px; font-size: 1.05rem;">Query 2: Tickets For User</h3>
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-family: monospace; font-size: 0.82rem; color: #1e293b; overflow-x: auto;">
-                SELECT u.first_name, e.title, oi.quantity FROM users u JOIN orders o ON u.user_id = o.user_id ... WHERE u.user_id = %s
-            </div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <input type="number" id="q2_user" value="402" placeholder="User ID" style="flex: 1; min-width: 180px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem;">
-                <button class="button" onclick="runQuery('q2', `/users/${document.getElementById('q2_user').value}/tickets`)">Run</button>
-            </div>
-            <pre id="q2_out" style="display: none; margin-top: 12px; background: #17191c; color: #e5e7eb; padding: 12px 14px; border-radius: 8px; font-size: 0.82rem; overflow-x: auto; max-height: 220px; font-family: monospace;"></pre>
-        </div>
+        {% else %}
 
-        <!-- QUERY 3 -->
-        <div class="info-panel">
-            <h3 style="margin: 0 0 10px; font-size: 1.05rem;">Query 3: Tickets Sold</h3>
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-family: monospace; font-size: 0.82rem; color: #1e293b; overflow-x: auto;">
-                SELECT e.title, COALESCE(SUM(oi.quantity), 0) FROM events e ... GROUP BY e.event_id
-            </div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button class="button" onclick="runQuery('q3', `/analytics/tickets-sold`)">Run</button>
-            </div>
-            <pre id="q3_out" style="display: none; margin-top: 12px; background: #17191c; color: #e5e7eb; padding: 12px 14px; border-radius: 8px; font-size: 0.82rem; overflow-x: auto; max-height: 220px; font-family: monospace;"></pre>
-        </div>
+        <p>
+            No results.
+        </p>
 
-        <!-- QUERY 4 -->
-        <div class="info-panel">
-            <h3 style="margin: 0 0 10px; font-size: 1.05rem;">Query 4: Event Inventory</h3>
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-family: monospace; font-size: 0.82rem; color: #1e293b; overflow-x: auto;">
-                SELECT e.title, tt.available_quantity FROM events e JOIN ticket_types tt ... WHERE e.event_id = %s
-            </div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <input type="number" id="q4_event" value="101" placeholder="Event ID" style="flex: 1; min-width: 180px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem;">
-                <button class="button" onclick="runQuery('q4', `/events/${document.getElementById('q4_event').value}/inventory`)">Run</button>
-            </div>
-            <pre id="q4_out" style="display: none; margin-top: 12px; background: #17191c; color: #e5e7eb; padding: 12px 14px; border-radius: 8px; font-size: 0.82rem; overflow-x: auto; max-height: 220px; font-family: monospace;"></pre>
-        </div>
+        {% endif %}
 
-        <!-- QUERY 5 -->
-        <div class="info-panel">
-            <h3 style="margin: 0 0 10px; font-size: 1.05rem;">Query 5: Event Revenue</h3>
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-family: monospace; font-size: 0.82rem; color: #1e293b; overflow-x: auto;">
-                SELECT e.title, SUM(oi.quantity * oi.unit_price) FROM events e ... GROUP BY e.event_id
-            </div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button class="button" onclick="runQuery('q5', `/analytics/revenue`)">Run</button>
-            </div>
-            <pre id="q5_out" style="display: none; margin-top: 12px; background: #17191c; color: #e5e7eb; padding: 12px 14px; border-radius: 8px; font-size: 0.82rem; overflow-x: auto; max-height: 220px; font-family: monospace;"></pre>
-        </div>
+    {% endmacro %}
 
-        <!-- QUERY 6 -->
-        <div class="info-panel">
-            <h3 style="margin: 0 0 10px; font-size: 1.05rem;">Query 6: Top Customers</h3>
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-family: monospace; font-size: 0.82rem; color: #1e293b; overflow-x: auto;">
-                SELECT u.first_name, SUM(oi.quantity) FROM users u JOIN orders o ... ORDER BY total_tickets DESC LIMIT %s
-            </div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <input type="number" id="q6_limit" value="10" placeholder="Limit" style="flex: 1; min-width: 180px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem;">
-                <button class="button" onclick="runQuery('q6', `/analytics/top-customers?limit=${document.getElementById('q6_limit').value}`)">Run</button>
-            </div>
-            <pre id="q6_out" style="display: none; margin-top: 12px; background: #17191c; color: #e5e7eb; padding: 12px 14px; border-radius: 8px; font-size: 0.82rem; overflow-x: auto; max-height: 220px; font-family: monospace;"></pre>
-        </div>
 
-        <!-- QUERY 7 -->
-        <div class="info-panel">
-            <h3 style="margin: 0 0 10px; font-size: 1.05rem;">Query 7: Events Over Threshold</h3>
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-family: monospace; font-size: 0.82rem; color: #1e293b; overflow-x: auto;">
-                SELECT e.title, SUM(oi.quantity * oi.unit_price) FROM events e ... HAVING SUM(...) > %s
-            </div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <input type="number" id="q7_threshold" value="500.00" placeholder="Threshold ($)" style="flex: 1; min-width: 180px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem;">
-                <button class="button" onclick="runQuery('q7', `/analytics/events-over-threshold?threshold=${document.getElementById('q7_threshold').value}`)">Run</button>
-            </div>
-            <pre id="q7_out" style="display: none; margin-top: 12px; background: #17191c; color: #e5e7eb; padding: 12px 14px; border-radius: 8px; font-size: 0.82rem; overflow-x: auto; max-height: 220px; font-family: monospace;"></pre>
-        </div>
+    <!-- QUERY 1 -->
 
-        <!-- QUERY 8 -->
-        <div class="info-panel">
-            <h3 style="margin: 0 0 10px; font-size: 1.05rem;">Query 8: Monthly Revenue</h3>
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-family: monospace; font-size: 0.82rem; color: #1e293b; overflow-x: auto;">
-                SELECT DATE_TRUNC('month', order_date), SUM(oi.quantity * oi.unit_price) FROM orders ... GROUP BY 1
-            </div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button class="button" onclick="runQuery('q8', `/analytics/monthly-revenue`)">Run</button>
-            </div>
-            <pre id="q8_out" style="display: none; margin-top: 12px; background: #17191c; color: #e5e7eb; padding: 12px 14px; border-radius: 8px; font-size: 0.82rem; overflow-x: auto; max-height: 220px; font-family: monospace;"></pre>
-        </div>
+    <section class="query-card">
 
-    </div>
-</section>
+        <h2>
+            Query 1: Events at a Venue
+        </h2>
 
-<script>
-async function runQuery(id, url) {
-    const pre = document.getElementById(`${id}_out`);
-    pre.style.display = "block";
-    pre.textContent = "Executing...";
-    try {
-        const resp = await fetch(url);
-        const data = await resp.json();
-        pre.textContent = JSON.stringify(data, null, 2);
-    } catch (err) {
-        pre.textContent = `Error: ${err.message}`;
-    }
+        <p>
+            PostgreSQL Events + Venues
+        </p>
+
+        <form method="GET">
+
+            <label>
+                Venue ID
+            </label>
+
+            <input
+                type="number"
+                name="venue_id"
+                value="{{ venue_id or '' }}"
+                min="1"
+                required
+            >
+
+            <button type="submit">
+                Run Query 1
+            </button>
+
+        </form>
+
+        {% if errors.q1 %}
+
+        <p class="error-message">
+            {{ errors.q1 }}
+        </p>
+
+        {% endif %}
+
+        {% if venue_id is not none %}
+            {{ result_table(q1) }}
+        {% endif %}
+
+    </section>
+
+
+    <!-- QUERY 2 -->
+
+    <section class="query-card">
+
+        <h2>
+            Query 2: Tickets Purchased by User
+        </h2>
+
+        <p>
+            Users + Orders + Order Items +
+            Ticket Types + Events
+        </p>
+
+        <form method="GET">
+
+            <label>
+                User ID
+            </label>
+
+            <input
+                type="number"
+                name="user_id"
+                value="{{ user_id or '' }}"
+                min="1"
+                required
+            >
+
+            <button type="submit">
+                Run Query 2
+            </button>
+
+        </form>
+
+        {% if errors.q2 %}
+
+        <p class="error-message">
+            {{ errors.q2 }}
+        </p>
+
+        {% endif %}
+
+        {% if user_id is not none %}
+            {{ result_table(q2) }}
+        {% endif %}
+
+    </section>
+
+
+    <!-- QUERY 3 -->
+
+    <section class="query-card">
+
+        <h2>
+            Query 3: Total Tickets Sold Per Event
+        </h2>
+
+        <p>
+            Events + Ticket Types + Order Items
+        </p>
+
+        {% if errors.q3 %}
+
+        <p class="error-message">
+            {{ errors.q3 }}
+        </p>
+
+        {% else %}
+
+            {{ result_table(q3) }}
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- QUERY 4 -->
+
+    <section class="query-card">
+
+        <h2>
+            Query 4: Remaining Ticket Inventory
+        </h2>
+
+        <form method="GET">
+
+            <label>
+                Event ID
+            </label>
+
+            <input
+                type="number"
+                name="event_id"
+                value="{{ event_id or '' }}"
+                min="1"
+                required
+            >
+
+            <button type="submit">
+                Run Query 4
+            </button>
+
+        </form>
+
+        {% if errors.q4 %}
+
+        <p class="error-message">
+            {{ errors.q4 }}
+        </p>
+
+        {% endif %}
+
+        {% if event_id is not none %}
+            {{ result_table(q4) }}
+        {% endif %}
+
+    </section>
+
+
+    <!-- QUERY 5 -->
+
+    <section class="query-card">
+
+        <h2>
+            Query 5: Revenue Per Event
+        </h2>
+
+        {% if errors.q5 %}
+
+        <p class="error-message">
+            {{ errors.q5 }}
+        </p>
+
+        {% else %}
+
+            {{ result_table(q5) }}
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- QUERY 6 -->
+
+    <section class="query-card">
+
+        <h2>
+            Query 6: Top Customers
+        </h2>
+
+        <form method="GET">
+
+            <label>
+                Number of Customers
+            </label>
+
+            <input
+                type="number"
+                name="limit"
+                value="{{ limit }}"
+                min="1"
+                max="100"
+            >
+
+            <button type="submit">
+                Run Query 6
+            </button>
+
+        </form>
+
+        {% if errors.q6 %}
+
+        <p class="error-message">
+            {{ errors.q6 }}
+        </p>
+
+        {% else %}
+
+            {{ result_table(q6) }}
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- QUERY 7 -->
+
+    <section class="query-card">
+
+        <h2>
+            Query 7: Events Above Sales Threshold
+        </h2>
+
+        <form method="GET">
+
+            <label>
+                Revenue Threshold
+            </label>
+
+            <input
+                type="number"
+                name="threshold"
+                step="0.01"
+                value="{{ threshold }}"
+            >
+
+            <button type="submit">
+                Run Query 7
+            </button>
+
+        </form>
+
+        {% if errors.q7 %}
+
+        <p class="error-message">
+            {{ errors.q7 }}
+        </p>
+
+        {% else %}
+
+            {{ result_table(q7) }}
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- QUERY 8 -->
+
+    <section class="query-card">
+
+        <h2>
+            Query 8: Monthly Ticket Revenue
+        </h2>
+
+        {% if errors.q8 %}
+
+        <p class="error-message">
+            {{ errors.q8 }}
+        </p>
+
+        {% else %}
+
+            {{ result_table(q8) }}
+
+        {% endif %}
+
+    </section>
+
+</div>
+
+
+<style>
+
+.postgres-demo {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 30px;
 }
-</script>
+
+.query-card {
+    margin: 35px 0;
+    padding: 24px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+}
+
+.query-card form {
+    display: flex;
+    gap: 10px;
+    align-items: end;
+    flex-wrap: wrap;
+    margin: 20px 0;
+}
+
+.query-card input {
+    padding: 10px;
+}
+
+.table-container {
+    overflow-x: auto;
+    margin-top: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    font-weight: bold;
+}
+
+.error-message {
+    padding: 12px;
+    border: 1px solid #b00020;
+    margin-top: 15px;
+}
+
+</style>
+
 {% endblock %}

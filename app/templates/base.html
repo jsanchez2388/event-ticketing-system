@@ -81,11 +81,7 @@
                 </a>
 
 
-                <!-- CACHE BENCHMARK -->
-
-                <a href="/site/benchmark">
-                    Benchmark
-                </a>
+            
 
 
                 {% if request.session.get("user_id") %}
@@ -102,16 +98,25 @@
 
 
 
-                    <!-- ADMIN LINK -->
-
+                    <!-- ADMIN ONLY LINKS -->
 
                     {% if request.session.get("role") == "admin" %}
 
+                        <a href="/site/admin">
+                            Admin
+                        </a>
 
-                    <a href="/site/admin">
-                        Admin
-                    </a>
+                        <a href="/site/benchmark">
+                            Benchmark
+                        </a>
 
+                        <a href="/site/postgres-demo">
+                            PostgreSQL Demo
+                        </a>
+
+                        <a href="/site/mongo-demo">
+                            Mongo Demo
+                        </a>
 
                     {% endif %}
 

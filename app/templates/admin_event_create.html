@@ -160,6 +160,101 @@
         </select>
 
 
+        <hr class="section-divider">
+
+        <h2>MongoDB Event Metadata</h2>
+
+        <p class="section-help">
+            Flexible event content stored in MongoDB.
+        </p>
+
+
+        <label for="tags">
+            Tags
+        </label>
+
+        <input
+            type="text"
+            id="tags"
+            name="tags"
+            placeholder="Tech, AI, Outdoors"
+        >
+
+        <small>
+            Separate tags with commas.
+        </small>
+
+
+        <label for="genres">
+            Genres
+        </label>
+
+        <input
+            type="text"
+            id="genres"
+            name="genres"
+            placeholder="Pop, Rock, Alternative"
+        >
+
+        <small>
+            Used mainly for concert events.
+        </small>
+
+
+        <label for="age_restriction">
+            Age Restriction
+        </label>
+
+        <input
+            type="number"
+            id="age_restriction"
+            name="age_restriction"
+            min="0"
+            placeholder="18"
+        >
+
+        <small>
+            Leave blank when the event has no age restriction.
+        </small>
+
+
+        <label for="speakers_json">
+            Speakers
+        </label>
+
+        <textarea
+            id="speakers_json"
+            name="speakers_json"
+            rows="9"
+        >[]</textarea>
+
+        <small>
+            Example:
+            [{"name":"Dr. John Doe","organization":"TechAI","topics":["Feature Engineering"]}]
+        </small>
+
+
+        <label for="schedule_json">
+            Schedule
+        </label>
+
+        <textarea
+            id="schedule_json"
+            name="schedule_json"
+            rows="9"
+        >[]</textarea>
+
+        <small>
+            Example:
+            [{"time":"09:00","session":"Opening Keynote","room":"Main Hall"}]
+        </small>
+
+
+        <p class="section-help">
+            Reviews automatically start empty and are added later by users.
+        </p>
+
+
         <div class="form-actions">
 
             <button
@@ -203,9 +298,31 @@
 }
 
 .form-page input,
-.form-page select {
+.form-page select,
+.form-page textarea {
     padding: 10px;
     font-size: 1rem;
+}
+
+
+.form-page textarea {
+    resize: vertical;
+    font-family: monospace;
+    padding: 10px;
+    font-size: 0.95rem;
+}
+
+.form-page small {
+    opacity: 0.75;
+    margin-bottom: 8px;
+}
+
+.section-divider {
+    margin: 30px 0 15px 0;
+}
+
+.section-help {
+    margin-bottom: 15px;
 }
 
 .form-actions {
