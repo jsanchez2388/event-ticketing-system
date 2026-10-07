@@ -573,6 +573,51 @@ def update_event(
 # ADMIN - GET TICKET TYPE
 # ============================================================
 
+
+def cancel_event(event_id: int):
+    """
+    Cancel an event without deleting its PostgreSQL record,
+    MongoDB content, ticket types, orders, or sales history.
+    """
+
+    conn = get_connection()
+
+    try:
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            UPDATE events
+            SET status = 'cancelled'
+            WHERE event_id = %s
+            RETURNING
+                event_id,
+                title,
+                status;
+            """,
+            (event_id,)
+        )
+
+        event = cursor.fetchone()
+
+        if event is None:
+            raise ValueError("Event not found.")
+
+        conn.commit()
+        cursor.close()
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        conn.close()
+
+    invalidate_event(event_id)
+
+    return event
+
+
 def get_admin_ticket_type(ticket_type_id: int):
     conn = get_connection()
 

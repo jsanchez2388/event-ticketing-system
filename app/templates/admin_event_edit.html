@@ -292,17 +292,19 @@
 
 
 
-<h2>Delete Event</h2>
+<h2>Cancel Event</h2>
 
 <p>
-    Delete this event permanently.
-    Events with existing ticket sales cannot be deleted.
+    Cancel this event without deleting its data,
+    ticket history, orders, sales history, or MongoDB content.
 </p>
+
+{% if event.status != "cancelled" %}
 
 <form
     method="POST"
-    action="/site/admin/events/{{ event.event_id }}/delete"
-    onsubmit="return confirm('Are you sure you want to permanently delete this event?');"
+    action="/site/admin/events/{{ event.event_id }}/cancel"
+    onsubmit="return confirm('Are you sure you want to cancel this event?');"
 >
     <input
         type="hidden"
@@ -311,8 +313,16 @@
     >
 
     <button type="submit">
-        Delete Event
+        Cancel Event
     </button>
 </form>
+
+{% else %}
+
+<p>
+    <strong>This event is cancelled.</strong>
+</p>
+
+{% endif %}
 
 {% endblock %}
