@@ -435,6 +435,7 @@ def website_postgres_demo(request: Request):
 # ============================================================
 
 @router.get("/mongo")
+@router.get("/site/mongo-demo")
 def website_mongo_demo(request: Request):
 
     if request.session.get("role") != "admin":
