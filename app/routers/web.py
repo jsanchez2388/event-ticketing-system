@@ -1673,13 +1673,12 @@ def website_admin_edit_ticket_type(
         status_code=303
     )
 
-
 # ============================================================
-# ADMIN - DELETE EVENT
+# ADMIN - CANCEL EVENT
 # ============================================================
 
-@router.post("/site/admin/events/{event_id}/delete")
-def website_admin_delete_event(
+@router.post("/site/admin/events/{event_id}/cancel")
+def website_admin_cancel_event(
     request: Request,
     event_id: int,
     csrf_token: str = Form(...),
@@ -1690,44 +1689,35 @@ def website_admin_delete_event(
             detail="Administrator access required"
         )
 
-    if csrf_token != get_csrf_token(request):
+    if not validate_csrf_token(request, csrf_token):
         raise HTTPException(
             status_code=403,
             detail="Invalid CSRF token"
         )
 
-    from app.services.admin_service import delete_event
+    event = get_admin_event(event_id)
 
-    try:
-        delete_event(event_id)
-
-    except ValueError as error:
-        event = get_admin_event(event_id)
-
-        if event is None:
-            raise HTTPException(
-                status_code=404,
-                detail="Event not found"
-            )
-
-        venues = get_all_venues()
-
-        return templates.TemplateResponse(
-            request=request,
-            name="admin_event_edit.html",
-            context={
-                "event": event,
-                "venues": venues,
-                "csrf_token": get_csrf_token(request),
-                "error": str(error),
-            },
-            status_code=400,
+    if event is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Event not found"
         )
 
+    update_event(
+        event_id=event_id,
+        venue_id=event["venue_id"],
+        title=event["title"],
+        event_type=event["event_type"],
+        start_datetime=event["start_datetime"],
+        end_datetime=event["end_datetime"],
+        status="cancelled",
+    )
+
     return RedirectResponse(
-        url="/site/admin",
+        url=f"/site/admin/events/{event_id}/edit",
         status_code=303
     )
+
 # ============================================================
 # ADMIN - CREATE TICKET TYPE FORM
 # ============================================================
