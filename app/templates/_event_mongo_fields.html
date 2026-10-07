@@ -1,0 +1,895 @@
+<div class="mongo-section">
+
+    <h2>Flexible Event Content</h2>
+
+    <p class="mongo-help">
+        This information is stored in MongoDB.
+        The available fields change based on the event type.
+    </p>
+
+
+    <!-- =====================================================
+         COMMON TO EVERY EVENT TYPE
+         ===================================================== -->
+
+    <label for="description">
+        Description
+    </label>
+
+    <textarea
+        id="description"
+        name="description"
+        rows="5"
+        placeholder="Describe the event..."
+    >{{ mongo_content.get("description", "") if mongo_content else "" }}</textarea>
+
+
+    <label for="tags">
+        Tags
+    </label>
+
+    <input
+        type="text"
+        id="tags"
+        name="tags"
+        value="{{ mongo_content.get('tags', []) | join(', ') if mongo_content else '' }}"
+        placeholder="Music, Outdoors, Family Friendly"
+    >
+
+    <small>
+        Separate tags with commas.
+    </small>
+
+
+    <!-- =====================================================
+         CONCERT
+         ===================================================== -->
+
+    <div
+        id="concert-fields"
+        class="event-specific-fields"
+    >
+
+        <h3>Concert Information</h3>
+
+
+        <label for="performers">
+            Performers
+        </label>
+
+        <textarea
+            id="performers"
+            name="performers"
+            rows="3"
+            placeholder="Artist A&#10;Artist B"
+        >{{ mongo_content.get("performers", []) | join("\n") if mongo_content else "" }}</textarea>
+
+        <small>
+            Enter one performer per line or separate with commas.
+        </small>
+
+
+        <label for="genres">
+            Genres
+        </label>
+
+        <input
+            type="text"
+            id="genres"
+            name="genres"
+            value="{{ mongo_content.get('genres', []) | join(', ') if mongo_content else '' }}"
+            placeholder="Rock, Alternative"
+        >
+
+
+        <label for="age_restriction">
+            Age Restriction
+        </label>
+
+        <input
+            type="number"
+            id="age_restriction"
+            name="age_restriction"
+            min="0"
+            value="{{ mongo_content.get('ageRestriction', '') if mongo_content else '' }}"
+            placeholder="18"
+        >
+
+    </div>
+
+
+    <!-- =====================================================
+         SPEAKERS
+         Conference / University / Workshop
+         ===================================================== -->
+
+    <div
+        id="speaker-fields"
+        class="event-specific-fields"
+    >
+
+        <h3>Speakers / Instructors</h3>
+
+        <div id="speaker-list">
+
+            {% if mongo_content and mongo_content.get("speakers") %}
+
+                {% for speaker in mongo_content.get("speakers", []) %}
+
+                    <div class="repeat-row speaker-row">
+
+                        <input
+                            type="text"
+                            name="speaker_name"
+                            value="{{ speaker.get('name', '') }}"
+                            placeholder="Name"
+                        >
+
+                        <input
+                            type="text"
+                            name="speaker_organization"
+                            value="{{ speaker.get('organization', '') }}"
+                            placeholder="Organization"
+                        >
+
+                        <input
+                            type="text"
+                            name="speaker_topics"
+                            value="{{ speaker.get('topics', []) | join(', ') }}"
+                            placeholder="Topics"
+                        >
+
+                        <button
+                            type="button"
+                            class="remove-button"
+                            onclick="this.parentElement.remove()"
+                        >
+                            Remove
+                        </button>
+
+                    </div>
+
+                {% endfor %}
+
+            {% else %}
+
+                <div class="repeat-row speaker-row">
+
+                    <input
+                        type="text"
+                        name="speaker_name"
+                        placeholder="Name"
+                    >
+
+                    <input
+                        type="text"
+                        name="speaker_organization"
+                        placeholder="Organization"
+                    >
+
+                    <input
+                        type="text"
+                        name="speaker_topics"
+                        placeholder="Topics"
+                    >
+
+                    <button
+                        type="button"
+                        class="remove-button"
+                        onclick="this.parentElement.remove()"
+                    >
+                        Remove
+                    </button>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+
+        <button
+            type="button"
+            class="button secondary"
+            onclick="addSpeaker()"
+        >
+            + Add Speaker
+        </button>
+
+    </div>
+
+
+    <!-- =====================================================
+         SCHEDULE
+         Conference / University / Workshop / Community
+         ===================================================== -->
+
+    <div
+        id="schedule-fields"
+        class="event-specific-fields"
+    >
+
+        <h3>Schedule</h3>
+
+        <div id="schedule-list">
+
+            {% if mongo_content and mongo_content.get("schedule") %}
+
+                {% for item in mongo_content.get("schedule", []) %}
+
+                    <div class="repeat-row schedule-row">
+
+                        <input
+                            type="time"
+                            name="schedule_time"
+                            value="{{ item.get('time', '') }}"
+                        >
+
+                        <input
+                            type="text"
+                            name="schedule_session"
+                            value="{{ item.get('session', '') }}"
+                            placeholder="Session"
+                        >
+
+                        <input
+                            type="text"
+                            name="schedule_room"
+                            value="{{ item.get('room', '') }}"
+                            placeholder="Room"
+                        >
+
+                        <button
+                            type="button"
+                            class="remove-button"
+                            onclick="this.parentElement.remove()"
+                        >
+                            Remove
+                        </button>
+
+                    </div>
+
+                {% endfor %}
+
+            {% else %}
+
+                <div class="repeat-row schedule-row">
+
+                    <input
+                        type="time"
+                        name="schedule_time"
+                    >
+
+                    <input
+                        type="text"
+                        name="schedule_session"
+                        placeholder="Session"
+                    >
+
+                    <input
+                        type="text"
+                        name="schedule_room"
+                        placeholder="Room"
+                    >
+
+                    <button
+                        type="button"
+                        class="remove-button"
+                        onclick="this.parentElement.remove()"
+                    >
+                        Remove
+                    </button>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+
+        <button
+            type="button"
+            class="button secondary"
+            onclick="addSchedule()"
+        >
+            + Add Schedule Item
+        </button>
+
+    </div>
+
+
+    <!-- =====================================================
+         SPORT
+         ===================================================== -->
+
+    <div
+        id="sport-fields"
+        class="event-specific-fields"
+    >
+
+        <h3>Sporting Event Information</h3>
+
+
+        <label for="sport_name">
+            Sport
+        </label>
+
+        <input
+            type="text"
+            id="sport_name"
+            name="sport_name"
+            value="{{ mongo_content.get('metadata', {}).get('sport', '') if mongo_content else '' }}"
+            placeholder="Basketball"
+        >
+
+
+        <label for="home_team">
+            Home Team
+        </label>
+
+        <input
+            type="text"
+            id="home_team"
+            name="home_team"
+            value="{{ mongo_content.get('metadata', {}).get('homeTeam', '') if mongo_content else '' }}"
+            placeholder="CSUN Matadors"
+        >
+
+
+        <label for="away_team">
+            Away Team
+        </label>
+
+        <input
+            type="text"
+            id="away_team"
+            name="away_team"
+            value="{{ mongo_content.get('metadata', {}).get('awayTeam', '') if mongo_content else '' }}"
+            placeholder="Opponent"
+        >
+
+
+        <label for="league">
+            League
+        </label>
+
+        <input
+            type="text"
+            id="league"
+            name="league"
+            value="{{ mongo_content.get('metadata', {}).get('league', '') if mongo_content else '' }}"
+            placeholder="NCAA"
+        >
+
+    </div>
+
+
+    <!-- =====================================================
+         UNIVERSITY
+         ===================================================== -->
+
+    <div
+        id="university-fields"
+        class="event-specific-fields"
+    >
+
+        <h3>University Event Information</h3>
+
+
+        <label for="department_organization">
+            Department / Organization
+        </label>
+
+        <input
+            type="text"
+            id="department_organization"
+            name="department_organization"
+            value="{{ mongo_content.get('metadata', {}).get('departmentOrganization', '') if mongo_content else '' }}"
+            placeholder="Computer Science Department"
+        >
+
+    </div>
+
+
+    <!-- =====================================================
+         WORKSHOP
+         ===================================================== -->
+
+    <div
+        id="workshop-fields"
+        class="event-specific-fields"
+    >
+
+        <h3>Workshop Information</h3>
+
+
+        <label for="skill_level">
+            Skill Level
+        </label>
+
+        <select
+            id="skill_level"
+            name="skill_level"
+        >
+
+            {% set current_skill = mongo_content.get('metadata', {}).get('skillLevel', '') if mongo_content else '' %}
+
+            <option value="">
+                Select skill level
+            </option>
+
+            <option
+                value="Beginner"
+                {% if current_skill == "Beginner" %}selected{% endif %}
+            >
+                Beginner
+            </option>
+
+            <option
+                value="Intermediate"
+                {% if current_skill == "Intermediate" %}selected{% endif %}
+            >
+                Intermediate
+            </option>
+
+            <option
+                value="Advanced"
+                {% if current_skill == "Advanced" %}selected{% endif %}
+            >
+                Advanced
+            </option>
+
+            <option
+                value="All Levels"
+                {% if current_skill == "All Levels" %}selected{% endif %}
+            >
+                All Levels
+            </option>
+
+        </select>
+
+
+        <label for="materials_needed">
+            Materials Needed
+        </label>
+
+        <input
+            type="text"
+            id="materials_needed"
+            name="materials_needed"
+            value="{{ mongo_content.get('metadata', {}).get('materialsNeeded', []) | join(', ') if mongo_content else '' }}"
+            placeholder="Laptop, Notebook, Pen"
+        >
+
+    </div>
+
+
+    <!-- =====================================================
+         COMMUNITY
+         ===================================================== -->
+
+    <div
+        id="community-fields"
+        class="event-specific-fields"
+    >
+
+        <h3>Community Event Information</h3>
+
+
+        <label for="organizer">
+            Organizer
+        </label>
+
+        <input
+            type="text"
+            id="organizer"
+            name="organizer"
+            value="{{ mongo_content.get('metadata', {}).get('organizer', '') if mongo_content else '' }}"
+            placeholder="Santa Clarita Community Center"
+        >
+
+
+        <label for="community_category">
+            Community Category
+        </label>
+
+        <input
+            type="text"
+            id="community_category"
+            name="community_category"
+            value="{{ mongo_content.get('metadata', {}).get('communityCategory', '') if mongo_content else '' }}"
+            placeholder="Festival, Volunteer, Family"
+        >
+
+    </div>
+
+
+    <!-- =====================================================
+         EXTRA FLEXIBLE METADATA
+         ===================================================== -->
+
+    <div id="metadata-fields">
+
+        <h3>Additional Metadata</h3>
+
+        <p class="mongo-help">
+            Optional. Add any other event-specific information.
+        </p>
+
+        <div id="metadata-list">
+
+            <div class="repeat-row metadata-row">
+
+                <input
+                    type="text"
+                    name="metadata_key"
+                    placeholder="Field name"
+                >
+
+                <input
+                    type="text"
+                    name="metadata_value"
+                    placeholder="Value"
+                >
+
+                <button
+                    type="button"
+                    class="remove-button"
+                    onclick="this.parentElement.remove()"
+                >
+                    Remove
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="button secondary"
+            onclick="addMetadata()"
+        >
+            + Add Custom Field
+        </button>
+
+    </div>
+
+</div>
+
+
+<style>
+
+.mongo-section {
+    margin-top: 30px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+.mongo-section h2 {
+    margin-top: 0;
+}
+
+.mongo-section h3 {
+    margin-top: 25px;
+}
+
+.mongo-help {
+    opacity: 0.75;
+}
+
+.event-specific-fields {
+    display: none;
+}
+
+.repeat-row {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.speaker-row,
+.schedule-row {
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr))
+        auto;
+}
+
+.metadata-row {
+    grid-template-columns:
+        1fr
+        1fr
+        auto;
+}
+
+.mongo-section input,
+.mongo-section select,
+.mongo-section textarea {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+}
+
+.mongo-section textarea {
+    resize: vertical;
+}
+
+.remove-button {
+    width: auto;
+    padding: 8px 12px;
+}
+
+</style>
+
+
+<script>
+
+function updateEventFields() {
+
+    const eventTypeElement =
+        document.getElementById("event_type");
+
+    if (!eventTypeElement) {
+        return;
+    }
+
+    const eventType =
+        eventTypeElement.value;
+
+
+    const sections = [
+        "concert-fields",
+        "speaker-fields",
+        "schedule-fields",
+        "sport-fields",
+        "university-fields",
+        "workshop-fields",
+        "community-fields"
+    ];
+
+
+    sections.forEach(function(id) {
+
+        document.getElementById(id)
+            .style.display = "none";
+
+    });
+
+
+    if (eventType === "Concert") {
+
+        document.getElementById(
+            "concert-fields"
+        ).style.display = "block";
+
+    }
+
+
+    if (eventType === "Conference") {
+
+        document.getElementById(
+            "speaker-fields"
+        ).style.display = "block";
+
+        document.getElementById(
+            "schedule-fields"
+        ).style.display = "block";
+
+    }
+
+
+    if (eventType === "Sport") {
+
+        document.getElementById(
+            "sport-fields"
+        ).style.display = "block";
+
+    }
+
+
+    if (eventType === "University") {
+
+        document.getElementById(
+            "speaker-fields"
+        ).style.display = "block";
+
+        document.getElementById(
+            "schedule-fields"
+        ).style.display = "block";
+
+        document.getElementById(
+            "university-fields"
+        ).style.display = "block";
+
+    }
+
+
+    if (eventType === "Workshop") {
+
+        document.getElementById(
+            "speaker-fields"
+        ).style.display = "block";
+
+        document.getElementById(
+            "schedule-fields"
+        ).style.display = "block";
+
+        document.getElementById(
+            "workshop-fields"
+        ).style.display = "block";
+
+    }
+
+
+    if (eventType === "Community") {
+
+        document.getElementById(
+            "schedule-fields"
+        ).style.display = "block";
+
+        document.getElementById(
+            "community-fields"
+        ).style.display = "block";
+
+    }
+
+}
+
+
+function addSpeaker() {
+
+    const container =
+        document.getElementById(
+            "speaker-list"
+        );
+
+    const row =
+        document.createElement("div");
+
+    row.className =
+        "repeat-row speaker-row";
+
+    row.innerHTML = `
+        <input
+            type="text"
+            name="speaker_name"
+            placeholder="Name"
+        >
+
+        <input
+            type="text"
+            name="speaker_organization"
+            placeholder="Organization"
+        >
+
+        <input
+            type="text"
+            name="speaker_topics"
+            placeholder="Topics"
+        >
+
+        <button
+            type="button"
+            class="remove-button"
+            onclick="this.parentElement.remove()"
+        >
+            Remove
+        </button>
+    `;
+
+    container.appendChild(row);
+
+}
+
+
+function addSchedule() {
+
+    const container =
+        document.getElementById(
+            "schedule-list"
+        );
+
+    const row =
+        document.createElement("div");
+
+    row.className =
+        "repeat-row schedule-row";
+
+    row.innerHTML = `
+        <input
+            type="time"
+            name="schedule_time"
+        >
+
+        <input
+            type="text"
+            name="schedule_session"
+            placeholder="Session"
+        >
+
+        <input
+            type="text"
+            name="schedule_room"
+            placeholder="Room"
+        >
+
+        <button
+            type="button"
+            class="remove-button"
+            onclick="this.parentElement.remove()"
+        >
+            Remove
+        </button>
+    `;
+
+    container.appendChild(row);
+
+}
+
+
+function addMetadata() {
+
+    const container =
+        document.getElementById(
+            "metadata-list"
+        );
+
+    const row =
+        document.createElement("div");
+
+    row.className =
+        "repeat-row metadata-row";
+
+    row.innerHTML = `
+        <input
+            type="text"
+            name="metadata_key"
+            placeholder="Field name"
+        >
+
+        <input
+            type="text"
+            name="metadata_value"
+            placeholder="Value"
+        >
+
+        <button
+            type="button"
+            class="remove-button"
+            onclick="this.parentElement.remove()"
+        >
+            Remove
+        </button>
+    `;
+
+    container.appendChild(row);
+
+}
+
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function() {
+
+        const eventType =
+            document.getElementById(
+                "event_type"
+            );
+
+        if (eventType) {
+
+            eventType.addEventListener(
+                "change",
+                updateEventFields
+            );
+
+            updateEventFields();
+
+        }
+
+    }
+);
+
+</script>

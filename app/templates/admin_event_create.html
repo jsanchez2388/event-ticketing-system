@@ -255,7 +255,11 @@
         </p>
 
 
-        <div class="form-actions">
+        {% set mongo_content = {} %}
+
+{% include "_event_mongo_fields.html" %}
+
+<div class="form-actions">
 
             <button
                 type="submit"

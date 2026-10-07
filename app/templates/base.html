@@ -31,6 +31,16 @@
     >
 
 
+
+<!-- ACTIVE NAV PAGE STYLE -->
+<style>
+.current-nav-page {
+    color: #111 !important;
+    font-weight: 800 !important;
+    box-shadow: inset 0 -4px 0 #111;
+}
+</style>
+
 </head>
 
 
@@ -265,6 +275,65 @@
     </footer>
 
 
+
+
+<!-- ACTIVE NAV PAGE SCRIPT -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const path = window.location.pathname;
+
+    const navTargets = {
+        "Events": function () {
+            return (
+                path === "/site" ||
+                path.startsWith("/site/events/")
+            );
+        },
+
+        "Trending": function () {
+            return path === "/site/trending";
+        },
+
+        "My Account": function () {
+            return path.startsWith("/site/account");
+        },
+
+        "Admin": function () {
+            return path.startsWith("/site/admin");
+        },
+
+        "Benchmark": function () {
+            return path.startsWith("/site/benchmark");
+        },
+
+        "PostgreSQL Demo": function () {
+            return path.startsWith("/site/postgres-demo");
+        },
+
+        "Mongo Demo": function () {
+            return (
+                path.startsWith("/site/mongo-demo") ||
+                path === "/mongo"
+            );
+        }
+    };
+
+    document.querySelectorAll("nav a").forEach(function (link) {
+
+        const label = link.textContent.trim();
+
+        if (
+            navTargets[label] &&
+            navTargets[label]()
+        ) {
+            link.classList.add("current-nav-page");
+        }
+
+    });
+
+});
+</script>
 
 </body>
 
