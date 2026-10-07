@@ -6,6 +6,7 @@ from datetime import datetime
 
 from app.database import redis as redis_db
 from app.services.analytics_service import (
+    QUERY_SQL,
     get_events_by_venue,
     get_user_tickets,
     get_tickets_sold,
@@ -179,6 +180,12 @@ def website_event_details(
 
 @router.get("/site/benchmark")
 def website_benchmark(request: Request):
+
+    if request.session.get("role") != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Administrator access required"
+        )
 
     results = load_results()
 
@@ -400,6 +407,8 @@ def website_postgres_demo(request: Request):
         context={
             "csrf_token":
                 get_csrf_token(request),
+
+            "query_sql": QUERY_SQL,
 
             "venue_id": venue_id,
             "user_id": user_id,

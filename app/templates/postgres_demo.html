@@ -76,6 +76,17 @@ PostgreSQL Demo | EventHub
     {% endmacro %}
 
 
+    {% macro sql_block(key) %}
+
+        <p class="sql-caption">
+            SQL executed
+        </p>
+
+        <pre class="sql-block">{{ query_sql[key] | trim }}</pre>
+
+    {% endmacro %}
+
+
     <!-- QUERY 1 -->
 
     <section class="query-card">
@@ -107,6 +118,8 @@ PostgreSQL Demo | EventHub
             </button>
 
         </form>
+
+        {{ sql_block("q1") }}
 
         {% if errors.q1 %}
 
@@ -156,6 +169,8 @@ PostgreSQL Demo | EventHub
 
         </form>
 
+        {{ sql_block("q2") }}
+
         {% if errors.q2 %}
 
         <p class="error-message">
@@ -182,6 +197,8 @@ PostgreSQL Demo | EventHub
         <p>
             Events + Ticket Types + Order Items
         </p>
+
+        {{ sql_block("q3") }}
 
         {% if errors.q3 %}
 
@@ -226,6 +243,8 @@ PostgreSQL Demo | EventHub
 
         </form>
 
+        {{ sql_block("q4") }}
+
         {% if errors.q4 %}
 
         <p class="error-message">
@@ -248,6 +267,8 @@ PostgreSQL Demo | EventHub
         <h2>
             Query 5: Revenue Per Event
         </h2>
+
+        {{ sql_block("q5") }}
 
         {% if errors.q5 %}
 
@@ -292,6 +313,8 @@ PostgreSQL Demo | EventHub
 
         </form>
 
+        {{ sql_block("q6") }}
+
         {% if errors.q6 %}
 
         <p class="error-message">
@@ -334,6 +357,8 @@ PostgreSQL Demo | EventHub
 
         </form>
 
+        {{ sql_block("q7") }}
+
         {% if errors.q7 %}
 
         <p class="error-message">
@@ -356,6 +381,8 @@ PostgreSQL Demo | EventHub
         <h2>
             Query 8: Monthly Ticket Revenue
         </h2>
+
+        {{ sql_block("q8") }}
 
         {% if errors.q8 %}
 
@@ -399,6 +426,30 @@ PostgreSQL Demo | EventHub
 
 .query-card input {
     padding: 10px;
+}
+
+.sql-caption {
+    margin: 20px 0 6px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+
+.sql-block {
+    margin: 0;
+    padding: 14px 16px;
+    background: #17191c;
+    color: #e5e7eb;
+    border-radius: 8px;
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    max-height: 260px;
+    overflow: auto;
+    white-space: pre;
+    tab-size: 4;
 }
 
 .table-container {
