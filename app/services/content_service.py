@@ -1,9 +1,3 @@
-# app/services/content_service.py
-#
-# PURPOSE
-#   MongoDB `event_content` operations used by the API
-#   (descriptions, speakers, schedules, performers, reviews).
-
 from datetime import datetime, timezone
 from app.database.mongo import get_event_content_collection, optional
 from app.models.event_content import ReviewCreate

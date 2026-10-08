@@ -1,8 +1,3 @@
-# app/routers/reviews.py
-#
-# PURPOSE
-#   Endpoints for reviewing events (stored in MongoDB `event_content`).
-
 from fastapi import APIRouter, HTTPException, Query, status
 
 from app.models.event_content import ReviewCreate

@@ -1,37 +1,108 @@
-<!--
-README.md
+# Event Ticketing System
 
-PURPOSE
-  Quick-start instructions for teammates and graders.
-  (PROJECT_GUIDE.md explains the design; this file explains how to run it.)
+A FastAPI event ticketing platform built for COMP 642. It uses three databases,
+each for the job it is actually good at: **PostgreSQL** is the system of record
+for users, events, inventory, orders and payments, and it enforces the purchase
+transaction; **MongoDB** stores the parts of an event whose shape differs by
+event type — speakers, schedules, performers, genres, reviews — in a single
+`event_content` collection; **Redis** caches assembled event pages and keeps a
+sorted set of trending events.
 
-TO ADD
-  # Event Ticketing System
-  - One-paragraph project description (FastAPI + PostgreSQL + MongoDB + Redis).
+The site is server-rendered with Jinja2 under `/site/...`, and the graded SQL
+and MongoDB queries are also exposed as JSON endpoints so they can be read and
+run directly.
 
-  ## Prerequisites
-  - Python version, PostgreSQL, MongoDB, Redis (local installs or Docker).
+## Prerequisites
 
-  ## Setup
-  - Clone, create and activate the venv (Windows and macOS/Linux commands),
-    pip install -r requirements.txt, copy .env.example to .env.
+- Python 3.11
+- A PostgreSQL database (the project uses [Neon](https://neon.tech))
+- A MongoDB database (MongoDB Atlas, or a local server)
+- Redis — `docker compose up -d` starts one on `localhost:6379`
 
-  ## Database Initialization
-  - psql ... -f sql/schema.sql, then sql/seed.sql
-  - python -m mongo.seed_event_content, then python -m mongo.indexes
+## Setup
 
-  ## Run the API
-  - uvicorn app.main:app --reload
-  - Swagger UI at http://127.0.0.1:8000/docs
+```bash
+git clone https://github.com/jsanchez2388/event-ticketing-system.git
+cd event-ticketing-system
 
-  ## Demos and Experiments
-  - python -m mongo.queries
-  - python -m redis_demo.cache_demo and python -m redis_demo.trending_demo
-  - python -m experiments.cache_benchmark, then python -m experiments.plot_results
+python -m venv venv
+venv\Scripts\activate          # Windows
+# source venv/bin/activate     # macOS / Linux
 
-  ## Endpoints
-  - Table of routes (see PROJECT_GUIDE.md section 7).
+pip install -r requirements.txt
 
-  ## Team
-  - Member names and responsibilities.
--->
+cp .env.example .env           # then fill in your own values
+```
+
+`.env.example` documents every variable and which ones are required.
+`SESSION_SECRET` has no default and the app will not start without it.
+
+## Database initialization
+
+Run the SQL files in this order, in the Neon SQL editor or with `psql`:
+
+```bash
+psql "$POSTGRES_CONNECTION_STRING" -f sql/schema.sql
+psql "$POSTGRES_CONNECTION_STRING" -f sql/seed.sql
+psql "$POSTGRES_CONNECTION_STRING" -f sql/purchase_tickets.sql
+```
+
+`schema.sql` drops every ticketing table before recreating them — check which
+database your connection string points at first.
+
+Then load MongoDB:
+
+```bash
+python -m mongo.seed_event_content
+python -m mongo.indexes
+```
+
+`seed.sql` creates events 101–106 and five sign-in-ready accounts; the Mongo
+seed creates the matching six `event_content` documents. Credentials for those
+accounts are in [setup.md](setup.md).
+
+## Run
+
+```bash
+uvicorn app.main:app --reload
+```
+
+| URL | What it is |
+|-----|------------|
+| http://127.0.0.1:8000/site | The website |
+| http://127.0.0.1:8000/docs | Swagger UI for the JSON API |
+| http://127.0.0.1:8000/health/database | PostgreSQL connectivity check |
+
+## Demos and experiments
+
+```bash
+python -m mongo.queries            # the required MongoDB queries, labeled
+python -m redis_demo.cache_demo    # MISS -> database -> populate -> HIT
+python -m redis_demo.trending_demo # simulates views, prints the Top 10
+python -m experiments.cache_benchmark  # cached vs uncached, >= 10 runs each
+python -m experiments.plot_results     # writes the comparison chart
+```
+
+Results are in `experiments/results.csv` and `experiments/summary.md`.
+
+## Where things are
+
+| Path | Contents |
+|------|----------|
+| `sql/` | `schema.sql`, `seed.sql`, the 8 required queries, the purchase function, a transaction demo |
+| `mongo/` | Seed documents, the required queries, index creation |
+| `redis_demo/` | The two Redis use cases |
+| `app/routers/` | `web.py` is the site; the others are the JSON API |
+| `app/services/` | Business logic — the transaction, the 8 SQL queries, cache and trending helpers |
+| `docs/` | Report, presentation outline, demo script |
+
+The 8 SQL queries in `sql/queries.sql` are generated from the same constants
+the application executes (`QUERY_SQL` in `app/services/analytics_service.py`),
+so the file and the running code cannot drift. `/site/postgres-demo` displays
+each query's SQL next to its live results.
+
+## Documentation
+
+- [setup.md](setup.md) — step-by-step localhost setup, including seeded accounts and troubleshooting
+- [PROJECT_GUIDE.md](PROJECT_GUIDE.md) — design, schema rationale, and the full file tree
+- [docs/report.md](docs/report.md) — final report

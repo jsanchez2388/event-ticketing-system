@@ -181,8 +181,8 @@ If you are creating a new database, use the Neon SQL Editor and run the SQL file
 
 ```text
 1. sql/schema.sql
-2. sql/sample_data.sql
-3. sql/purchase_transaction.sql
+2. sql/seed.sql
+3. sql/purchase_tickets.sql
 ```
 
 The first file creates the relational schema.
@@ -190,6 +190,27 @@ The first file creates the relational schema.
 The second file inserts the sample event data.
 
 The third file creates the ticket purchase transaction.
+
+`sql/schema.sql` drops every ticketing table before recreating them. Check
+which database your connection string points at before running it.
+
+## Seeded Accounts
+
+`sql/seed.sql` creates five accounts that can sign in immediately, so you do
+not have to register one to test a purchase:
+
+```text
+maya.lopez@example.com     admin      wallet $1000.00
+jordan.kim@example.com     customer   wallet $2500.00
+avery.patel@example.com    customer   wallet  $500.00
+noah.garcia@example.com    customer   wallet  $500.00
+emma.nguyen@example.com    customer   wallet  $500.00
+```
+
+All five use the password `Comp642Demo!`.
+
+These are sample accounts for local development. Delete them before any
+deployment that is reachable from the internet.
 
 The database contains tables including:
 

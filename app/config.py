@@ -1,9 +1,3 @@
-# app/config.py
-#
-# PURPOSE
-#   Single place where application settings are read from the environment file.
-#   Every other module imports settings from here instead of hard-coding hosts, ports, or credentials.
-
 import os
 from functools import lru_cache
 from dotenv import load_dotenv

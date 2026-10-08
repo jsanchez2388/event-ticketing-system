@@ -1,9 +1,3 @@
-# app/routers/events.py
-#
-# PURPOSE
-#   Public event browsing endpoints, including the cross-database detail route.
-#
-
 from fastapi import APIRouter, HTTPException
 
 from app.services.event_service import (

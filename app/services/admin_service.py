@@ -1,5 +1,3 @@
-# app/services/admin_service.py
-
 from app.services.analytics_service import (
     get_tickets_sold,
     get_event_inventory,

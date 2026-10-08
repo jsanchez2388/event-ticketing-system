@@ -1,14 +1,3 @@
--- sql/queries.sql
--- COMP 642 Event Ticketing Platform
--- The 8 required SQL queries
---
--- Notes:
---   * Sample values are hard-coded so these can be run directly in Neon.
---   * In FastAPI/psycopg2, replace sample values with parameters.
---   * Queries 2, 3, 5, 6, 7, and 8 join three or more tables.
---   * Completed-payment checks use EXISTS so multiple payment records
---     do not accidentally duplicate order items.
-
 -- ============================================================
 -- QUERY 1
 -- Find all events at a particular venue.
@@ -61,7 +50,7 @@ JOIN ticket_types AS tt
 JOIN events AS e
     ON tt.event_id = e.event_id
 WHERE u.user_id = 402
-ORDER BY o.order_date DESC, o.order_id, e.event_id;
+ORDER BY o.order_date DESC;
 
 
 -- ============================================================
@@ -82,9 +71,7 @@ LEFT JOIN order_items AS oi
 GROUP BY
     e.event_id,
     e.title
-ORDER BY
-    total_tickets_sold DESC,
-    e.event_id;
+ORDER BY total_tickets_sold DESC;
 
 
 -- ============================================================
@@ -99,15 +86,21 @@ SELECT
     e.title,
     tt.ticket_type_id,
     tt.ticket_name,
+    tt.price,
     tt.total_quantity,
     tt.available_quantity AS remaining_for_ticket_type,
-    SUM(tt.available_quantity) OVER (
-        PARTITION BY e.event_id
-    ) AS total_remaining_for_event
+
+    SUM(tt.available_quantity)
+        OVER (PARTITION BY e.event_id)
+        AS total_remaining_for_event
+
 FROM events AS e
+
 JOIN ticket_types AS tt
     ON e.event_id = tt.event_id
+
 WHERE e.event_id = 101
+
 ORDER BY tt.ticket_type_id;
 
 
@@ -120,31 +113,36 @@ ORDER BY tt.ticket_type_id;
 SELECT
     e.event_id,
     e.title,
+
     COALESCE(
         SUM(oi.quantity * oi.unit_price)
-            FILTER (
-                WHERE EXISTS (
-                    SELECT 1
-                    FROM payments AS p
-                    WHERE p.order_id = o.order_id
-                      AND LOWER(p.payment_status) = 'completed'
-                )
-            ),
+        FILTER (
+            WHERE EXISTS (
+                SELECT 1
+                FROM payments AS p
+                WHERE p.order_id = o.order_id
+                AND LOWER(p.payment_status) = 'completed'
+            )
+        ),
         0
     ) AS total_revenue
+
 FROM events AS e
+
 LEFT JOIN ticket_types AS tt
     ON e.event_id = tt.event_id
+
 LEFT JOIN order_items AS oi
     ON tt.ticket_type_id = oi.ticket_type_id
+
 LEFT JOIN orders AS o
     ON oi.order_id = o.order_id
+
 GROUP BY
     e.event_id,
     e.title
-ORDER BY
-    total_revenue DESC,
-    e.event_id;
+
+ORDER BY total_revenue DESC;
 
 
 -- ============================================================
@@ -159,26 +157,32 @@ SELECT
     u.last_name,
     u.email,
     SUM(oi.quantity) AS total_tickets_purchased
+
 FROM users AS u
+
 JOIN orders AS o
     ON u.user_id = o.user_id
+
 JOIN order_items AS oi
     ON o.order_id = oi.order_id
+
 WHERE LOWER(o.status) = 'completed'
-  AND EXISTS (
-        SELECT 1
-        FROM payments AS p
-        WHERE p.order_id = o.order_id
-          AND LOWER(p.payment_status) = 'completed'
-    )
+
+AND EXISTS (
+    SELECT 1
+    FROM payments AS p
+    WHERE p.order_id = o.order_id
+    AND LOWER(p.payment_status) = 'completed'
+)
+
 GROUP BY
     u.user_id,
     u.first_name,
     u.last_name,
     u.email
-ORDER BY
-    total_tickets_purchased DESC,
-    u.user_id
+
+ORDER BY total_tickets_purchased DESC
+
 LIMIT 10;
 
 
@@ -192,27 +196,34 @@ SELECT
     e.event_id,
     e.title,
     SUM(oi.quantity * oi.unit_price) AS ticket_sales
+
 FROM events AS e
+
 JOIN ticket_types AS tt
     ON e.event_id = tt.event_id
+
 JOIN order_items AS oi
     ON tt.ticket_type_id = oi.ticket_type_id
+
 JOIN orders AS o
     ON oi.order_id = o.order_id
+
 WHERE LOWER(o.status) = 'completed'
-  AND EXISTS (
-        SELECT 1
-        FROM payments AS p
-        WHERE p.order_id = o.order_id
-          AND LOWER(p.payment_status) = 'completed'
-    )
+
+AND EXISTS (
+    SELECT 1
+    FROM payments AS p
+    WHERE p.order_id = o.order_id
+    AND LOWER(p.payment_status) = 'completed'
+)
+
 GROUP BY
     e.event_id,
     e.title
+
 HAVING SUM(oi.quantity * oi.unit_price) > 500.00
-ORDER BY
-    ticket_sales DESC,
-    e.event_id;
+
+ORDER BY ticket_sales DESC;
 
 
 -- ============================================================
@@ -221,22 +232,36 @@ ORDER BY
 -- Uses order_date to assign each ticket sale to a month.
 -- ============================================================
 SELECT
-    DATE_TRUNC('month', o.order_date) AS revenue_month,
-    SUM(oi.quantity * oi.unit_price) AS monthly_ticket_revenue
+    DATE_TRUNC(
+        'month',
+        o.order_date
+    ) AS revenue_month,
+
+    SUM(
+        oi.quantity * oi.unit_price
+    ) AS monthly_ticket_revenue
+
 FROM orders AS o
+
 JOIN order_items AS oi
     ON o.order_id = oi.order_id
+
 WHERE LOWER(o.status) = 'completed'
-  AND EXISTS (
-        SELECT 1
-        FROM payments AS p
-        WHERE p.order_id = o.order_id
-          AND LOWER(p.payment_status) = 'completed'
-    )
+
+AND EXISTS (
+    SELECT 1
+    FROM payments AS p
+    WHERE p.order_id = o.order_id
+    AND LOWER(p.payment_status) = 'completed'
+)
+
 GROUP BY
-    DATE_TRUNC('month', o.order_date)
-ORDER BY
-    revenue_month;
+    DATE_TRUNC(
+        'month',
+        o.order_date
+    )
+
+ORDER BY revenue_month;
 
 
 -- ============================================================

@@ -1,10 +1,3 @@
-# mongo/queries.py
-#
-# PURPOSE
-#   The 8+ required MongoDB queries, each in its own labeled function that
-#   prints its results for the report.
-#   Run from the repo root: python -m mongo.queries
-
 from app.database.mongo import get_event_content_collection
 
 # Query 1

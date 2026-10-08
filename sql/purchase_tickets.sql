@@ -1,5 +1,3 @@
--- Ticket purchase transaction function
-
 CREATE OR REPLACE FUNCTION public.purchase_tickets(p_user_id bigint, p_ticket_type_id bigint, p_quantity integer, p_payment_method character varying)
  RETURNS TABLE(new_order_id bigint, event_id bigint, purchased_ticket_type_id bigint, quantity_purchased integer, unit_price numeric, order_total numeric, remaining_inventory integer, remaining_balance numeric)
  LANGUAGE plpgsql

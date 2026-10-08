@@ -1,9 +1,3 @@
-# app/routers/mongo_queries.py
-#
-# PURPOSE
-#   API endpoints exposing the MongoDB queries (matching the structure of app/routers/analytics.py for SQL).
-#   Provides query endpoints for easy demoing and testing.
-
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 

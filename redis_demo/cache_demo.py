@@ -1,8 +1,3 @@
-# PURPOSE
-#   Demonstrate Redis Use Case 1 (event cache) for the report.
-#   Must visibly show: CACHE MISS -> DATABASE RETRIEVAL -> CACHE POPULATION -> CACHE HIT.
-#   Run from the repo root: python -m redis_demo.cache_demo
-
 from time import perf_counter, sleep
 
 from app.database.mongo import init_client as init_mongo, close_client as close_mongo

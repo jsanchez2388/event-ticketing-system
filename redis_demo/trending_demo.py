@@ -1,9 +1,3 @@
-# redis_demo/trending_demo.py
-
-# PURPOSE
-#   Demonstrate Redis Use Case 2 (trending events via a sorted set).
-#   Run from the repo root: python -m redis_demo.trending_demo
-
 from app.database.redis import init_client, close_client
 from app.services.trending_service import (
     record_view,
