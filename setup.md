@@ -1,200 +1,71 @@
-# Event Ticketing System - Localhost Website Setup
+# Event Ticketing System - Localhost Walkthrough
 
-This guide explains how to download the project from GitHub and run the EventHub website locally.
+This guide covers using the EventHub website on localhost: creating an account,
+buying a ticket, the local URLs, and what to do when something does not work.
 
-The website runs using:
+It assumes the project is already installed. For installation - cloning, the
+virtual environment, `pip install`, the `.env` file, and loading the databases -
+follow [README.md](README.md).
 
-- FastAPI
-- PostgreSQL / Neon
-- Jinja2 HTML templates
-- Python
-- Uvicorn
+---
 
-Once setup is complete, the website will run at:
+# Before You Start
+
+Complete the Setup and Database initialization steps in [README.md](README.md).
+In short:
+
+```bash
+python -m venv venv
+venv\Scripts\activate          # Windows
+# source venv/bin/activate     # macOS / Linux
+
+pip install -r requirements.txt
+
+cp .env.example .env           # then fill in your own values
+```
+
+`.env.example` documents every variable the application reads and marks which
+ones are required. `POSTGRES_CONNECTION_STRING`, `MONGO_URI`, `MONGO_DB` and
+`SESSION_SECRET` have no defaults. `ADMIN_SIGNUP_CODE` is required to register
+an administrator account.
+
+Start Redis, load PostgreSQL, then load MongoDB:
+
+```bash
+docker compose up -d                   # Redis on localhost:6379
+
+psql "$POSTGRES_CONNECTION_STRING" -f sql/schema.sql
+psql "$POSTGRES_CONNECTION_STRING" -f sql/seed.sql
+psql "$POSTGRES_CONNECTION_STRING" -f sql/purchase_tickets.sql
+
+python -m mongo.seed_event_content
+python -m mongo.indexes
+```
+
+`sql/schema.sql` drops every ticketing table before recreating them. Check which
+database your connection string points at before running it.
+
+MongoDB and Redis are both optional at runtime, so the site still starts when
+either is missing - the features that depend on them just go quiet. See
+Troubleshooting below if event pages look empty or trending stays blank.
+
+Start the server:
+
+```bash
+uvicorn app.main:app --reload
+```
+
+Then open:
 
 ```text
 http://127.0.0.1:8000/site
 ```
 
----
-
-# 1. Clone the GitHub Repository
-
-Open Terminal and run:
-
-```bash
-git clone https://github.com/jsanchez2388/event-ticketing-system.git
-```
-
-Enter the project folder:
-
-```bash
-cd event-ticketing-system
-```
+Leave that terminal window open while using the website.
 
 ---
 
-# 2. Create a Python Virtual Environment
-
-Create a virtual environment:
-
-```bash
-python3 -m venv .venv
-```
-
-Activate it on macOS:
-
-```bash
-source .venv/bin/activate
-```
-
-When activated, the Terminal should show something similar to:
-
-```text
-(.venv)
-```
-
-Example:
-
-```text
-(.venv) user@Mac event-ticketing-system %
-```
-
----
-
-# 3. Install the Required Python Packages
-
-Run:
-
-```bash
-pip install -r requirements.txt
-```
-
-The project currently uses packages including:
-
-```text
-fastapi
-uvicorn[standard]
-psycopg2-binary
-python-dotenv
-jinja2
-python-multipart
-bcrypt
-itsdangerous
-email-validator
-pymongo
-redis
-```
-
-You do not need to install each package individually if:
-
-```bash
-pip install -r requirements.txt
-```
-
-completes successfully.
-
----
-
-# 4. Create the `.env` File
-
-The `.env` file is not stored on GitHub because it contains private information.
-
-Create it in the root of the project:
-
-```bash
-touch .env
-```
-
-The project folder should look similar to:
-
-```text
-event-ticketing-system/
-├── app/
-├── sql/
-├── mongo/
-├── redis_demo/
-├── requirements.txt
-├── README.md
-└── .env
-```
-
-Open `.env` and add:
-
-```env
-POSTGRES_CONNECTION_STRING=YOUR_NEON_POSTGRESQL_CONNECTION_STRING
-
-SESSION_SECRET=YOUR_PRIVATE_SESSION_SECRET
-
-ADMIN_SIGNUP_CODE=YOUR_ADMIN_CODE
-```
-
-Example:
-
-```env
-POSTGRES_CONNECTION_STRING=postgresql://username:password@hostname/neondb?sslmode=require
-
-SESSION_SECRET=my-long-private-session-secret
-
-ADMIN_SIGNUP_CODE=COMP642ADMIN2026
-```
-
-Do not upload the `.env` file to GitHub.
-
----
-
-# 5. Get the Neon PostgreSQL Connection String
-
-The application requires a PostgreSQL database.
-
-Open your Neon account and select the project database.
-
-Copy the PostgreSQL connection string.
-
-It should look similar to:
-
-```text
-postgresql://username:password@ep-example.us-west-2.aws.neon.tech/neondb?sslmode=require
-```
-
-Place the connection string in:
-
-```env
-POSTGRES_CONNECTION_STRING=
-```
-
-inside `.env`.
-
-Example:
-
-```env
-POSTGRES_CONNECTION_STRING=postgresql://username:password@hostname/neondb?sslmode=require
-```
-
----
-
-# 6. Set Up the PostgreSQL Database
-
-If the Neon database is already populated for the project, this step can be skipped.
-
-If you are creating a new database, use the Neon SQL Editor and run the SQL files in this order:
-
-```text
-1. sql/schema.sql
-2. sql/seed.sql
-3. sql/purchase_tickets.sql
-```
-
-The first file creates the relational schema.
-
-The second file inserts the sample event data.
-
-The third file creates the ticket purchase transaction.
-
-`sql/schema.sql` drops every ticketing table before recreating them. Check
-which database your connection string points at before running it.
-
-## Seeded Accounts
+# Seeded Accounts
 
 `sql/seed.sql` creates five accounts that can sign in immediately, so you do
 not have to register one to test a purchase:
@@ -228,54 +99,7 @@ event_category_map
 
 ---
 
-# 7. Start the Local FastAPI Server
-
-Make sure you are inside the project directory:
-
-```bash
-cd event-ticketing-system
-```
-
-Activate the virtual environment:
-
-```bash
-source .venv/bin/activate
-```
-
-Start FastAPI:
-
-```bash
-uvicorn app.main:app --reload
-```
-
-If successful, Terminal should display something similar to:
-
-```text
-INFO:     Uvicorn running on http://127.0.0.1:8000
-INFO:     Application startup complete.
-```
-
-Leave this Terminal window open while using the website.
-
----
-
-# 8. Open the EventHub Website
-
-Open a web browser.
-
-Go to:
-
-```text
-http://127.0.0.1:8000/site
-```
-
-This opens the main EventHub page.
-
-You should see the events stored in PostgreSQL.
-
----
-
-# 9. Create an Account
+# 1. Create an Account
 
 Open:
 
@@ -310,7 +134,7 @@ ADMIN_SIGNUP_CODE=
 
 ---
 
-# 10. Login
+# 2. Login
 
 Open:
 
@@ -328,7 +152,7 @@ http://127.0.0.1:8000/site/account
 
 ---
 
-# 11. My Account
+# 3. My Account
 
 The My Account page is available at:
 
@@ -359,7 +183,7 @@ If the user is not logged in, FastAPI redirects them to:
 
 ---
 
-# 12. Buy a Ticket
+# 4. Buy a Ticket
 
 Open:
 
@@ -429,7 +253,7 @@ My Tickets
 
 ---
 
-# 13. Example Purchase
+# 5. Example Purchase
 
 A new normal User begins with:
 
@@ -453,7 +277,7 @@ The purchase will also appear in the user's account.
 
 ---
 
-# 14. Test the PostgreSQL Connection
+# 6. Test the PostgreSQL Connection
 
 Open:
 
@@ -481,7 +305,7 @@ value inside `.env`.
 
 ---
 
-# 15. FastAPI API Documentation
+# 7. FastAPI API Documentation
 
 FastAPI automatically creates interactive API documentation.
 
@@ -550,7 +374,8 @@ cd event-ticketing-system
 Activate the existing environment:
 
 ```bash
-source .venv/bin/activate
+venv\Scripts\activate          # Windows
+# source venv/bin/activate     # macOS / Linux
 ```
 
 Start FastAPI:
@@ -672,7 +497,8 @@ After changing `.env`, restart FastAPI.
 Make sure the virtual environment is active:
 
 ```bash
-source .venv/bin/activate
+venv\Scripts\activate          # Windows
+# source venv/bin/activate     # macOS / Linux
 ```
 
 Then reinstall the requirements:
@@ -758,6 +584,44 @@ Check the FastAPI Terminal output for additional information.
 
 ---
 
+## Event Pages Have No Speakers, Schedule or Reviews
+
+The PostgreSQL fields appear but the MongoDB content does not, which means Mongo
+is unreachable or the collection is empty. The site degrades quietly here
+instead of raising an error.
+
+Check that `.env` contains both:
+
+```env
+MONGO_URI=
+MONGO_DB=
+```
+
+Then load the documents:
+
+```bash
+python -m mongo.seed_event_content
+python -m mongo.indexes
+```
+
+Restart FastAPI after changing `.env`.
+
+---
+
+## Trending Is Empty, or Nothing Is Ever Cached
+
+Redis is not running. Start it:
+
+```bash
+docker compose up -d
+```
+
+It should be listening on `localhost:6379`, which matches the defaults in
+`.env.example`. Set `REDIS_HOST` and `REDIS_PORT` if it runs somewhere else.
+Both the event cache and the trending sorted set depend on Redis.
+
+---
+
 # Security Notes
 
 The localhost website currently includes:
@@ -808,46 +672,6 @@ The `.gitignore` file should contain:
 
 ```text
 .env
-.venv/
+venv/
 __pycache__/
 ```
-
----
-
-# Quick Start
-
-After cloning the repository, the basic setup is:
-
-```bash
-cd event-ticketing-system
-
-python3 -m venv .venv
-
-source .venv/bin/activate
-
-pip install -r requirements.txt
-
-touch .env
-```
-
-Add the required values to `.env`:
-
-```env
-POSTGRES_CONNECTION_STRING=YOUR_NEON_CONNECTION_STRING
-SESSION_SECRET=YOUR_PRIVATE_SECRET
-ADMIN_SIGNUP_CODE=YOUR_ADMIN_CODE
-```
-
-Then run:
-
-```bash
-uvicorn app.main:app --reload
-```
-
-Open:
-
-```text
-http://127.0.0.1:8000/site
-```
-
-The EventHub localhost website should now be running.

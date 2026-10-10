@@ -11,7 +11,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 RESULTS_CSV = PROJECT_ROOT / "experiments" / "results.csv"
@@ -30,7 +29,6 @@ ARM_LABELS = {
 
 ARM_ORDER = [ARM_DATABASE, ARM_DATABASE_WARM, ARM_REDIS]
 
-
 def summarize(timings: list[float]) -> dict[str, Any]:
     """Return min / max / average / median (plus stdev and count) in ms."""
     if not timings:
@@ -45,7 +43,6 @@ def summarize(timings: list[float]) -> dict[str, Any]:
         "stdev": statistics.stdev(timings) if len(timings) > 1 else 0.0
     }
 
-
 def load_results(path: Path = RESULTS_CSV) -> dict[str, list[float]]:
     """Read results.csv and group the timings by experiment arm."""
     if not Path(path).exists():
@@ -59,7 +56,6 @@ def load_results(path: Path = RESULTS_CSV) -> dict[str, list[float]]:
 
     return results
 
-
 def summarize_all(results: dict[str, list[float]]) -> dict[str, dict[str, Any]]:
     """Summarise every arm present, in display order."""
     return {
@@ -67,7 +63,6 @@ def summarize_all(results: dict[str, list[float]]) -> dict[str, dict[str, Any]]:
         for arm in ARM_ORDER
         if results.get(arm)
     }
-
 
 def speedup(results: dict[str, list[float]], baseline: str, compared: str) -> float | None:
     """How many times faster `compared` is than `baseline`, by median."""
@@ -81,7 +76,6 @@ def speedup(results: dict[str, list[float]], baseline: str, compared: str) -> fl
 
     return statistics.median(results[baseline]) / faster
 
-
 def results_generated_at(path: Path = RESULTS_CSV) -> datetime | None:
     """Timestamp of the last benchmark run, from the results file mtime."""
     path = Path(path)
@@ -91,6 +85,6 @@ def results_generated_at(path: Path = RESULTS_CSV) -> datetime | None:
 
     return datetime.fromtimestamp(path.stat().st_mtime)
 
-
 def chart_available() -> bool:
+    """Whether the benchmark chart image has been generated."""
     return CHART_FILE.exists()

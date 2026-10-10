@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from datetime import datetime
 from typing import Any
-
+from app.database.postgres import get_connection
 from app.services.analytics_service import (
     get_tickets_sold,
     get_event_inventory,
@@ -9,207 +9,134 @@ from app.services.analytics_service import (
     get_top_customers,
     get_monthly_revenue,
 )
-
 from app.services.trending_service import get_event_score
 from app.services.content_service import get_average_rating
-
-from app.services.cache_service import invalidate_event     
+from app.services.cache_service import invalidate_event
 
 def get_admin_dashboard_data() -> dict[str, Any]:
-
-    # ============================================================
+    """
+    Returns a dictionary containing the data for the admin dashboard, including event activity, 
+    inventory, top customers, monthly revenue, and summary statistics.
+    """
     # POSTGRESQL REPORTS
-    # ============================================================
-
     tickets_sold_rows = get_tickets_sold()
     revenue_rows = get_event_revenue()
     top_customer_rows = get_top_customers(10)
     monthly_revenue_rows = get_monthly_revenue()
 
-
-    # ============================================================
     # REVENUE LOOKUP
-    # ============================================================
-
     revenue_by_event = {
         row["event_id"]: row["total_revenue"]
         for row in revenue_rows
     }
 
-
-    # ============================================================
     # INVENTORY
-    # ============================================================
-
     inventory = []
 
     for row in tickets_sold_rows:
-
         event_id = row["event_id"]
-
         inventory_rows = get_event_inventory(event_id)
 
         for inventory_row in inventory_rows:
-
             inventory.append({
                 "event_id":
                     inventory_row["event_id"],
-
                 "title":
                     inventory_row["title"],
-
                 "ticket_type_id":
                     inventory_row["ticket_type_id"],
-
                 "ticket_name":
                     inventory_row["ticket_name"],
-
                 "price":
                     inventory_row["price"],
-
                 "total_quantity":
                     inventory_row["total_quantity"],
-
                 "remaining_quantity":
                     inventory_row["remaining_for_ticket_type"],
-
                 "event_remaining":
                     inventory_row["total_remaining_for_event"],
             })
 
-
-    # ============================================================
     # EVENT ACTIVITY
-    #
-    # PostgreSQL:
-    #     ticket sales + revenue
-    #
-    # Redis:
-    #     trending score
-    #
-    # MongoDB:
-    #     average rating
-    # ============================================================
+    # PostgreSQL: ticket sales + revenue
+    # Redis: trending score
+    # MongoDB: average rating
 
     activity = []
 
     for row in tickets_sold_rows:
-
         event_id = row["event_id"]
 
-
-        # --------------------------------------------------------
         # REDIS TRENDING SCORE
-        # --------------------------------------------------------
-
         try:
             trending_score = get_event_score(event_id)
-
             if trending_score is None:
                 trending_score = 0
-
         except Exception as error:
-
             print(
                 f"Redis trending error for event "
                 f"{event_id}: {error}"
             )
-
             trending_score = 0
 
-
-        # --------------------------------------------------------
         # MONGODB AVERAGE RATING
-        # --------------------------------------------------------
-
         try:
             average_rating = get_average_rating(event_id)
-
         except Exception as error:
-
             print(
                 f"MongoDB rating error for event "
                 f"{event_id}: {error}"
             )
-
             average_rating = None
 
-
-        # --------------------------------------------------------
         # ADD EVENT TO ACTIVITY TABLE
-        # --------------------------------------------------------
-
         activity.append({
             "event_id":
                 event_id,
-
             "title":
                 row["title"],
-
             "tickets_sold":
                 row["total_tickets_sold"],
-
             "revenue":
                 revenue_by_event.get(
                     event_id,
                     0
                 ),
-
             "trending_score":
                 trending_score,
-
             "average_rating":
                 average_rating,
         })
 
-
-    # ============================================================
     # TOP CUSTOMERS
-    # ============================================================
-
     top_customers = []
 
     for row in top_customer_rows:
-
         top_customers.append({
             "user_id":
                 row["user_id"],
-
             "first_name":
                 row["first_name"],
-
             "last_name":
                 row["last_name"],
-
             "email":
                 row["email"],
-
             "tickets_purchased":
                 row["total_tickets_purchased"],
         })
 
-
-    # ============================================================
     # MONTHLY REVENUE
-    # ============================================================
-
     monthly_revenue = []
 
     for row in monthly_revenue_rows:
-
         monthly_revenue.append({
             "month":
                 row["revenue_month"],
-
             "revenue":
                 row["monthly_ticket_revenue"],
         })
 
-
-    # ============================================================
     # SUMMARY
-    # ============================================================
-
     total_tickets_sold = sum(
         row["total_tickets_sold"]
         for row in tickets_sold_rows
@@ -220,53 +147,29 @@ def get_admin_dashboard_data() -> dict[str, Any]:
         for row in revenue_rows
     )
 
-
-    # ============================================================
     # RETURN DASHBOARD DATA
-    # ============================================================
-
     return {
         "activity":
             activity,
-
         "inventory":
             inventory,
-
         "top_customers":
             top_customers,
-
         "monthly_revenue":
             monthly_revenue,
-
         "total_events":
             len(tickets_sold_rows),
-
         "total_tickets_sold":
             total_tickets_sold,
-
         "total_revenue":
             total_revenue,
     }
 
-
-# ============================================================
-# ADMIN EVENT MANAGEMENT
-# ============================================================
-
-from app.database.postgres import get_connection
-from app.services.cache_service import invalidate_event
-
-
 def get_all_venues() -> Sequence[dict[str, Any]]:
-    """
-    Return all venues for the Admin event form.
-    """
-
+    """Return all venues for the Admin event form."""
     conn = get_connection()
-
     try:
         cursor = conn.cursor()
-
         cursor.execute(
             """
             SELECT
@@ -281,12 +184,9 @@ def get_all_venues() -> Sequence[dict[str, Any]]:
 
         venues = cursor.fetchall()
         cursor.close()
-
         return venues
-
     finally:
         conn.close()
-
 
 def create_event(
     venue_id: int,
@@ -296,20 +196,15 @@ def create_event(
     end_datetime: datetime,
     status: str = "scheduled",
 ) -> dict[str, Any] | None:
-    """
-    Create a new PostgreSQL event.
-    """
-
+    """Create a new PostgreSQL event."""
     if end_datetime <= start_datetime:
         raise ValueError(
             "Event end time must be after the start time."
         )
 
     conn = get_connection()
-
     try:
         cursor = conn.cursor()
-
         cursor.execute(
             """
             INSERT INTO events (
@@ -348,23 +243,14 @@ def create_event(
         )
 
         event = cursor.fetchone()
-
         conn.commit()
         cursor.close()
-
         return event
-
     except Exception:
         conn.rollback()
         raise
-
     finally:
         conn.close()
-
-
-# ============================================================
-# ADMIN - CREATE TICKET TYPE
-# ============================================================
 
 def create_ticket_type(
     event_id: int,
@@ -375,6 +261,7 @@ def create_ticket_type(
     maximum_purchase: int = 10,
     status: str = "active",
 ) -> dict[str, Any] | None:
+    """Create a new ticket type for an event."""
     if price < 0:
         raise ValueError("Ticket price cannot be negative.")
 
@@ -390,10 +277,8 @@ def create_ticket_type(
         )
 
     conn = get_connection()
-
     try:
         cursor = conn.cursor()
-
         cursor.execute(
             """
             SELECT event_id
@@ -443,14 +328,11 @@ def create_ticket_type(
         )
 
         ticket_type = cursor.fetchone()
-
         conn.commit()
         cursor.close()
-
     except Exception:
         conn.rollback()
         raise
-
     finally:
         conn.close()
 
@@ -461,18 +343,13 @@ def create_ticket_type(
             f"Could not invalidate cache for event "
             f"{event_id}: {error}"
         )
-
     return ticket_type
-# ============================================================
-# ADMIN - GET EVENT
-# ============================================================
 
 def get_admin_event(event_id: int) -> dict[str, Any] | None:
+    """Return a single event for the Admin event form."""
     conn = get_connection()
-
     try:
         cursor = conn.cursor()
-
         cursor.execute(
             """
             SELECT
@@ -491,15 +368,9 @@ def get_admin_event(event_id: int) -> dict[str, Any] | None:
 
         event = cursor.fetchone()
         cursor.close()
-
         return event
-
     finally:
         conn.close()
-
-# ============================================================
-# ADMIN - UPDATE EVENT
-# ============================================================
 
 def update_event(
     event_id: int,
@@ -510,16 +381,15 @@ def update_event(
     end_datetime: datetime,
     status: str,
 ) -> dict[str, Any] | None:
+    """Update an existing PostgreSQL event."""
     if end_datetime <= start_datetime:
         raise ValueError(
             "Event end time must be after the start time."
         )
 
     conn = get_connection()
-
     try:
         cursor = conn.cursor()
-
         cursor.execute(
             """
             UPDATE events
@@ -553,40 +423,28 @@ def update_event(
         )
 
         event = cursor.fetchone()
-
         if event is None:
             raise ValueError("Event not found.")
 
         conn.commit()
         cursor.close()
-
     except Exception:
         conn.rollback()
         raise
-
     finally:
         conn.close()
 
     invalidate_event(event_id)
-
     return event
-
-# ============================================================
-# ADMIN - GET TICKET TYPE
-# ============================================================
-
 
 def cancel_event(event_id: int) -> dict[str, Any] | None:
     """
     Cancel an event without deleting its PostgreSQL record,
     MongoDB content, ticket types, orders, or sales history.
     """
-
     conn = get_connection()
-
     try:
         cursor = conn.cursor()
-
         cursor.execute(
             """
             UPDATE events
@@ -601,31 +459,25 @@ def cancel_event(event_id: int) -> dict[str, Any] | None:
         )
 
         event = cursor.fetchone()
-
         if event is None:
             raise ValueError("Event not found.")
 
         conn.commit()
         cursor.close()
-
     except Exception:
         conn.rollback()
         raise
-
     finally:
         conn.close()
 
     invalidate_event(event_id)
-
     return event
 
-
 def get_admin_ticket_type(ticket_type_id: int) -> dict[str, Any] | None:
+    """Return a single ticket type for the Admin ticket type form."""
     conn = get_connection()
-
     try:
         cursor = conn.cursor()
-
         cursor.execute(
             """
             SELECT
@@ -648,15 +500,9 @@ def get_admin_ticket_type(ticket_type_id: int) -> dict[str, Any] | None:
 
         ticket_type = cursor.fetchone()
         cursor.close()
-
         return ticket_type
-
     finally:
         conn.close()
-
-# ============================================================
-# ADMIN - UPDATE TICKET TYPE
-# ============================================================
 
 def update_ticket_type(
     ticket_type_id: int,
@@ -664,6 +510,7 @@ def update_ticket_type(
     total_quantity: int,
     status: str,
 ) -> dict[str, Any] | None:
+    """Update an existing ticket type for an event."""
     if price < 0:
         raise ValueError("Ticket price cannot be negative.")
 
@@ -674,10 +521,8 @@ def update_ticket_type(
 
     conn = get_connection()
     event_id = None
-
     try:
         cursor = conn.cursor()
-
         cursor.execute(
             """
             SELECT
@@ -692,12 +537,10 @@ def update_ticket_type(
         )
 
         current = cursor.fetchone()
-
         if current is None:
             raise ValueError("Ticket type not found.")
 
         event_id = current["event_id"]
-
         sold_quantity = (
             current["total_quantity"]
             - current["available_quantity"]
@@ -710,7 +553,6 @@ def update_ticket_type(
             )
 
         new_available = total_quantity - sold_quantity
-
         cursor.execute(
             """
             UPDATE ticket_types
@@ -732,18 +574,14 @@ def update_ticket_type(
         )
 
         updated = cursor.fetchone()
-
         conn.commit()
         cursor.close()
-
     except Exception:
         conn.rollback()
         raise
-
     finally:
         conn.close()
 
     if event_id is not None:
         invalidate_event(event_id)
-
     return updated

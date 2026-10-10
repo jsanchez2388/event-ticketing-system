@@ -17,9 +17,7 @@ Run from the repo root:  python -m experiments.cache_benchmark
 import argparse
 import csv
 import sys
-
 from time import perf_counter
-
 from app.database.mongo import (
     init_client as init_mongo,
     close_client as close_mongo,
@@ -46,17 +44,12 @@ from app.services.cache_service import (
 from app.services.content_service import get_event_content
 from app.services.event_service import build_event_detail
 
-
 DEFAULT_EVENT_ID = 103
 DEFAULT_RUNS = 30
 QUICK_RUNS = 10
 WARMUP_RUNS = 3
 
-# CACHE_TTL_SECONDS is 60s and arm A costs a few hundred ms per run, so a full
-# benchmark can outlive a normal TTL and arm B would silently start timing
-# cache misses. Hold the key for the duration instead.
 BENCHMARK_TTL_SECONDS = 600
-
 
 def time_call(fn, *args, **kwargs) -> float:
     """Run fn once and return how long it took, in milliseconds."""
@@ -64,16 +57,16 @@ def time_call(fn, *args, **kwargs) -> float:
     fn(*args, **kwargs)
     return (perf_counter() - start) * 1000
 
-
 def measure_database(event_id: int) -> float:
+    """Time one cold rebuild of an event from PostgreSQL and MongoDB."""
     return time_call(build_event_detail, event_id)
 
-
 def measure_database_warm(event_id: int, conn) -> float:
+    """Time one rebuild of an event, reusing an already-open connection."""
     return time_call(build_event_detail, event_id, conn=conn)
 
-
 def measure_redis(event_id: int) -> float:
+    """Time one cached read, repopulating the cache on a miss."""
     start = perf_counter()
     cached = get_cached_event(event_id)
     elapsed = (perf_counter() - start) * 1000
@@ -85,7 +78,6 @@ def measure_redis(event_id: int) -> float:
         )
 
     return elapsed
-
 
 def preflight(event_id: int) -> None:
     """Fail early and legibly if a datastore or the event is unavailable."""
@@ -109,14 +101,12 @@ def preflight(event_id: int) -> None:
     if get_event_content(event_id) is None:
         print(f"Warning: event {event_id} has no MongoDB content document.")
 
-
 def warm_up(event_id: int, conn) -> None:
     """Discarded runs that absorb DNS, TLS setup and any Neon cold start."""
     for _ in range(WARMUP_RUNS):
         build_event_detail(event_id)
         build_event_detail(event_id, conn=conn)
         get_cached_event(event_id)
-
 
 def run_experiments(event_id: int, runs: int, include_warm_conn: bool) -> dict[str, list[float]]:
     """Time every arm round-robin so network drift is shared evenly."""
@@ -155,8 +145,8 @@ def run_experiments(event_id: int, runs: int, include_warm_conn: bool) -> dict[s
     print(" " * 30, end="\r")
     return results
 
-
 def save_results(results: dict[str, list[float]], path=RESULTS_CSV) -> None:
+    """Write the per-run timings to the results CSV."""
     path.parent.mkdir(parents=True, exist_ok=True)
 
     with open(path, "w", newline="", encoding="utf-8") as handle:
@@ -167,8 +157,8 @@ def save_results(results: dict[str, list[float]], path=RESULTS_CSV) -> None:
             for run, ms in enumerate(timings, start=1):
                 writer.writerow([run, arm, f"{ms:.4f}"])
 
-
 def build_table(results: dict[str, list[float]]) -> list[list[str]]:
+    """Build the summary table rows for whichever arms produced results."""
     arms = [a for a in (ARM_DATABASE, ARM_REDIS, ARM_DATABASE_WARM) if results.get(a)]
     summaries = {arm: summarize(results[arm]) for arm in arms}
 
@@ -185,14 +175,16 @@ def build_table(results: dict[str, list[float]]) -> list[list[str]]:
 
     return rows
 
-
 def print_table(rows: list[list[str]]) -> None:
+    """Print a table with box-drawing borders."""
     widths = [max(len(row[i]) for row in rows) for i in range(len(rows[0]))]
 
     def rule(char: str) -> str:
+        """Return a horizontal border built from the given character."""
         return "+" + "+".join(char * (w + 2) for w in widths) + "+"
 
     def render(row: list[str]) -> str:
+        """Return one row padded to the column widths."""
         return "| " + " | ".join(v.ljust(widths[i]) for i, v in enumerate(row)) + " |"
 
     print(rule("="))
@@ -203,7 +195,6 @@ def print_table(rows: list[list[str]]) -> None:
         print(render(row))
 
     print(rule("-"))
-
 
 def write_markdown(rows: list[list[str]], event_id: int, runs: int) -> None:
     """Write the report-ready table so the numbers never need retyping."""
@@ -224,8 +215,8 @@ def write_markdown(rows: list[list[str]], event_id: int, runs: int) -> None:
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"Wrote {path}")
 
-
 def main() -> None:
+    """Run the benchmark from the command line."""
     parser = argparse.ArgumentParser(description="Cache performance experiment.")
     parser.add_argument("--event-id", type=int, default=DEFAULT_EVENT_ID)
     parser.add_argument("--runs", type=int, default=DEFAULT_RUNS)
@@ -265,7 +256,6 @@ def main() -> None:
 
         close_mongo()
         close_redis()
-
 
 if __name__ == "__main__":
     main()

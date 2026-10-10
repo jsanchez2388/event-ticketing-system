@@ -1,14 +1,13 @@
 from collections.abc import Sequence
 from typing import Any
-
 from app.database.postgres import get_connection
 from app.services.event_service import get_event_detail, get_events_by_ids
 from app.services.trending_service import get_top_trending
 from app.services.content_service import get_event_content_by_ids
 from app.services.user_service import get_users_by_ids
 
-
 def get_event_cards() -> Sequence[dict[str, Any]]:
+    """Return the event cards shown on the website home page."""
     conn = get_connection()
 
     try:
@@ -74,8 +73,8 @@ def get_event_cards() -> Sequence[dict[str, Any]]:
     finally:
         conn.close()
 
-
 def get_trending_event_cards(limit: int = 10) -> list[dict[str, Any]]:
+    """Return cards for the top trending events, in rank order."""
     trending = get_top_trending(limit)
 
     if not trending:
@@ -109,20 +108,17 @@ def get_trending_event_cards(limit: int = 10) -> list[dict[str, Any]]:
 
     return results
 
-
 def get_event_page_details(event_id: int) -> dict[str, Any] | None:
-
+    """Return an event's page data: ticket types, categories and average rating."""
     event = get_event_detail(event_id)
-    
+
     if event is None:
         return None
-    
+
     conn = get_connection()
 
     try:
         cursor = conn.cursor()
-
-        
 
         # Ticket types
         cursor.execute(

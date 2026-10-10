@@ -31,7 +31,6 @@ SERVER_SELECTION_TIMEOUT_SECONDS = 2
 # The cooldown is long enough to avoid spamming the logs with repeated failures when MongoDB is down.
 RECONNECT_COOLDOWN_SECONDS = 5
 
-
 def init_client() -> MongoClient[MongoDocument]:
     """Initialize the MongoDB client."""
     global _client, _degraded
@@ -54,7 +53,6 @@ def init_client() -> MongoClient[MongoDocument]:
 
     return _client
 
-
 def get_client() -> MongoClient[MongoDocument]:
     """Return the MongoDB client, or raise if it has not been initialized."""
     if _client is None:
@@ -66,7 +64,6 @@ def get_client() -> MongoClient[MongoDocument]:
         )
 
     return _client
-
 
 def _try_reconnect() -> bool:
     """Attempt to reconnect to MongoDB if the cooldown has passed."""
@@ -87,13 +84,11 @@ def _try_reconnect() -> bool:
 
     return True
 
-
 def optional(
     fallback: Any = None,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """Decorator to provide a fallback value when MongoDB is unavailable."""
     def decorator(fn: Callable[P, R]) -> Callable[P, R]:
-
         @functools.wraps(fn)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             global _degraded
@@ -121,7 +116,6 @@ def optional(
 
     return decorator
 
-
 def _degrade(fn: Callable[..., Any], error: BaseException, fallback: Any) -> Any:
     """Called when an operation fails while MongoDB is unavailable."""
     global _degraded
@@ -132,21 +126,17 @@ def _degrade(fn: Callable[..., Any], error: BaseException, fallback: Any) -> Any
 
     return fallback() if callable(fallback) else fallback
 
-
 def is_available() -> bool:
     """Best-effort view of whether MongoDB is currently usable."""
     return _client is not None and not _degraded
-
 
 def get_database() -> Database[MongoDocument]:
     """Return the MongoDB database, or raise if it has not been initialized."""
     return get_client()[get_settings().require("MONGO_DB")]
 
-
 def get_event_content_collection() -> Collection[MongoDocument]:
     """Return the event content collection, or raise if it has not been initialized."""
     return get_database()[get_settings().EVENT_CONTENT_COLLECTION]
-
 
 def test_connection() -> dict[str, Any]:
     """Tests the connection to the MongoDB database."""
@@ -156,7 +146,6 @@ def test_connection() -> dict[str, Any]:
         "status": "connected",
         "database": get_settings().MONGO_DB
     }
-
 
 def close_client() -> None:
     """Close the MongoDB client."""

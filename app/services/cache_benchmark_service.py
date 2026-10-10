@@ -1,7 +1,6 @@
 from time import perf_counter
 from statistics import median
 from typing import Any
-
 from app.services.event_service import build_event_detail
 from app.services.cache_service import (
     get_cached_event,
@@ -9,11 +8,14 @@ from app.services.cache_service import (
     invalidate_event,
 )
 
-
 def run_cache_benchmark(
     event_id: int,
     iterations: int = 10,
 ) -> dict[str, Any]:
+    """Time repeated reads of one event with and without the Redis cache.
+
+    Returns the individual timings and medians for both paths.
+    """
     if iterations < 1:
         raise ValueError(
             "Iterations must be at least 1."
@@ -24,26 +26,21 @@ def run_cache_benchmark(
             "Iterations cannot exceed 100."
         )
 
-    # --------------------------------------------------------
     # Make sure the event exists.
     # This also acts as a warm-up request.
-    # --------------------------------------------------------
 
     event = build_event_detail(event_id)
 
     if event is None:
         raise ValueError("Event not found.")
 
-    # --------------------------------------------------------
     # WITHOUT REDIS CACHE
     #
     # Rebuild the event from PostgreSQL + MongoDB each time.
-    # --------------------------------------------------------
 
     no_cache_times = []
 
     for _ in range(iterations):
-
         start = perf_counter()
 
         result = build_event_detail(event_id)
@@ -57,9 +54,7 @@ def run_cache_benchmark(
 
         no_cache_times.append(elapsed_ms)
 
-    # --------------------------------------------------------
     # WITH REDIS CACHE
-    # --------------------------------------------------------
 
     invalidate_event(event_id)
 
@@ -76,7 +71,6 @@ def run_cache_benchmark(
     cache_times = []
 
     for _ in range(iterations):
-
         start = perf_counter()
 
         result = get_cached_event(event_id)

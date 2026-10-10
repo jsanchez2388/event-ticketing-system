@@ -1,20 +1,16 @@
 from time import perf_counter, sleep
-
 from app.database.mongo import init_client as init_mongo, close_client as close_mongo
 from app.database.redis import init_client as init_redis, close_client as close_redis
 from app.services.cache_service import invalidate_event, get_ttl_remaining, set_cached_event
 from app.services.event_service import get_event_detail
-
 
 def setup() -> None:
     """Initialize the database clients needed by the cache demo."""
     init_mongo()
     init_redis()
 
-
 def demo_cache_flow(event_id: int) -> None:
     """Show a Redis cache miss followed by a cache hit for one event."""
-
     print(f"\n--- Redis Cache Demo: Event {event_id} ---")
 
     # Start from a clean state so the first request is a cache miss.
@@ -61,11 +57,10 @@ def demo_cache_flow(event_id: int) -> None:
     print(f"Popularity score: {second_result['popularity_score']}")
     print(f"TTL remaining: {ttl} seconds")
 
-
     print("\n--- Demo Complete ---")
 
-
 def demo_ttl_expiry(event_id: int) -> None:
+    """Show a cache entry expiring once its TTL elapses."""
     print("\n--- TTL Expiration Demo ---")
 
     # Get the event normally first.
@@ -98,8 +93,8 @@ def demo_ttl_expiry(event_id: int) -> None:
 
     print(f"Cache hit: {result['cache_hit']}")
 
-
 def main() -> None:
+    """Run the cache demos against a known event."""
     setup()
 
     try:

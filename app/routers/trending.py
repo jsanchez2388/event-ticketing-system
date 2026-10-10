@@ -1,15 +1,12 @@
 from fastapi import APIRouter, Query
-
 from app.services.trending_service import get_top_trending
 from app.services.event_service import get_events_by_ids
-
 
 router = APIRouter(
     prefix="/trending",
     tags=["trending"],
 )
 
-# Gets ranking from Redis to get the top event IDs and fetches their info from Postgres
 @router.get("")
 def get_trending(
     limit: int = Query(default=10, ge=1, le=50)
@@ -17,8 +14,8 @@ def get_trending(
     """
     Return the highest ranked trending events.
 
-    Events are ranked by their popularity score stored
-    in the Redis trending sorted set.
+    Ids are ranked by the popularity score held in the Redis trending sorted
+    set, then their details are read from PostgreSQL.
     """
     trending = get_top_trending(limit)
 

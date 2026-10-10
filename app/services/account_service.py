@@ -1,10 +1,8 @@
 from typing import Any
-
 from app.database.postgres import get_connection
 
-
 def get_account(user_id: int) -> dict[str, Any]:
-
+    """Return a user's profile together with their order history."""
     conn = get_connection()
 
     try:
@@ -27,7 +25,6 @@ def get_account(user_id: int) -> dict[str, Any]:
         )
 
         user = cursor.fetchone()
-
 
         cursor.execute(
             """

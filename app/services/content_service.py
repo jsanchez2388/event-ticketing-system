@@ -23,7 +23,6 @@ def get_event_content(event_id: int) -> dict[str, Any] | None:
 
     return document
 
-
 @optional(fallback=dict)
 def get_event_content_by_ids(event_ids: list[int]) -> dict[int, dict[str, Any]]:
     """
@@ -55,7 +54,6 @@ def get_event_content_by_ids(event_ids: list[int]) -> dict[int, dict[str, Any]]:
         document["eventId"]: document
         for document in documents
     }
-
 
 def add_review(event_id: int, review: ReviewCreate) -> dict[str, Any] | None:
     """
@@ -174,7 +172,6 @@ def create_event_content(document: dict[str, Any]) -> bool:
 
     return result.inserted_id is not None
 
-
 def update_event_content(
     event_id: int,
     updates: dict[str, Any],
@@ -188,7 +185,6 @@ def update_event_content(
 
     Customer reviews are not removed here.
     """
-
     collection = get_event_content_collection()
 
     update_operation = {
@@ -196,7 +192,6 @@ def update_event_content(
     }
 
     if replace_flexible:
-
         flexible_fields = [
             "description",
             "tags",
@@ -211,7 +206,6 @@ def update_event_content(
         fields_to_remove = {}
 
         for field in flexible_fields:
-
             if field not in updates:
                 fields_to_remove[field] = ""
 
@@ -226,13 +220,11 @@ def update_event_content(
     )
 
     if result.matched_count > 0:
-
         invalidate_event(event_id)
 
         return True
 
     return False
-
 
 def delete_event_content(event_id: int) -> bool:
     """

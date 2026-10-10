@@ -5,7 +5,6 @@ from typing import Any, ParamSpec, TypeVar, cast
 import redis
 from app.config import get_settings
 
-
 P = ParamSpec("P")
 R = TypeVar("R")
 
@@ -25,7 +24,6 @@ CONNECT_TIMEOUT_SECONDS = 2
 SOCKET_TIMEOUT_SECONDS = 2
 
 RECONNECT_COOLDOWN_SECONDS = 5
-
 
 def init_client() -> None:
     """Initialize the Redis client."""
@@ -49,7 +47,6 @@ def init_client() -> None:
     _client = client
     _degraded = False
 
-
 def get_redis() -> redis.Redis:
     """Return the Redis client, or raise if it has not been initialized."""
     if _client is None:
@@ -58,7 +55,6 @@ def get_redis() -> redis.Redis:
         )
 
     return _client
-
 
 def _try_reconnect() -> bool:
     """
@@ -82,13 +78,11 @@ def _try_reconnect() -> bool:
 
     return True
 
-
 def optional(
     fallback: Any = None,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """Decorator to provide a fallback value when Redis is unavailable."""
     def decorator(fn: Callable[P, R]) -> Callable[P, R]:
-
         @functools.wraps(fn)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             global _degraded
@@ -116,7 +110,6 @@ def optional(
 
     return decorator
 
-
 def _degrade( fn: Callable[..., Any], error: BaseException, fallback: Any) -> Any:
     """Called when an operation fails while Redis is unavailable."""
     global _degraded
@@ -127,13 +120,12 @@ def _degrade( fn: Callable[..., Any], error: BaseException, fallback: Any) -> An
 
     return fallback() if callable(fallback) else fallback
 
-
 def is_available() -> bool:
     """Best-effort view of whether Redis is currently usable."""
     return _client is not None and not _degraded
 
-
 def close_client() -> None:
+    """Close the Redis client."""
     global _client
 
     if _client is not None:

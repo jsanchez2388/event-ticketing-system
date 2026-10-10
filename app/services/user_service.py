@@ -1,12 +1,8 @@
 from typing import Any
-
 from app.database.postgres import get_connection
 
-
 def get_user(user_id: int) -> dict[str, Any] | None:
-    """
-    Return a single user from PostgreSQL by user_id, or None if not found.
-    """
+    """Return a single user from PostgreSQL by user_id, or None if not found."""
     conn = get_connection()
 
     try:
@@ -36,13 +32,11 @@ def get_user(user_id: int) -> dict[str, Any] | None:
     finally:
         conn.close()
 
-
-# Will be used to collect all the user details for the review section of the event details page
 def get_users_by_ids(user_ids: list[int]) -> dict[int, dict[str, Any]]:
-    """
-    Return multiple users from PostgreSQL keyed by user_id.
-    """
+    """Return multiple users from PostgreSQL keyed by user_id.
 
+    Used to resolve the reviewers shown on an event's detail page.
+    """
     if not user_ids:
         return {}
 

@@ -5,18 +5,14 @@ from app.services.trending_service import (
     reset_trending,
 )
 
-
 def simulate_views(view_counts: dict[int, int]) -> None:
     """Simulate a specified number of views for each event."""
-
     for event_id, view_count in view_counts.items():
         for _ in range(view_count):
             record_view(event_id)
 
-
 def print_top_trending(limit: int = 10) -> None:
     """Print the current Redis trending ranking."""
-
     trending_events = get_top_trending(limit)
 
     print(f"{'Rank':<6}{'Event':<14}{'Score':<8}")
@@ -29,8 +25,8 @@ def print_top_trending(limit: int = 10) -> None:
             f"{event['score']:<8.0f}"
         )
 
-
 def main() -> None:
+    """Run the trending demo against a repeatable, empty sorted set."""
     init_client()
 
     try:
@@ -63,7 +59,6 @@ def main() -> None:
 
     finally:
         close_client()
-
 
 if __name__ == "__main__":
     main()

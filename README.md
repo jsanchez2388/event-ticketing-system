@@ -35,7 +35,8 @@ cp .env.example .env           # then fill in your own values
 ```
 
 `.env.example` documents every variable and which ones are required.
-`SESSION_SECRET` has no default and the app will not start without it.
+`POSTGRES_CONNECTION_STRING`, `MONGO_URI`, `MONGO_DB` and `SESSION_SECRET`
+have no defaults, and the app refuses to start without `SESSION_SECRET`.
 
 ## Database initialization
 
@@ -94,7 +95,7 @@ Results are in `experiments/results.csv` and `experiments/summary.md`.
 | `redis_demo/` | The two Redis use cases |
 | `app/routers/` | `web.py` is the site; the others are the JSON API |
 | `app/services/` | Business logic — the transaction, the 8 SQL queries, cache and trending helpers |
-| `docs/` | Report, presentation outline, demo script |
+| `docs/` | The benchmark chart, written by `experiments/plot_results.py` |
 
 The 8 SQL queries in `sql/queries.sql` are generated from the same constants
 the application executes (`QUERY_SQL` in `app/services/analytics_service.py`),
@@ -104,5 +105,4 @@ each query's SQL next to its live results.
 ## Documentation
 
 - [setup.md](setup.md) — step-by-step localhost setup, including seeded accounts and troubleshooting
-- [PROJECT_GUIDE.md](PROJECT_GUIDE.md) — design, schema rationale, and the full file tree
-- [docs/report.md](docs/report.md) — final report
+- [experiments/summary.md](experiments/summary.md) — cache benchmark results table

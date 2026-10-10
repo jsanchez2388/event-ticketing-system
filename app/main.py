@@ -1,10 +1,8 @@
 import os
 from contextlib import asynccontextmanager
-
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
-
 from app.database.postgres import test_connection
 from app.database import mongo as mongo_db
 from app.database import redis as redis_db
@@ -17,9 +15,13 @@ from app.routers.reviews import router as reviews_router
 from app.routers.trending import router as trending_router
 from app.routers.mongo_queries import router as mongo_queries_router
 
-# MongoDB and Redis connection lifecycle
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Open and close the MongoDB and Redis connections around the app's lifetime.
+
+    Both stores are optional, so startup continues when either is unavailable
+    and only the connections that opened successfully are closed.
+    """
     try:
         mongo_db.init_client()
         print("MongoDB initialized.")
@@ -53,7 +55,6 @@ async def lifespan(app: FastAPI):
 
         mongo_db.close_client()
         print("MongoDB connection closed.")
-
 
 app = FastAPI(
     title="Event Ticketing System",
@@ -92,7 +93,6 @@ app.add_middleware(
     https_only=SESSION_HTTPS_ONLY
 )
 
-
 # API routes
 app.include_router(events_router)
 app.include_router(analytics_router)
@@ -114,9 +114,9 @@ app.mount(
     name="static"
 )
 
-
 @app.get("/")
 def root():
+    """Return a short index of the public entry points."""
     return {
         "status": "ok",
         "message": "Event Ticketing System",
@@ -126,9 +126,9 @@ def root():
         "docs": "/docs"
     }
 
-
 @app.get("/health/database")
 def database_health():
+    """Report whether PostgreSQL is reachable."""
     try:
         result = test_connection()
 

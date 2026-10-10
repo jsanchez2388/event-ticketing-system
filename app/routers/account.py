@@ -11,47 +11,36 @@ router = APIRouter(
     tags=["Account"]
 )
 
-
 APP_DIR = Path(__file__).resolve().parent.parent
 
 templates = Jinja2Templates(
     directory=str(APP_DIR / "templates")
 )
 
-
-# ============================================================
-# MY ACCOUNT
-# ============================================================
-
 @router.get("/account")
 def account_page(request: Request):
-
+    """ 
+    Render the account page for the logged-in user. If the user is not logged in, 
+    redirect to the login page.
+    """
     user_id = request.session.get(
         "user_id"
     )
 
     if not user_id:
-
         return RedirectResponse(
             url="/site/login",
             status_code=303
         )
 
-
-    data = get_account(
-        user_id
-    )
-
+    data = get_account(user_id)
 
     if not data["user"]:
-
         request.session.clear()
-
         return RedirectResponse(
             url="/site/login",
             status_code=303
         )
-
 
     message = request.session.pop(
         "message",
@@ -63,11 +52,9 @@ def account_page(request: Request):
         None
     )
 
-
     csrf_token = get_csrf_token(
         request
     )
-
 
     return templates.TemplateResponse(
         request=request,
@@ -81,11 +68,6 @@ def account_page(request: Request):
         }
     )
 
-
-# ============================================================
-# BUY TICKET
-# ============================================================
-
 @router.post("/buy/{ticket_type_id}")
 def buy_ticket(
     request: Request,
@@ -93,65 +75,46 @@ def buy_ticket(
     quantity: int = Form(...),
     csrf_token: str = Form(...)
 ):
-
+    """Handle ticket purchase requests."""
     user_id = request.session.get(
         "user_id"
     )
 
-
     # User must be logged in
     if not user_id:
-
         return RedirectResponse(
             url="/site/login",
             status_code=303
         )
 
-
-    # --------------------------------------------------------
     # CSRF CHECK
-    # --------------------------------------------------------
-
     if not validate_csrf_token(
         request,
         csrf_token
     ):
-
         raise HTTPException(
             status_code=403,
             detail="Invalid CSRF token."
         )
 
-
-    # --------------------------------------------------------
     # BASIC QUANTITY CHECK
-    # --------------------------------------------------------
-
     if quantity <= 0:
-
         request.session["error"] = (
             "Ticket quantity must be "
             "greater than zero."
         )
-
         return RedirectResponse(
             url="/site/account",
             status_code=303
         )
 
-
-    # --------------------------------------------------------
     # PURCHASE
-    # --------------------------------------------------------
-
     try:
-
         result = purchase_ticket(
             user_id=user_id,
             ticket_type_id=ticket_type_id,
             quantity=quantity
         )
-
         if result is None:
             raise RuntimeError(
                 "Purchase did not return an order."
@@ -162,13 +125,8 @@ def buy_ticket(
             f"Order #{result['new_order_id']} "
             f"was created."
         )
-
-
     except Exception as e:
-
         request.session["error"] = str(e)
-
-
     return RedirectResponse(
         url="/site/account",
         status_code=303

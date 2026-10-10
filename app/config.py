@@ -5,7 +5,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Settings:
+    """Environment-backed configuration for the application."""
     def __init__(self) -> None:
+        """Read every supported setting from the environment."""
         self.POSTGRES_CONNECTION_STRING: str | None = os.getenv("POSTGRES_CONNECTION_STRING")
         self.MONGO_URI: str | None = os.getenv("MONGO_URI")
         self.MONGO_DB: str | None = os.getenv("MONGO_DB")
@@ -25,6 +27,7 @@ class Settings:
         self.EVENT_CONTENT_COLLECTION: str = "event_content"
 
     def require(self, name: str) -> str:
+        """Return a setting's value, raising if it is missing or empty."""
         value = getattr(self, name)
 
         if not value:
@@ -34,7 +37,5 @@ class Settings:
 
 @lru_cache()
 def get_settings() -> Settings:
-    """
-    Return the application settings, cached to avoid re-reading the environment file.
-    """
+    """Return the application settings, cached to avoid re-reading the environment file."""
     return Settings()

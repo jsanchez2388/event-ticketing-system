@@ -24,7 +24,6 @@ from app.services.benchmark_service import (
     summarize_all
 )
 
-
 METRICS = [
     ("minimum", "Minimum"),
     ("maximum", "Maximum"),
@@ -38,8 +37,8 @@ BAR_COLORS = {
     "redis": "#27ae60"
 }
 
-
 def plot_summary_bars(summaries: dict[str, dict], path) -> None:
+    """Draw the grouped bar chart comparing the benchmark arms."""
     arms = list(summaries)
     width = 0.8 / len(arms)
     positions = range(len(METRICS))
@@ -91,8 +90,8 @@ def plot_summary_bars(summaries: dict[str, dict], path) -> None:
 
     plt.close(figure)
 
-
 def main() -> None:
+    """Render the benchmark chart from the results CSV."""
     results = load_results()
 
     if not results:
@@ -103,7 +102,6 @@ def main() -> None:
 
     summaries = summarize_all(results)
     plot_summary_bars(summaries, [DOCS_CHART_FILE, CHART_FILE])
-
 
 if __name__ == "__main__":
     main()

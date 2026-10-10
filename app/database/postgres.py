@@ -1,7 +1,6 @@
 from typing import Any, cast
 import psycopg2
 from psycopg2.extras import RealDictConnection, RealDictCursor
-
 from app.config import get_settings
 
 def get_connection() -> RealDictConnection:

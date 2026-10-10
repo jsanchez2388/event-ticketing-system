@@ -1,7 +1,7 @@
 from app.database.mongo import get_event_content_collection
 
-
 def create_indexes():
+    """Create the indexes used by the event content queries."""
     collection = get_event_content_collection()
 
     collection.create_index(
@@ -16,8 +16,8 @@ def create_indexes():
 
     print("MongoDB indexes created.")
 
-
 def list_indexes():
+    """Print the indexes currently defined on the collection."""
     collection = get_event_content_collection()
 
     indexes = collection.index_information()
@@ -28,6 +28,7 @@ def list_indexes():
         print()
 
 def explain_tag_query():
+    """Print the query plan for a tag lookup, to show which index is used."""
     collection = get_event_content_collection()
 
     explanation = collection.find(
@@ -38,7 +39,6 @@ def explain_tag_query():
 
     print("Explain result for tag query:")
     print(winning_plan)
-
 
 if __name__ == "__main__":
     create_indexes()

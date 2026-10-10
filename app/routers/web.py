@@ -4,7 +4,6 @@ from pathlib import Path
 from time import perf_counter
 from datetime import datetime
 from typing import Any
-
 from app.database import redis as redis_db
 from app.services.analytics_service import (
     QUERY_SQL,
@@ -22,8 +21,6 @@ from app.services.cache_service import (
     is_event_cache_enabled,
     set_event_cache_enabled,
 )
-
-
 from fastapi import (
     APIRouter,
     Form,
@@ -32,17 +29,13 @@ from fastapi import (
     Form,
 )
 from fastapi.responses import RedirectResponse
-
 from fastapi.templating import Jinja2Templates
-
 from app.security import get_csrf_token, validate_csrf_token
-
 from app.services.web_service import (
     get_event_cards,
     get_event_page_details,
     get_trending_event_cards
 )
-
 from app.services.benchmark_service import (
     ARM_DATABASE,
     ARM_DATABASE_WARM,
@@ -54,7 +47,6 @@ from app.services.benchmark_service import (
     speedup,
     summarize_all
 )
-
 from app.models.event_content import ReviewCreate
 from app.services.content_service import (
     add_review,
@@ -62,7 +54,6 @@ from app.services.content_service import (
     create_event_content,
     update_event_content,
 )
-
 from app.services.admin_service import (
     get_admin_dashboard_data,
     get_all_venues,
@@ -77,21 +68,15 @@ router = APIRouter(
     tags=["Website"]
 )
 
-
 APP_DIR = Path(__file__).resolve().parent.parent
 
 templates = Jinja2Templates(
     directory=str(APP_DIR / "templates")
 )
 
-
-# ============================================================
-# WEBSITE HOME
-# ============================================================
-
 @router.get("/site")
 def website_home(request: Request):
-
+    """Render the home page with the event cards."""
     events = get_event_cards()
 
     csrf_token = get_csrf_token(
@@ -107,14 +92,9 @@ def website_home(request: Request):
         }
     )
 
-
-# ============================================================
-# TRENDING EVENTS
-# ============================================================
-
 @router.get("/site/trending")
 def website_trending(request: Request):
-
+    """Render the trending events page."""
     events = get_trending_event_cards()
 
     csrf_token = get_csrf_token(
@@ -130,17 +110,12 @@ def website_trending(request: Request):
         }
     )
 
-
-
-# ============================================================
-# EVENT DETAILS
-# ============================================================
-
 @router.get("/site/events/{event_id}")
 def website_event_details(
     request: Request,
     event_id: int
 ):
+    """Render one event's detail page, with request timing and cache TTL."""
     start = perf_counter()
 
     data = get_event_page_details(
@@ -150,7 +125,6 @@ def website_event_details(
     request_time_ms = (perf_counter() - start) * 1000
 
     if data is None:
-
         raise HTTPException(
             status_code=404,
             detail="Event not found"
@@ -174,14 +148,9 @@ def website_event_details(
         }
     )
 
-
-# ============================================================
-# CACHE BENCHMARK RESULTS
-# ============================================================
-
 @router.get("/site/benchmark")
 def website_benchmark(request: Request):
-
+    """Render the stored cache benchmark results."""
     if request.session.get("role") != "admin":
         raise HTTPException(
             status_code=403,
@@ -222,11 +191,6 @@ def website_benchmark(request: Request):
         }
     )
 
-
-
-# ============================================================
-# SUBMIT EVENT REVIEW
-
 @router.post("/site/events/{event_id}/reviews")
 def website_submit_review(
     request: Request,
@@ -235,6 +199,7 @@ def website_submit_review(
     comment: str = Form(...),
     csrf_token: str = Form(...)
 ):
+    """Accept a review submitted from an event page."""
     user_id = request.session.get("user_id")
 
     if user_id is None:
@@ -278,16 +243,9 @@ def website_submit_review(
         status_code=303
     )
 
-
-
-# ============================================================
-# POSTGRESQL QUERY DEMO
-# ============================================================
-
-
 @router.get("/site/postgres-demo")
 def website_postgres_demo(request: Request):
-
+    """Render the PostgreSQL query demo page. Administrators only."""
     if request.session.get("role") != "admin":
         raise HTTPException(
             status_code=403,
@@ -295,6 +253,7 @@ def website_postgres_demo(request: Request):
         )
 
     def optional_int(name):
+        """Read a query parameter as an int, or None when missing or unparseable."""
         value = request.query_params.get(name)
 
         if value is None or value.strip() == "":
@@ -306,6 +265,7 @@ def website_postgres_demo(request: Request):
             return None
 
     def safe_query(function):
+        """Run a query, returning its rows and any error message instead of raising."""
         try:
             return function(), None
         except Exception as error:
@@ -439,15 +399,10 @@ def website_postgres_demo(request: Request):
         }
     )
 
-
-# ============================================================
-# MONGO QUERIES DEMO
-# ============================================================
-
 @router.get("/mongo")
 @router.get("/site/mongo-demo")
 def website_mongo_demo(request: Request):
-
+    """Render the MongoDB query demo page."""
     if request.session.get("role") != "admin":
         raise HTTPException(
             status_code=403,
@@ -464,23 +419,17 @@ def website_mongo_demo(request: Request):
         }
     )
 
-# ============================================================
-# ADMIN DASHBOARD
-# ============================================================
-
 @router.get("/site/admin")
 def website_admin_dashboard(
     request: Request
 ):
-
     # Only administrator accounts may access this page.
+    """Render the admin dashboard. Administrators only."""
     if request.session.get("role") != "admin":
-
         raise HTTPException(
             status_code=403,
             detail="Administrator access required"
         )
-
 
     dashboard = get_admin_dashboard_data()
 
@@ -501,16 +450,12 @@ def website_admin_dashboard(
         }
     )
 
-
-# ============================================================
-# ADMIN - TOGGLE EVENT CACHE
-# ============================================================
-
 @router.post("/site/admin/cache/toggle")
 def website_admin_toggle_cache(
     request: Request,
     csrf_token: str = Form(...),
 ):
+    """Turn the event cache on or off from the admin dashboard."""
     if request.session.get("role") != "admin":
         raise HTTPException(
             status_code=403,
@@ -537,13 +482,6 @@ def website_admin_toggle_cache(
         status_code=303
     )
 
-
-
-
-# ============================================================
-# ADMIN - CACHE PERFORMANCE BENCHMARK
-# ============================================================
-
 @router.post("/site/admin/cache/benchmark")
 def website_admin_cache_benchmark(
     request: Request,
@@ -551,6 +489,7 @@ def website_admin_cache_benchmark(
     iterations: int = Form(10),
     csrf_token: str = Form(...),
 ):
+    """Run the cache benchmark from the admin dashboard and show the result."""
     if request.session.get("role") != "admin":
         raise HTTPException(
             status_code=403,
@@ -591,16 +530,11 @@ def website_admin_cache_benchmark(
         }
     )
 
-
-# ============================================================
-# ADMIN - CREATE EVENT FORM
-# ============================================================
-
 @router.get("/site/admin/events/create")
 def website_admin_create_event_form(
     request: Request
 ):
-
+    """Render the admin form for creating an event."""
     if request.session.get("role") != "admin":
         raise HTTPException(
             status_code=403,
@@ -623,10 +557,8 @@ def website_admin_create_event_form(
         }
     )
 
-
-
 def _split_form_list(value: str) -> list[str]:
-
+    """Split a comma- or newline-separated form field into trimmed values."""
     if not value:
         return []
 
@@ -638,13 +570,12 @@ def _split_form_list(value: str) -> list[str]:
         if item.strip()
     ]
 
-
 def _build_speakers(
     names: list[str] | None,
     organizations: list[str] | None,
     topics: list[str] | None,
 ) -> list[dict]:
-
+    """Build the speaker documents from the parallel speaker form fields."""
     names = names or []
     organizations = organizations or []
     topics = topics or []
@@ -659,7 +590,6 @@ def _build_speakers(
     )
 
     for index in range(count):
-
         name = (
             names[index].strip()
             if index < len(names)
@@ -704,13 +634,12 @@ def _build_speakers(
 
     return speakers
 
-
 def _build_schedule(
     times: list[str] | None,
     sessions: list[str] | None,
     rooms: list[str] | None,
 ) -> list[dict]:
-
+    """Build the schedule documents from the parallel schedule form fields."""
     times = times or []
     sessions = sessions or []
     rooms = rooms or []
@@ -725,7 +654,6 @@ def _build_schedule(
     )
 
     for index in range(count):
-
         time_value = (
             times[index].strip()
             if index < len(times)
@@ -766,19 +694,17 @@ def _build_schedule(
 
     return schedule
 
-
 def _build_custom_metadata(
     keys: list[str] | None,
     values: list[str] | None,
 ) -> dict:
-
+    """Pair the custom metadata keys with their values, dropping blank entries."""
     keys = keys or []
     values = values or []
 
     metadata = {}
 
     for index, key in enumerate(keys):
-
         key = key.strip()
 
         if not key:
@@ -795,7 +721,6 @@ def _build_custom_metadata(
 
     return metadata
 
-
 def _build_mongo_event_content(
     *,
     event_id: int,
@@ -803,48 +728,40 @@ def _build_mongo_event_content(
     event_type: str,
     description: str,
     tags: str,
-
     performers: str,
     genres: str,
     age_restriction: str,
-
     speaker_names: list[str] | None,
     speaker_organizations: list[str] | None,
     speaker_topics: list[str] | None,
-
     schedule_times: list[str] | None,
     schedule_sessions: list[str] | None,
     schedule_rooms: list[str] | None,
-
     home_team: str,
     away_team: str,
     sport_name: str,
     league: str,
-
     department_organization: str,
-
     skill_level: str,
     materials_needed: str,
-
     organizer: str,
     community_category: str,
-
     metadata_keys: list[str] | None,
     metadata_values: list[str] | None,
 ) -> dict:
+    """Assemble an event's MongoDB content document from the admin form fields.
 
+    Only the fields that apply to the given event type are included.
+    """
     content = {
         "eventId": event_id,
         "title": title.strip(),
         "eventType": event_type.strip(),
     }
 
-    # ========================================================
     # COMMON MONGODB CONTENT
-    # ========================================================
 
     if description.strip():
-
         content["description"] = (
             description.strip()
         )
@@ -853,7 +770,6 @@ def _build_mongo_event_content(
 
     if parsed_tags:
         content["tags"] = parsed_tags
-
 
     event_type_clean = (
         event_type.strip().lower()
@@ -864,13 +780,9 @@ def _build_mongo_event_content(
         metadata_values,
     )
 
-
-    # ========================================================
     # CONCERT
-    # ========================================================
 
     if event_type_clean == "concert":
-
         parsed_performers = (
             _split_form_list(performers)
         )
@@ -890,7 +802,6 @@ def _build_mongo_event_content(
             )
 
         if age_restriction.strip():
-
             age = int(
                 age_restriction
             )
@@ -903,17 +814,13 @@ def _build_mongo_event_content(
 
             content["ageRestriction"] = age
 
-
-    # ========================================================
     # SPEAKER-BASED EVENTS
-    # ========================================================
 
     if event_type_clean in {
         "conference",
         "university",
         "workshop",
     }:
-
         speakers = _build_speakers(
             speaker_names,
             speaker_organizations,
@@ -923,10 +830,7 @@ def _build_mongo_event_content(
         if speakers:
             content["speakers"] = speakers
 
-
-    # ========================================================
     # SCHEDULE-BASED EVENTS
-    # ========================================================
 
     if event_type_clean in {
         "conference",
@@ -934,7 +838,6 @@ def _build_mongo_event_content(
         "workshop",
         "community",
     }:
-
         schedule = _build_schedule(
             schedule_times,
             schedule_sessions,
@@ -944,13 +847,9 @@ def _build_mongo_event_content(
         if schedule:
             content["schedule"] = schedule
 
-
-    # ========================================================
     # SPORT
-    # ========================================================
 
     if event_type_clean == "sport":
-
         if home_team.strip():
             metadata["homeTeam"] = (
                 home_team.strip()
@@ -971,30 +870,20 @@ def _build_mongo_event_content(
                 league.strip()
             )
 
-
-    # ========================================================
     # UNIVERSITY EVENT
-    # ========================================================
 
     if event_type_clean == "university":
-
         if department_organization.strip():
-
             metadata[
                 "departmentOrganization"
             ] = (
                 department_organization.strip()
             )
 
-
-    # ========================================================
     # WORKSHOP
-    # ========================================================
 
     if event_type_clean == "workshop":
-
         if skill_level.strip():
-
             metadata["skillLevel"] = (
                 skill_level.strip()
             )
@@ -1008,42 +897,28 @@ def _build_mongo_event_content(
                 "materialsNeeded"
             ] = materials
 
-
-    # ========================================================
     # COMMUNITY EVENT
-    # ========================================================
 
     if event_type_clean == "community":
-
         if organizer.strip():
-
             metadata["organizer"] = (
                 organizer.strip()
             )
 
         if community_category.strip():
-
             metadata[
                 "communityCategory"
             ] = (
                 community_category.strip()
             )
 
-
     if metadata:
         content["metadata"] = metadata
 
     return content
 
-
-# ============================================================
-# ADMIN - CREATE EVENT
-# ============================================================
-
 def _parse_csv_metadata(value: str) -> list[str]:
-    """
-    Convert comma-separated form input into a clean list.
-    """
+    """Convert comma-separated form input into a clean list."""
     if not value.strip():
         return []
 
@@ -1053,14 +928,11 @@ def _parse_csv_metadata(value: str) -> list[str]:
         if item.strip()
     ]
 
-
 def _parse_json_list_metadata(
     value: str,
     field_name: str,
 ) -> list:
-    """
-    Convert JSON textarea input into a Python list.
-    """
+    """Convert JSON textarea input into a Python list."""
     if not value.strip():
         return []
 
@@ -1079,11 +951,8 @@ def _parse_json_list_metadata(
 
     return parsed
 
-
 def _parse_age_restriction(value: str):
-    """
-    Convert optional age restriction into an integer.
-    """
+    """Convert optional age restriction into an integer."""
     if not value.strip():
         return None
 
@@ -1105,7 +974,6 @@ def _parse_age_restriction(value: str):
 @router.post("/site/admin/events/create")
 def website_admin_create_event(
     request: Request,
-
     venue_id: int = Form(...),
     title: str = Form(...),
     event_type: str = Form(...),
@@ -1113,48 +981,39 @@ def website_admin_create_event(
     end_datetime: str = Form(...),
     status: str = Form("scheduled"),
     csrf_token: str = Form(...),
-
     # MongoDB common fields
     description: str = Form(""),
     tags: str = Form(""),
-
     # Concert
     performers: str = Form(""),
     genres: str = Form(""),
     age_restriction: str = Form(""),
-
     # Speakers
     speaker_name: list[str] | None = Form(None),
     speaker_organization: list[str] | None = Form(None),
     speaker_topics: list[str] | None = Form(None),
-
     # Schedule
     schedule_time: list[str] | None = Form(None),
     schedule_session: list[str] | None = Form(None),
     schedule_room: list[str] | None = Form(None),
-
     # Sport
     home_team: str = Form(""),
     away_team: str = Form(""),
     sport_name: str = Form(""),
     league: str = Form(""),
-
     # University
     department_organization: str = Form(""),
-
     # Workshop
     skill_level: str = Form(""),
     materials_needed: str = Form(""),
-
     # Community
     organizer: str = Form(""),
     community_category: str = Form(""),
-
     # Extra flexible metadata
     metadata_key: list[str] | None = Form(None),
     metadata_value: list[str] | None = Form(None),
 ):
-
+    """Create an event in PostgreSQL along with its MongoDB content document."""
     if request.session.get("role") != "admin":
         raise HTTPException(
             status_code=403,
@@ -1173,7 +1032,6 @@ def website_admin_create_event(
     venues = get_all_venues()
 
     try:
-
         if not title.strip():
             raise ValueError(
                 "Event title is required."
@@ -1197,9 +1055,7 @@ def website_admin_create_event(
                 "End date must be after start date."
             )
 
-        # --------------------------------------------------
         # CREATE POSTGRESQL EVENT
-        # --------------------------------------------------
 
         new_event = create_event(
             venue_id=venue_id,
@@ -1217,9 +1073,7 @@ def website_admin_create_event(
 
         event_id = new_event["event_id"]
 
-        # --------------------------------------------------
         # BUILD FLEXIBLE MONGODB DOCUMENT
-        # --------------------------------------------------
 
         mongo_content = _build_mongo_event_content(
             event_id=event_id,
@@ -1269,7 +1123,6 @@ def website_admin_create_event(
         )
 
     except Exception as error:
-
         return templates.TemplateResponse(
             request=request,
             name="admin_event_create.html",
@@ -1292,15 +1145,12 @@ def website_admin_create_event(
         status_code=303,
     )
 
-# ============================================================
-# ADMIN - EDIT EVENT FORM
-# ============================================================
-
 @router.get("/site/admin/events/{event_id}/edit")
 def website_admin_edit_event_form(
     request: Request,
     event_id: int,
 ):
+    """Render the admin form for editing an event."""
     if request.session.get("role") != "admin":
         raise HTTPException(
             status_code=403,
@@ -1341,18 +1191,12 @@ def website_admin_edit_event_form(
         }
     )
 
-
-# ============================================================
-# ADMIN - EDIT EVENT SUBMIT
-# ============================================================
-
 @router.post(
     "/site/admin/events/{event_id}/edit"
 )
 def website_admin_edit_event(
     request: Request,
     event_id: int,
-
     venue_id: int = Form(...),
     title: str = Form(...),
     event_type: str = Form(...),
@@ -1360,48 +1204,39 @@ def website_admin_edit_event(
     end_datetime: str = Form(...),
     status: str = Form(...),
     csrf_token: str = Form(...),
-
     # MongoDB common fields
     description: str = Form(""),
     tags: str = Form(""),
-
     # Concert
     performers: str = Form(""),
     genres: str = Form(""),
     age_restriction: str = Form(""),
-
     # Speakers
     speaker_name: list[str] | None = Form(None),
     speaker_organization: list[str] | None = Form(None),
     speaker_topics: list[str] | None = Form(None),
-
     # Schedule
     schedule_time: list[str] | None = Form(None),
     schedule_session: list[str] | None = Form(None),
     schedule_room: list[str] | None = Form(None),
-
     # Sport
     home_team: str = Form(""),
     away_team: str = Form(""),
     sport_name: str = Form(""),
     league: str = Form(""),
-
     # University
     department_organization: str = Form(""),
-
     # Workshop
     skill_level: str = Form(""),
     materials_needed: str = Form(""),
-
     # Community
     organizer: str = Form(""),
     community_category: str = Form(""),
-
     # Additional metadata
     metadata_key: list[str] | None = Form(None),
     metadata_value: list[str] | None = Form(None),
 ):
-
+    """Apply an admin edit to an event and its MongoDB content."""
     if request.session.get("role") != "admin":
         raise HTTPException(
             status_code=403,
@@ -1418,7 +1253,6 @@ def website_admin_edit_event(
         )
 
     try:
-
         if not title.strip():
             raise ValueError(
                 "Event title is required."
@@ -1442,9 +1276,7 @@ def website_admin_edit_event(
                 "End date must be after start date."
             )
 
-        # --------------------------------------------------
         # UPDATE POSTGRESQL
-        # --------------------------------------------------
 
         update_event(
             event_id=event_id,
@@ -1456,9 +1288,7 @@ def website_admin_edit_event(
             status=status,
         )
 
-        # --------------------------------------------------
         # BUILD CURRENT FLEXIBLE MONGO CONTENT
-        # --------------------------------------------------
 
         mongo_content = _build_mongo_event_content(
             event_id=event_id,
@@ -1511,7 +1341,6 @@ def website_admin_edit_event(
         )
 
         if existing_content is None:
-
             mongo_content["reviews"] = []
 
             create_event_content(
@@ -1519,7 +1348,6 @@ def website_admin_edit_event(
             )
 
         else:
-
             update_event_content(
                 event_id,
                 mongo_content,
@@ -1527,7 +1355,6 @@ def website_admin_edit_event(
             )
 
     except Exception as error:
-
         event = get_admin_event(
             event_id
         )
@@ -1567,10 +1394,6 @@ def website_admin_edit_event(
         status_code=303
     )
 
-# ============================================================
-# ADMIN - EDIT TICKET TYPE FORM
-# ============================================================
-
 @router.get(
     "/site/admin/ticket-types/{ticket_type_id}/edit"
 )
@@ -1578,6 +1401,7 @@ def website_admin_edit_ticket_type_form(
     request: Request,
     ticket_type_id: int
 ):
+    """Render the admin form for editing a ticket type."""
     if request.session.get("role") != "admin":
         raise HTTPException(
             status_code=403,
@@ -1604,11 +1428,6 @@ def website_admin_edit_ticket_type_form(
         }
     )
 
-
-# ============================================================
-# ADMIN - EDIT TICKET TYPE SUBMIT
-# ============================================================
-
 @router.post(
     "/site/admin/ticket-types/{ticket_type_id}/edit"
 )
@@ -1620,6 +1439,7 @@ def website_admin_edit_ticket_type(
     status: str = Form(...),
     csrf_token: str = Form(...),
 ):
+    """Apply an admin edit to a ticket type."""
     if request.session.get("role") != "admin":
         raise HTTPException(
             status_code=403,
@@ -1663,16 +1483,13 @@ def website_admin_edit_ticket_type(
         status_code=303
     )
 
-# ============================================================
-# ADMIN - CANCEL EVENT
-# ============================================================
-
 @router.post("/site/admin/events/{event_id}/cancel")
 def website_admin_cancel_event(
     request: Request,
     event_id: int,
     csrf_token: str = Form(...),
 ):
+    """Cancel an event from the admin dashboard."""
     if request.session.get("role") != "admin":
         raise HTTPException(
             status_code=403,
@@ -1708,10 +1525,6 @@ def website_admin_cancel_event(
         status_code=303
     )
 
-# ============================================================
-# ADMIN - CREATE TICKET TYPE FORM
-# ============================================================
-
 @router.get(
     "/site/admin/events/{event_id}/ticket-types/create"
 )
@@ -1719,6 +1532,7 @@ def website_admin_create_ticket_type_form(
     request: Request,
     event_id: int
 ):
+    """Render the admin form for adding a ticket type to an event."""
     if request.session.get("role") != "admin":
         raise HTTPException(
             status_code=403,
@@ -1743,11 +1557,6 @@ def website_admin_create_ticket_type_form(
         }
     )
 
-
-# ============================================================
-# ADMIN - CREATE TICKET TYPE SUBMIT
-# ============================================================
-
 @router.post(
     "/site/admin/events/{event_id}/ticket-types/create"
 )
@@ -1762,6 +1571,7 @@ def website_admin_create_ticket_type(
     status: str = Form("active"),
     csrf_token: str = Form(...),
 ):
+    """Add a ticket type to an event."""
     if request.session.get("role") != "admin":
         raise HTTPException(
             status_code=403,

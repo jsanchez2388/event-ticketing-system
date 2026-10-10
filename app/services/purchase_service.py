@@ -1,15 +1,16 @@
 from typing import Any
-
 from app.database.postgres import get_connection
 from app.services.cache_service import invalidate_event
-
 
 def purchase_ticket(
     user_id: int,
     ticket_type_id: int,
     quantity: int
 ) -> dict[str, Any] | None:
+    """Buy tickets for a ticket type and invalidate the event's cached detail.
 
+    The purchase runs as one transaction and is rolled back if any step fails.
+    """
     conn = get_connection()
 
     try:

@@ -1,8 +1,6 @@
 from collections.abc import Sequence
 from typing import Any
-
 from app.database.postgres import get_connection
-
 
 SQL_EVENTS_BY_VENUE = """
 SELECT
@@ -21,7 +19,6 @@ JOIN venues AS v
 WHERE e.venue_id = %s
 ORDER BY e.start_datetime;
 """
-
 
 SQL_USER_TICKETS = """
 SELECT
@@ -49,7 +46,6 @@ WHERE u.user_id = %s
 ORDER BY o.order_date DESC;
 """
 
-
 SQL_TICKETS_SOLD = """
 SELECT
     e.event_id,
@@ -65,7 +61,6 @@ GROUP BY
     e.title
 ORDER BY total_tickets_sold DESC;
 """
-
 
 SQL_EVENT_INVENTORY = """
 SELECT
@@ -90,7 +85,6 @@ WHERE e.event_id = %s
 
 ORDER BY tt.ticket_type_id;
 """
-
 
 SQL_EVENT_REVENUE = """
 SELECT
@@ -128,7 +122,6 @@ GROUP BY
 ORDER BY total_revenue DESC;
 """
 
-
 SQL_TOP_CUSTOMERS = """
 SELECT
     u.user_id,
@@ -165,7 +158,6 @@ ORDER BY total_tickets_purchased DESC
 LIMIT %s;
 """
 
-
 SQL_EVENTS_OVER_THRESHOLD = """
 SELECT
     e.event_id,
@@ -201,7 +193,6 @@ HAVING SUM(oi.quantity * oi.unit_price) > %s
 ORDER BY ticket_sales DESC;
 """
 
-
 SQL_MONTHLY_REVENUE = """
 SELECT
     DATE_TRUNC(
@@ -236,7 +227,6 @@ GROUP BY
 ORDER BY revenue_month;
 """
 
-
 QUERY_SQL = {
     "q1": SQL_EVENTS_BY_VENUE,
     "q2": SQL_USER_TICKETS,
@@ -248,8 +238,8 @@ QUERY_SQL = {
     "q8": SQL_MONTHLY_REVENUE,
 }
 
-
 def get_events_by_venue(venue_id: int) -> Sequence[dict[str, Any]]:
+    """Query 1: events at a venue, ordered by start time."""
     conn = get_connection()
 
     try:
@@ -268,8 +258,8 @@ def get_events_by_venue(venue_id: int) -> Sequence[dict[str, Any]]:
     finally:
         conn.close()
 
-
 def get_user_tickets(user_id: int) -> Sequence[dict[str, Any]]:
+    """Query 2: a user's ticket orders, newest first."""
     conn = get_connection()
 
     try:
@@ -288,8 +278,8 @@ def get_user_tickets(user_id: int) -> Sequence[dict[str, Any]]:
     finally:
         conn.close()
 
-
 def get_tickets_sold() -> Sequence[dict[str, Any]]:
+    """Query 3: total tickets sold per event, highest first."""
     conn = get_connection()
 
     try:
@@ -307,8 +297,8 @@ def get_tickets_sold() -> Sequence[dict[str, Any]]:
     finally:
         conn.close()
 
-
 def get_event_inventory(event_id: int) -> Sequence[dict[str, Any]]:
+    """Query 4: an event's ticket types with their remaining quantities."""
     conn = get_connection()
 
     try:
@@ -327,8 +317,8 @@ def get_event_inventory(event_id: int) -> Sequence[dict[str, Any]]:
     finally:
         conn.close()
 
-
 def get_event_revenue() -> Sequence[dict[str, Any]]:
+    """Query 5: paid revenue per event, highest first."""
     conn = get_connection()
 
     try:
@@ -346,8 +336,8 @@ def get_event_revenue() -> Sequence[dict[str, Any]]:
     finally:
         conn.close()
 
-
 def get_top_customers(limit: int) -> Sequence[dict[str, Any]]:
+    """Query 6: customers ranked by tickets purchased, capped at limit rows."""
     conn = get_connection()
 
     try:
@@ -366,8 +356,8 @@ def get_top_customers(limit: int) -> Sequence[dict[str, Any]]:
     finally:
         conn.close()
 
-
 def get_events_over_threshold(threshold: float) -> Sequence[dict[str, Any]]:
+    """Query 7: events whose completed ticket sales exceed the threshold."""
     conn = get_connection()
 
     try:
@@ -386,8 +376,8 @@ def get_events_over_threshold(threshold: float) -> Sequence[dict[str, Any]]:
     finally:
         conn.close()
 
-
 def get_monthly_revenue() -> Sequence[dict[str, Any]]:
+    """Query 8: completed ticket revenue totalled by month."""
     conn = get_connection()
 
     try:

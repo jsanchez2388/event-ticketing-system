@@ -1,11 +1,8 @@
 import hmac
 import secrets
-
 from fastapi import Request
 
-
 CSRF_SESSION_KEY = "_csrf_token"
-
 
 def get_csrf_token(request: Request) -> str:
     """
@@ -14,7 +11,6 @@ def get_csrf_token(request: Request) -> str:
     If the session does not have one yet,
     create a cryptographically secure token.
     """
-
     token = request.session.get(CSRF_SESSION_KEY)
 
     if not token:
@@ -24,7 +20,6 @@ def get_csrf_token(request: Request) -> str:
 
     return token
 
-
 def rotate_csrf_token(request: Request) -> str:
     """
     Generate a new CSRF token.
@@ -32,13 +27,11 @@ def rotate_csrf_token(request: Request) -> str:
     Useful after login/signup because the
     authentication state has changed.
     """
-
     token = secrets.token_urlsafe(32)
 
     request.session[CSRF_SESSION_KEY] = token
 
     return token
-
 
 def validate_csrf_token(
     request: Request,
@@ -48,7 +41,6 @@ def validate_csrf_token(
     Compare the submitted form token with
     the token stored in the user's session.
     """
-
     session_token = request.session.get(
         CSRF_SESSION_KEY
     )

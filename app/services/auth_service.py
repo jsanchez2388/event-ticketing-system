@@ -1,11 +1,9 @@
 from typing import Any
-
 import bcrypt
-
 from app.database.postgres import get_connection
 
-
 def hash_password(password: str) -> str:
+    """Return a bcrypt hash of the given password."""
     password_bytes = password.encode("utf-8")
 
     hashed = bcrypt.hashpw(
@@ -15,12 +13,11 @@ def hash_password(password: str) -> str:
 
     return hashed.decode("utf-8")
 
-
 def verify_password(
     password: str,
     password_hash: str
 ) -> bool:
-
+    """Check a password against its bcrypt hash."""
     try:
         return bcrypt.checkpw(
             password.encode("utf-8"),
@@ -29,9 +26,8 @@ def verify_password(
     except (ValueError, TypeError):
         return False
 
-
 def get_user_by_email(email: str) -> dict[str, Any] | None:
-
+    """Return the user with this email, matched case-insensitively."""
     conn = get_connection()
 
     try:
@@ -65,7 +61,6 @@ def get_user_by_email(email: str) -> dict[str, Any] | None:
     finally:
         conn.close()
 
-
 def create_user(
     first_name: str,
     last_name: str,
@@ -73,7 +68,7 @@ def create_user(
     password: str,
     role: str
 ) -> dict[str, Any] | None:
-
+    """Insert a new user and return the created row."""
     conn = get_connection()
 
     try:

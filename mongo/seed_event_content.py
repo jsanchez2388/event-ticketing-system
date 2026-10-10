@@ -1,6 +1,5 @@
 from app.database.mongo import get_event_content_collection
 
-
 SAMPLE_DOCUMENTS = [
     {
         "eventId": 101,
@@ -141,16 +140,16 @@ SAMPLE_DOCUMENTS = [
     }
 ]
 
-
 def clear_collection():
+    """Delete every document in the event content collection."""
     collection = get_event_content_collection()
 
     collection.delete_many({})
 
     print("Existing event content cleared.")
 
-
 def seed_single_document():
+    """Insert one event content document."""
     collection = get_event_content_collection()
 
     result = collection.insert_one(
@@ -161,8 +160,8 @@ def seed_single_document():
         f"Inserted one document: {result.inserted_id}"
     )
 
-
 def seed_many_documents():
+    """Insert the remaining event content documents in one call."""
     collection = get_event_content_collection()
 
     result = collection.insert_many(
@@ -173,8 +172,8 @@ def seed_many_documents():
         f"Inserted {len(result.inserted_ids)} additional documents."
     )
 
-
 def main():
+    """Reseed the event content collection from scratch."""
     clear_collection()
 
     seed_single_document()
@@ -186,7 +185,6 @@ def main():
     print(
         f"Total documents: {collection.count_documents({})}"
     )
-
 
 if __name__ == "__main__":
     main()

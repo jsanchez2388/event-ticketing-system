@@ -1,7 +1,7 @@
 from app.database.mongo import get_event_content_collection
 
-# Query 1
 def query1_events_with_tag(tag: str):
+    """Query 1: find events carrying a tag (array match with projection)."""
     collection = get_event_content_collection()
 
     results = collection.find(
@@ -16,8 +16,8 @@ def query1_events_with_tag(tag: str):
 
     return list(results)
 
-# Query 2
 def query2_events_with_speaker(name: str):
+    """Query 2: find events featuring a speaker (dot notation into nested documents)."""
     collection = get_event_content_collection()
 
     results = collection.find(
@@ -27,8 +27,8 @@ def query2_events_with_speaker(name: str):
 
     return list(results)
 
-# Query 3
 def query3_reviews_above_rating(min_rating: int):
+    """Query 3: find reviews rated above a threshold ($gt)."""
     collection = get_event_content_collection()
 
     results = collection.find(
@@ -47,11 +47,11 @@ def query3_reviews_above_rating(min_rating: int):
 
     return list(results)
 
-# Query 4
 def query4_speaker_org_and_topic(
     organization: str,
     topic: str
 ):
+    """Query 4: find speakers matching an organization and topic ($elemMatch)."""
     collection = get_event_content_collection()
 
     results = collection.find(
@@ -68,8 +68,8 @@ def query4_speaker_org_and_topic(
 
     return list(results)
 
-# Query 5
 def query5_concerts_by_genre(genre: str):
+    """Query 5: find concerts in a genre (array match)."""
     collection = get_event_content_collection()
 
     results = collection.find(
@@ -87,11 +87,11 @@ def query5_concerts_by_genre(genre: str):
 
     return list(results)
 
-# Query 6
 def query6_age_restricted_or_tagged(
     min_age: int,
     tag: str
 ):
+    """Query 6: find events restricted above a minimum age or carrying a tag ($or)."""
     collection = get_event_content_collection()
 
     results = collection.find(
@@ -118,8 +118,8 @@ def query6_age_restricted_or_tagged(
 
     return list(results)
 
-# Query 7
 def query7_sessions_in_room(room: str):
+    """Query 7: find conference sessions held in a room ($elemMatch with projection)."""
     collection = get_event_content_collection()
 
     results = collection.find(
@@ -140,11 +140,11 @@ def query7_sessions_in_room(room: str):
 
     return list(results)
 
-# Query 8
 def query8_add_review(
     event_id: int,
     review: dict
 ):
+    """Query 8: append a review to an event's reviews array ($push)."""
     collection = get_event_content_collection()
 
     result = collection.update_one(
@@ -162,6 +162,7 @@ def query8_add_review(
     }
 
 def cleanup_query8_review():
+    """Remove the review added by query 8 so the demo can be re-run ($pull)."""
     collection = get_event_content_collection()
 
     collection.update_one(
@@ -177,11 +178,11 @@ def cleanup_query8_review():
         }
     )
 
-# Query 9
 def query9_add_tag(
     event_id: int,
     tag: str
 ):
+    """Query 9: add a tag to an event without duplicating it ($addToSet)."""
     collection = get_event_content_collection()
 
     result = collection.update_one(
@@ -198,11 +199,11 @@ def query9_add_tag(
         "modified": result.modified_count
     }
 
-# Query 10
 def query10_delete_low_reviews(
     event_id: int,
     max_rating: int
 ):
+    """Query 10: remove an event's reviews at or below a rating ($pull with $lte)."""
     collection = get_event_content_collection()
 
     result = collection.update_one(
@@ -223,11 +224,7 @@ def query10_delete_low_reviews(
         "modified": result.modified_count
     }
 
-
-
-
 if __name__ == "__main__":
-
     print("\nQUERY 1 - Events with tag 'Tech'")
     print(
         query1_events_with_tag("Tech")

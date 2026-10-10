@@ -1,5 +1,4 @@
 from fastapi import APIRouter, HTTPException, Query, status
-
 from app.models.event_content import ReviewCreate
 from app.services.content_service import (
     add_review,
@@ -17,6 +16,7 @@ router = APIRouter(
 @router.post("/{event_id}/reviews", status_code = status.HTTP_201_CREATED)
 def create_review(event_id: int, payload: ReviewCreate):
     # Verify the event exists in PostgreSQL
+    """Add a review to an event, after checking the event and user exist."""
     if get_event_by_id(event_id) is None:
         raise HTTPException(
             status_code=404,
@@ -42,6 +42,7 @@ def create_review(event_id: int, payload: ReviewCreate):
 
 @router.get("/{event_id}/reviews")
 def list_reviews(event_id: int, min_rating: int | None = Query(default = None, ge = 1, le = 5)):
+    """Return an event's reviews, optionally filtered by a minimum rating."""
     reviews = get_reviews(event_id, min_rating)
 
     if reviews is None:
@@ -54,6 +55,7 @@ def list_reviews(event_id: int, min_rating: int | None = Query(default = None, g
 
 @router.delete("/{event_id}/reviews/{user_id}")
 def remove_review(event_id: int, user_id: int):
+    """Delete a user's review from an event."""
     success = delete_review(event_id, user_id)
 
     if not success:
