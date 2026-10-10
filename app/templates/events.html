@@ -1,13 +1,10 @@
 {% extends "base.html" %}
 
-
 {% block title %}
 Events | EventHub
 {% endblock %}
 
-
 {% block content %}
-
 
 <section class="hero">
 
@@ -26,7 +23,6 @@ Events | EventHub
             workshops, university events,
             and community experiences.
         </p>
-
 
         {% if not request.session.get("user_id") %}
 
@@ -69,12 +65,9 @@ Events | EventHub
 
 </section>
 
-
-
 <section class="events-section">
 
     <div class="container">
-
 
         <div class="section-header">
 
@@ -90,7 +83,6 @@ Events | EventHub
 
             </div>
 
-
             <div class="event-count">
 
                 {{ events|length }} events
@@ -99,18 +91,13 @@ Events | EventHub
 
         </div>
 
-
-
         {% if events %}
 
         <div class="event-grid">
 
-
             {% for event in events %}
 
-
             <article class="event-card">
-
 
                 <div class="event-card-top">
 
@@ -120,7 +107,6 @@ Events | EventHub
 
                     </span>
 
-
                     <span class="event-id">
 
                         #{{ event.event_id }}
@@ -128,8 +114,6 @@ Events | EventHub
                     </span>
 
                 </div>
-
-
 
                 <div class="event-date">
 
@@ -139,7 +123,6 @@ Events | EventHub
 
                     </span>
 
-
                     <span class="day">
 
                         {{ event.start_datetime.strftime("%d") }}
@@ -148,15 +131,11 @@ Events | EventHub
 
                 </div>
 
-
-
                 <h3>
 
                     {{ event.title }}
 
                 </h3>
-
-
 
                 <div class="event-info">
 
@@ -168,7 +147,6 @@ Events | EventHub
 
                     </p>
 
-
                     <p>
 
                         {{ event.start_datetime.strftime(
@@ -177,13 +155,11 @@ Events | EventHub
 
                     </p>
 
-
                     <p>
 
                         {{ event.venue_name }}
 
                     </p>
-
 
                     <p>
 
@@ -194,7 +170,6 @@ Events | EventHub
 
                 </div>
 
-                
                 {% if event.tags %}
 
                 <div class="event-tags">
@@ -211,8 +186,6 @@ Events | EventHub
 
                 {% endif %}
 
-
-
                 <div class="event-card-bottom">
 
                     <div>
@@ -220,7 +193,6 @@ Events | EventHub
                         <span class="small-label">
                             From
                         </span>
-
 
                         {% if event.starting_price == 0 %}
 
@@ -242,8 +214,6 @@ Events | EventHub
 
                     </div>
 
-
-
                     <a
                         class="button"
                         href="/site/events/{{ event.event_id }}"
@@ -253,18 +223,13 @@ Events | EventHub
 
                 </div>
 
-
             </article>
-
 
             {% endfor %}
 
-
         </div>
 
-
         {% else %}
-
 
         <div class="event-card">
 
@@ -278,13 +243,10 @@ Events | EventHub
 
         </div>
 
-
         {% endif %}
-
 
     </div>
 
 </section>
-
 
 {% endblock %}

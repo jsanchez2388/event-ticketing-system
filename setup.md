@@ -71,14 +71,25 @@ Leave that terminal window open while using the website.
 not have to register one to test a purchase:
 
 ```text
-maya.lopez@example.com     admin      wallet $1000.00
-jordan.kim@example.com     customer   wallet $2500.00
-avery.patel@example.com    customer   wallet  $500.00
-noah.garcia@example.com    customer   wallet  $500.00
-emma.nguyen@example.com    customer   wallet  $500.00
+maya.lopez@example.com     admin   wallet $1000.00
+jordan.kim@example.com     user    wallet $2500.00
+avery.patel@example.com    user    wallet  $500.00
+noah.garcia@example.com    user    wallet  $500.00
+emma.nguyen@example.com    user    wallet  $500.00
 ```
 
-All five use the password `Comp642Demo!`.
+All five use the password `Comp642Demo!`. The second column is the `role` value
+the application stores; the two roles are `user` and `admin`.
+
+These credentials only work in a database seeded from `sql/seed.sql`. 
+```sql
+SELECT email, LEFT(password_hash, 4) AS hash_prefix
+FROM users WHERE email = 'maya.lopez@example.com';
+```
+
+A real hash starts with `$2b$`. Anything else means that row cannot authenticate,
+so register a new account through the signup page instead, or re-run
+`sql/seed.sql` against a database of your own.
 
 These are sample accounts for local development. Delete them before any
 deployment that is reachable from the internet.
@@ -619,6 +630,9 @@ docker compose up -d
 It should be listening on `localhost:6379`, which matches the defaults in
 `.env.example`. Set `REDIS_HOST` and `REDIS_PORT` if it runs somewhere else.
 Both the event cache and the trending sorted set depend on Redis.
+
+Pages still render without Redis - every cache and trending call falls back to
+an uncached read - so an empty trending list is the visible symptom.
 
 ---
 

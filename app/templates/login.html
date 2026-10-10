@@ -1,34 +1,26 @@
 {% extends "base.html" %}
 
-
 {% block title %}
 Login | EventHub
 {% endblock %}
 
-
 {% block content %}
-
 
 <section class="auth-section">
 
-
     <div class="auth-card">
-
 
         <p class="eyebrow">
             Welcome Back
         </p>
 
-
         <h1>
             Sign In
         </h1>
 
-
         <p class="auth-description">
             Sign in to access your EventHub account.
         </p>
-
 
         {% if error %}
 
@@ -38,13 +30,11 @@ Login | EventHub
 
         {% endif %}
 
-
         <form
             method="POST"
             action="/site/login"
             class="auth-form"
         >
-
 
             <!-- CSRF TOKEN -->
 
@@ -53,7 +43,6 @@ Login | EventHub
                 name="csrf_token"
                 value="{{ csrf_token }}"
             >
-
 
             <label>
 
@@ -70,7 +59,6 @@ Login | EventHub
 
             </label>
 
-
             <label>
 
                 Password
@@ -86,7 +74,6 @@ Login | EventHub
 
             </label>
 
-
             <button
                 type="submit"
                 class="button button-full"
@@ -94,9 +81,7 @@ Login | EventHub
                 Sign In
             </button>
 
-
         </form>
-
 
         <p class="auth-footer">
 
@@ -108,11 +93,8 @@ Login | EventHub
 
         </p>
 
-
     </div>
 
-
 </section>
-
 
 {% endblock %}

@@ -2,17 +2,14 @@
 
 <html lang="en">
 
-
 <head>
 
     <meta charset="UTF-8">
-
 
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0"
     >
-
 
     <title>
 
@@ -24,13 +21,10 @@
 
     </title>
 
-
     <link
         rel="stylesheet"
         href="/static/css/style.css"
     >
-
-
 
 <!-- ACTIVE NAV PAGE STYLE -->
 <style>
@@ -43,24 +37,15 @@
 
 </head>
 
-
-
 <body>
 
-
-    <!-- ========================================= -->
     <!-- NAVIGATION -->
-    <!-- ========================================= -->
-
 
     <header class="navbar">
 
-
         <div class="nav-container">
 
-
             <!-- LOGO -->
-
 
             <a
                 href="/site"
@@ -69,13 +54,9 @@
                 NotTicketMaster
             </a>
 
-
-
             <!-- NAVIGATION -->
 
-
             <nav>
-
 
                 <!-- EVENTS -->
 
@@ -83,30 +64,19 @@
                     Events
                 </a>
 
-
                 <!-- TRENDING -->
 
                 <a href="/site/trending">
                     Trending
                 </a>
 
-
-            
-
-
                 {% if request.session.get("user_id") %}
 
-
-                    <!-- ============================= -->
                     <!-- LOGGED IN -->
-                    <!-- ============================= -->
-
 
                     <a href="/site/account">
                         My Account
                     </a>
-
-
 
                     <!-- ADMIN ONLY LINKS -->
 
@@ -130,10 +100,7 @@
 
                     {% endif %}
 
-
-
                     <!-- USER NAME -->
-
 
                     <span
                         style="
@@ -152,12 +119,7 @@
 
                     </span>
 
-
-
-                    <!-- ============================= -->
                     <!-- SECURE LOGOUT FORM -->
-                    <!-- ============================= -->
-
 
                     <form
                         method="POST"
@@ -170,9 +132,7 @@
                         "
                     >
 
-
                         <!-- CSRF TOKEN -->
-
 
                         <input
                             type="hidden"
@@ -180,10 +140,7 @@
                             value="{{ csrf_token }}"
                         >
 
-
-
                         <!-- LOGOUT BUTTON -->
-
 
                         <button
                             type="submit"
@@ -201,81 +158,49 @@
                             Logout
                         </button>
 
-
                     </form>
-
-
 
                 {% else %}
 
-
-                    <!-- ============================= -->
                     <!-- NOT LOGGED IN -->
-                    <!-- ============================= -->
-
 
                     <a href="/site/login">
                         Login
                     </a>
 
-
                     <a href="/site/signup">
                         Sign Up
                     </a>
 
-
                 {% endif %}
-
 
             </nav>
 
-
         </div>
-
 
     </header>
 
-
-
-    <!-- ========================================= -->
     <!-- MAIN PAGE CONTENT -->
-    <!-- ========================================= -->
-
 
     <main>
 
-
         {% block content %}
-
 
         {% endblock %}
 
-
     </main>
 
-
-
-    <!-- ========================================= -->
     <!-- FOOTER -->
-    <!-- ========================================= -->
-
 
     <footer>
 
-
         <div class="container">
-
 
             COMP 642 Event Ticketing System
 
-
         </div>
 
-
     </footer>
-
-
-
 
 <!-- ACTIVE NAV PAGE SCRIPT -->
 <script>
@@ -336,6 +261,5 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 </body>
-
 
 </html>

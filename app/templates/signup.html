@@ -1,33 +1,26 @@
 {% extends "base.html" %}
 
-
 {% block title %}
 Create Account | EventHub
 {% endblock %}
 
-
 {% block content %}
-
 
 <section class="auth-section">
 
     <div class="auth-card">
 
-
         <p class="eyebrow">
             Join EventHub
         </p>
-
 
         <h1>
             Create Account
         </h1>
 
-
         <p class="auth-description">
             Create a user or administrator account.
         </p>
-
 
         {% if error %}
 
@@ -37,13 +30,11 @@ Create Account | EventHub
 
         {% endif %}
 
-
         <form
             method="POST"
             action="/site/signup"
             class="auth-form"
         >
-
 
             <!-- CSRF TOKEN -->
 
@@ -52,7 +43,6 @@ Create Account | EventHub
                 name="csrf_token"
                 value="{{ csrf_token }}"
             >
-
 
             <label>
 
@@ -69,7 +59,6 @@ Create Account | EventHub
 
             </label>
 
-
             <label>
 
                 Last Name
@@ -84,7 +73,6 @@ Create Account | EventHub
                 >
 
             </label>
-
 
             <label>
 
@@ -101,7 +89,6 @@ Create Account | EventHub
 
             </label>
 
-
             <label>
 
                 Password
@@ -117,7 +104,6 @@ Create Account | EventHub
                 >
 
             </label>
-
 
             <label>
 
@@ -142,7 +128,6 @@ Create Account | EventHub
 
             </label>
 
-
             <div
                 id="admin-code-section"
                 style="display: none;"
@@ -162,7 +147,6 @@ Create Account | EventHub
                 </label>
 
             </div>
-
 
             <div
                 style="
@@ -188,7 +172,6 @@ Create Account | EventHub
 
             </div>
 
-
             <button
                 type="submit"
                 class="button button-full"
@@ -197,7 +180,6 @@ Create Account | EventHub
             </button>
 
         </form>
-
 
         <p class="auth-footer">
 
@@ -213,7 +195,6 @@ Create Account | EventHub
 
 </section>
 
-
 <script>
 
 function toggleAdminCode() {
@@ -225,7 +206,6 @@ function toggleAdminCode() {
         document.getElementById(
             "admin-code-section"
         );
-
 
     if (role === "admin") {
 
@@ -241,13 +221,11 @@ function toggleAdminCode() {
 
 }
 
-
 document.addEventListener(
     "DOMContentLoaded",
     toggleAdminCode
 );
 
 </script>
-
 
 {% endblock %}

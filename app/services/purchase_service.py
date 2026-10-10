@@ -1,4 +1,5 @@
 from typing import Any
+import psycopg2.errors
 from app.database.postgres import get_connection
 from app.services.cache_service import invalidate_event
 
@@ -54,6 +55,15 @@ def purchase_ticket(
             invalidate_event(event_id)
 
         return result
+
+    except psycopg2.errors.RaiseException as error:
+        conn.rollback()
+
+        message = (error.diag.message_primary or "").strip()
+
+        raise ValueError(
+            message or "The purchase could not be completed."
+        ) from error
 
     except Exception:
         conn.rollback()

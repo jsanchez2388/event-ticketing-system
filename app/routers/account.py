@@ -125,8 +125,14 @@ def buy_ticket(
             f"Order #{result['new_order_id']} "
             f"was created."
         )
-    except Exception as e:
-        request.session["error"] = str(e)
+    except ValueError as error:
+        request.session["error"] = str(error)
+
+    except Exception:
+        request.session["error"] = (
+            "The purchase could not be completed. "
+            "Please try again."
+        )
     return RedirectResponse(
         url="/site/account",
         status_code=303

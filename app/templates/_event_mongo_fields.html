@@ -7,10 +7,7 @@
         The available fields change based on the event type.
     </p>
 
-
-    <!-- =====================================================
-         COMMON TO EVERY EVENT TYPE
-         ===================================================== -->
+    <!-- COMMON TO EVERY EVENT TYPE -->
 
     <label for="description">
         Description
@@ -22,7 +19,6 @@
         rows="5"
         placeholder="Describe the event..."
     >{{ mongo_content.get("description", "") if mongo_content else "" }}</textarea>
-
 
     <label for="tags">
         Tags
@@ -40,10 +36,7 @@
         Separate tags with commas.
     </small>
 
-
-    <!-- =====================================================
-         CONCERT
-         ===================================================== -->
+    <!-- CONCERT -->
 
     <div
         id="concert-fields"
@@ -51,7 +44,6 @@
     >
 
         <h3>Concert Information</h3>
-
 
         <label for="performers">
             Performers
@@ -68,7 +60,6 @@
             Enter one performer per line or separate with commas.
         </small>
 
-
         <label for="genres">
             Genres
         </label>
@@ -80,7 +71,6 @@
             value="{{ mongo_content.get('genres', []) | join(', ') if mongo_content else '' }}"
             placeholder="Rock, Alternative"
         >
-
 
         <label for="age_restriction">
             Age Restriction
@@ -97,11 +87,8 @@
 
     </div>
 
-
-    <!-- =====================================================
-         SPEAKERS
-         Conference / University / Workshop
-         ===================================================== -->
+    <!-- SPEAKERS
+         Conference / University / Workshop -->
 
     <div
         id="speaker-fields"
@@ -187,7 +174,6 @@
 
         </div>
 
-
         <button
             type="button"
             class="button secondary"
@@ -198,11 +184,8 @@
 
     </div>
 
-
-    <!-- =====================================================
-         SCHEDULE
-         Conference / University / Workshop / Community
-         ===================================================== -->
+    <!-- SCHEDULE
+         Conference / University / Workshop / Community -->
 
     <div
         id="schedule-fields"
@@ -286,7 +269,6 @@
 
         </div>
 
-
         <button
             type="button"
             class="button secondary"
@@ -297,10 +279,7 @@
 
     </div>
 
-
-    <!-- =====================================================
-         SPORT
-         ===================================================== -->
+    <!-- SPORT -->
 
     <div
         id="sport-fields"
@@ -308,7 +287,6 @@
     >
 
         <h3>Sporting Event Information</h3>
-
 
         <label for="sport_name">
             Sport
@@ -322,7 +300,6 @@
             placeholder="Basketball"
         >
 
-
         <label for="home_team">
             Home Team
         </label>
@@ -335,7 +312,6 @@
             placeholder="CSUN Matadors"
         >
 
-
         <label for="away_team">
             Away Team
         </label>
@@ -347,7 +323,6 @@
             value="{{ mongo_content.get('metadata', {}).get('awayTeam', '') if mongo_content else '' }}"
             placeholder="Opponent"
         >
-
 
         <label for="league">
             League
@@ -363,10 +338,7 @@
 
     </div>
 
-
-    <!-- =====================================================
-         UNIVERSITY
-         ===================================================== -->
+    <!-- UNIVERSITY -->
 
     <div
         id="university-fields"
@@ -374,7 +346,6 @@
     >
 
         <h3>University Event Information</h3>
-
 
         <label for="department_organization">
             Department / Organization
@@ -390,10 +361,7 @@
 
     </div>
 
-
-    <!-- =====================================================
-         WORKSHOP
-         ===================================================== -->
+    <!-- WORKSHOP -->
 
     <div
         id="workshop-fields"
@@ -401,7 +369,6 @@
     >
 
         <h3>Workshop Information</h3>
-
 
         <label for="skill_level">
             Skill Level
@@ -448,7 +415,6 @@
 
         </select>
 
-
         <label for="materials_needed">
             Materials Needed
         </label>
@@ -463,10 +429,7 @@
 
     </div>
 
-
-    <!-- =====================================================
-         COMMUNITY
-         ===================================================== -->
+    <!-- COMMUNITY -->
 
     <div
         id="community-fields"
@@ -474,7 +437,6 @@
     >
 
         <h3>Community Event Information</h3>
-
 
         <label for="organizer">
             Organizer
@@ -487,7 +449,6 @@
             value="{{ mongo_content.get('metadata', {}).get('organizer', '') if mongo_content else '' }}"
             placeholder="Santa Clarita Community Center"
         >
-
 
         <label for="community_category">
             Community Category
@@ -503,10 +464,7 @@
 
     </div>
 
-
-    <!-- =====================================================
-         EXTRA FLEXIBLE METADATA
-         ===================================================== -->
+    <!-- EXTRA FLEXIBLE METADATA -->
 
     <div id="metadata-fields">
 
@@ -544,7 +502,6 @@
 
         </div>
 
-
         <button
             type="button"
             class="button secondary"
@@ -556,7 +513,6 @@
     </div>
 
 </div>
-
 
 <style>
 
@@ -623,7 +579,6 @@
 
 </style>
 
-
 <script>
 
 function updateEventFields() {
@@ -638,7 +593,6 @@ function updateEventFields() {
     const eventType =
         eventTypeElement.value;
 
-
     const sections = [
         "concert-fields",
         "speaker-fields",
@@ -649,14 +603,12 @@ function updateEventFields() {
         "community-fields"
     ];
 
-
     sections.forEach(function(id) {
 
         document.getElementById(id)
             .style.display = "none";
 
     });
-
 
     if (eventType === "Concert") {
 
@@ -665,7 +617,6 @@ function updateEventFields() {
         ).style.display = "block";
 
     }
-
 
     if (eventType === "Conference") {
 
@@ -679,7 +630,6 @@ function updateEventFields() {
 
     }
 
-
     if (eventType === "Sport") {
 
         document.getElementById(
@@ -687,7 +637,6 @@ function updateEventFields() {
         ).style.display = "block";
 
     }
-
 
     if (eventType === "University") {
 
@@ -705,7 +654,6 @@ function updateEventFields() {
 
     }
 
-
     if (eventType === "Workshop") {
 
         document.getElementById(
@@ -722,7 +670,6 @@ function updateEventFields() {
 
     }
 
-
     if (eventType === "Community") {
 
         document.getElementById(
@@ -736,7 +683,6 @@ function updateEventFields() {
     }
 
 }
-
 
 function addSpeaker() {
 
@@ -783,7 +729,6 @@ function addSpeaker() {
 
 }
 
-
 function addSchedule() {
 
     const container =
@@ -828,7 +773,6 @@ function addSchedule() {
 
 }
 
-
 function addMetadata() {
 
     const container =
@@ -867,7 +811,6 @@ function addMetadata() {
     container.appendChild(row);
 
 }
-
 
 document.addEventListener(
     "DOMContentLoaded",

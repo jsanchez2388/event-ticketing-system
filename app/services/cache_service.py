@@ -73,6 +73,7 @@ def get_ttl_remaining(event_id: int) -> int:
 
 CACHE_ENABLED_KEY = "admin:event_cache_enabled"
 
+@redis_db.optional(fallback=False)
 def is_event_cache_enabled() -> bool:
     """Whether the admin cache toggle is on. Caching is on by default."""
     redis_client = redis_db.get_redis()
@@ -84,6 +85,7 @@ def is_event_cache_enabled() -> bool:
 
     return value == "1"
 
+@redis_db.optional(fallback=0)
 def clear_event_cache() -> int:
     """Delete every cached event detail and return how many keys were removed."""
     redis_client = redis_db.get_redis()
@@ -99,6 +101,7 @@ def clear_event_cache() -> int:
 
     return len(keys)
 
+@redis_db.optional()
 def set_event_cache_enabled(enabled: bool) -> None:
     """Turn the event cache on or off.
 

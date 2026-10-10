@@ -74,10 +74,7 @@ endblock %} {% block content %}
 
         <h2>About This Event</h2>
 
-
-        <!-- ==================================================
-             DESCRIPTION
-             ================================================== -->
+        <!-- DESCRIPTION -->
 
         {% if event.description %}
 
@@ -93,10 +90,7 @@ endblock %} {% block content %}
 
         {% endif %}
 
-
-        <!-- ==================================================
-             TAGS
-             ================================================== -->
+        <!-- TAGS -->
 
         {% if event.tags %}
 
@@ -120,10 +114,7 @@ endblock %} {% block content %}
 
         {% endif %}
 
-
-        <!-- ==================================================
-             CONCERT
-             ================================================== -->
+        <!-- CONCERT -->
 
         {% if event.performers %}
 
@@ -139,7 +130,6 @@ endblock %} {% block content %}
 
         {% endif %}
 
-
         {% if event.genres %}
 
         <div class="mongo-content-group">
@@ -153,7 +143,6 @@ endblock %} {% block content %}
         </div>
 
         {% endif %}
-
 
         {% if event.ageRestriction is defined
               and event.ageRestriction is not none %}
@@ -170,10 +159,7 @@ endblock %} {% block content %}
 
         {% endif %}
 
-
-        <!-- ==================================================
-             SPEAKERS / INSTRUCTORS
-             ================================================== -->
+        <!-- SPEAKERS / INSTRUCTORS -->
 
         {% if event.speakers %}
 
@@ -217,10 +203,7 @@ endblock %} {% block content %}
 
         {% endif %}
 
-
-        <!-- ==================================================
-             SCHEDULE
-             ================================================== -->
+        <!-- SCHEDULE -->
 
         {% if event.schedule %}
 
@@ -258,10 +241,7 @@ endblock %} {% block content %}
 
         {% endif %}
 
-
-        <!-- ==================================================
-             SPORT
-             ================================================== -->
+        <!-- SPORT -->
 
         {% if metadata.get("sport")
               or metadata.get("homeTeam")
@@ -281,7 +261,6 @@ endblock %} {% block content %}
 
           {% endif %}
 
-
           {% if metadata.get("league") %}
 
           <p>
@@ -291,7 +270,6 @@ endblock %} {% block content %}
 
           {% endif %}
 
-
           {% if metadata.get("homeTeam") %}
 
           <p>
@@ -300,7 +278,6 @@ endblock %} {% block content %}
           </p>
 
           {% endif %}
-
 
           {% if metadata.get("awayTeam") %}
 
@@ -315,10 +292,7 @@ endblock %} {% block content %}
 
         {% endif %}
 
-
-        <!-- ==================================================
-             UNIVERSITY
-             ================================================== -->
+        <!-- UNIVERSITY -->
 
         {% if metadata.get("departmentOrganization") %}
 
@@ -335,10 +309,7 @@ endblock %} {% block content %}
 
         {% endif %}
 
-
-        <!-- ==================================================
-             WORKSHOP
-             ================================================== -->
+        <!-- WORKSHOP -->
 
         {% if metadata.get("skillLevel")
               or metadata.get("materialsNeeded") %}
@@ -356,7 +327,6 @@ endblock %} {% block content %}
 
           {% endif %}
 
-
           {% if metadata.get("materialsNeeded") %}
 
           <p>
@@ -370,10 +340,7 @@ endblock %} {% block content %}
 
         {% endif %}
 
-
-        <!-- ==================================================
-             COMMUNITY
-             ================================================== -->
+        <!-- COMMUNITY -->
 
         {% if metadata.get("organizer")
               or metadata.get("communityCategory") %}
@@ -391,7 +358,6 @@ endblock %} {% block content %}
 
           {% endif %}
 
-
           {% if metadata.get("communityCategory") %}
 
           <p>
@@ -405,10 +371,7 @@ endblock %} {% block content %}
 
         {% endif %}
 
-
-        <!-- ==================================================
-             EXTRA FLEXIBLE METADATA
-             ================================================== -->
+        <!-- EXTRA FLEXIBLE METADATA -->
 
         {% set known_metadata = [
           "homeTeam",
@@ -431,7 +394,6 @@ endblock %} {% block content %}
           {% endif %}
 
         {% endfor %}
-
 
         {% if custom_metadata.found %}
 
@@ -466,7 +428,6 @@ endblock %} {% block content %}
         {% endif %}
 
       </section>
-
 
       <!-- TICKETS -->
 

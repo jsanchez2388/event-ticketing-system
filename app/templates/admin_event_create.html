@@ -29,7 +29,6 @@
             value="{{ csrf_token }}"
         >
 
-
         <label for="title">
             Event Title
         </label>
@@ -40,7 +39,6 @@
             name="title"
             required
         >
-
 
         <label for="event_type">
             Event Type
@@ -82,7 +80,6 @@
 
         </select>
 
-
         <label for="venue_id">
             Venue
         </label>
@@ -110,7 +107,6 @@
 
         </select>
 
-
         <label for="start_datetime">
             Start Date and Time
         </label>
@@ -122,7 +118,6 @@
             required
         >
 
-
         <label for="end_datetime">
             End Date and Time
         </label>
@@ -133,7 +128,6 @@
             name="end_datetime"
             required
         >
-
 
         <label for="status">
             Status
@@ -158,9 +152,6 @@
             </option>
 
         </select>
-
-
-
 
         {% set mongo_content = {} %}
 
@@ -188,7 +179,6 @@
 
 </div>
 
-
 <style>
 
 .form-page {
@@ -214,7 +204,6 @@
     padding: 10px;
     font-size: 1rem;
 }
-
 
 .form-page textarea {
     resize: vertical;
