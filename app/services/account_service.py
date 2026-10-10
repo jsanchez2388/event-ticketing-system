@@ -1,7 +1,9 @@
+from typing import Any
+
 from app.database.postgres import get_connection
 
 
-def get_account(user_id: int):
+def get_account(user_id: int) -> dict[str, Any]:
 
     conn = get_connection()
 

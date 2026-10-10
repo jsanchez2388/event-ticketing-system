@@ -1,3 +1,6 @@
+from collections.abc import Sequence
+from typing import Any
+
 from app.database.postgres import get_connection
 
 
@@ -246,7 +249,7 @@ QUERY_SQL = {
 }
 
 
-def get_events_by_venue(venue_id: int):
+def get_events_by_venue(venue_id: int) -> Sequence[dict[str, Any]]:
     conn = get_connection()
 
     try:
@@ -266,7 +269,7 @@ def get_events_by_venue(venue_id: int):
         conn.close()
 
 
-def get_user_tickets(user_id: int):
+def get_user_tickets(user_id: int) -> Sequence[dict[str, Any]]:
     conn = get_connection()
 
     try:
@@ -286,7 +289,7 @@ def get_user_tickets(user_id: int):
         conn.close()
 
 
-def get_tickets_sold():
+def get_tickets_sold() -> Sequence[dict[str, Any]]:
     conn = get_connection()
 
     try:
@@ -305,7 +308,7 @@ def get_tickets_sold():
         conn.close()
 
 
-def get_event_inventory(event_id: int):
+def get_event_inventory(event_id: int) -> Sequence[dict[str, Any]]:
     conn = get_connection()
 
     try:
@@ -325,7 +328,7 @@ def get_event_inventory(event_id: int):
         conn.close()
 
 
-def get_event_revenue():
+def get_event_revenue() -> Sequence[dict[str, Any]]:
     conn = get_connection()
 
     try:
@@ -344,7 +347,7 @@ def get_event_revenue():
         conn.close()
 
 
-def get_top_customers(limit: int):
+def get_top_customers(limit: int) -> Sequence[dict[str, Any]]:
     conn = get_connection()
 
     try:
@@ -364,7 +367,7 @@ def get_top_customers(limit: int):
         conn.close()
 
 
-def get_events_over_threshold(threshold: float):
+def get_events_over_threshold(threshold: float) -> Sequence[dict[str, Any]]:
     conn = get_connection()
 
     try:
@@ -384,7 +387,7 @@ def get_events_over_threshold(threshold: float):
         conn.close()
 
 
-def get_monthly_revenue():
+def get_monthly_revenue() -> Sequence[dict[str, Any]]:
     conn = get_connection()
 
     try:

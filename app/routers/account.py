@@ -1,28 +1,10 @@
 from pathlib import Path
-
-from fastapi import (
-    APIRouter,
-    Form,
-    HTTPException,
-    Request
-)
-
+from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
-
-from app.security import (
-    get_csrf_token,
-    validate_csrf_token
-)
-
-from app.services.account_service import (
-    get_account
-)
-
-from app.services.purchase_service import (
-    purchase_ticket
-)
-
+from app.security import get_csrf_token, validate_csrf_token
+from app.services.account_service import get_account
+from app.services.purchase_service import purchase_ticket
 
 router = APIRouter(
     prefix="/site",
@@ -170,6 +152,10 @@ def buy_ticket(
             quantity=quantity
         )
 
+        if result is None:
+            raise RuntimeError(
+                "Purchase did not return an order."
+            )
 
         request.session["message"] = (
             f"Purchase successful. "

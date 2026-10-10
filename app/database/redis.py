@@ -1,34 +1,34 @@
 import functools
 import time
-
+from collections.abc import Callable
+from typing import Any, ParamSpec, TypeVar, cast
 import redis
-
 from app.config import get_settings
 
 
-_client = None
+P = ParamSpec("P")
+R = TypeVar("R")
+
+_client: redis.Redis | None = None
 _degraded = False
 _last_connect_attempt = 0.0
 
-# Redis holds a cache and a ranking index, never the system of record, so an
-# outage must degrade those features rather than fail the request. Both a
-# missing client and a dropped connection count as unavailable; command errors
-# such as ResponseError are left to raise, since those are bugs, not outages.
+# Specific exceptions that indicate Redis is unavailable, which we want to catch and degrade gracefully.
 UNAVAILABLE_ERRORS = (
     RuntimeError,
     redis.ConnectionError,
     redis.TimeoutError
 )
 
-# Without these a partitioned Redis would hang every request instead of
-# failing fast into the degraded path.
+# The timeouts are short because we want to fail fast and degrade gracefully if Redis is unavailable.
 CONNECT_TIMEOUT_SECONDS = 2
 SOCKET_TIMEOUT_SECONDS = 2
 
 RECONNECT_COOLDOWN_SECONDS = 5
 
 
-def init_client():
+def init_client() -> None:
+    """Initialize the Redis client."""
     global _client, _degraded
 
     client = redis.Redis.from_url(
@@ -50,7 +50,8 @@ def init_client():
     _degraded = False
 
 
-def get_redis():
+def get_redis() -> redis.Redis:
+    """Return the Redis client, or raise if it has not been initialized."""
     if _client is None:
         raise RuntimeError(
             "Redis client has not been initialized."
@@ -60,8 +61,7 @@ def get_redis():
 
 
 def _try_reconnect() -> bool:
-    """Attempt one reconnect, at most once per cooldown window.
-
+    """
     Lets the app recover on its own when Redis was unavailable at startup, or
     went away and came back, without restarting the server.
     """
@@ -83,16 +83,14 @@ def _try_reconnect() -> bool:
     return True
 
 
-def optional(fallback=None):
-    """Return `fallback` instead of raising when Redis is unavailable.
-
-    Pass a zero-argument callable for mutable fallbacks, for example
-    `@optional(fallback=list)`.
-    """
-    def decorator(fn):
+def optional(
+    fallback: Any = None,
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
+    """Decorator to provide a fallback value when Redis is unavailable."""
+    def decorator(fn: Callable[P, R]) -> Callable[P, R]:
 
         @functools.wraps(fn)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             global _degraded
 
             try:
@@ -100,13 +98,13 @@ def optional(fallback=None):
 
             except UNAVAILABLE_ERRORS as error:
                 if not _try_reconnect():
-                    return _degrade(fn, error, fallback)
+                    return cast(R, _degrade(fn, error, fallback))
 
                 try:
                     result = fn(*args, **kwargs)
 
                 except UNAVAILABLE_ERRORS as retry_error:
-                    return _degrade(fn, retry_error, fallback)
+                    return cast(R, _degrade(fn, retry_error, fallback))
 
             if _degraded:
                 _degraded = False
@@ -119,7 +117,8 @@ def optional(fallback=None):
     return decorator
 
 
-def _degrade(fn, error, fallback):
+def _degrade( fn: Callable[..., Any], error: BaseException, fallback: Any) -> Any:
+    """Called when an operation fails while Redis is unavailable."""
     global _degraded
 
     if not _degraded:
@@ -134,7 +133,7 @@ def is_available() -> bool:
     return _client is not None and not _degraded
 
 
-def close_client():
+def close_client() -> None:
     global _client
 
     if _client is not None:

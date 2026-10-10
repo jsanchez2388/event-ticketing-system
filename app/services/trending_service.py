@@ -1,3 +1,5 @@
+from typing import Any, cast
+
 from app.database import redis as redis_db
 
 
@@ -11,7 +13,7 @@ def event_member(event_id: int) -> str:
 
 
 @redis_db.optional()
-def record_view(event_id: int) -> float:
+def record_view(event_id: int) -> float | None:
     redis_client = redis_db.get_redis()
     member = event_member(event_id)
 
@@ -27,15 +29,18 @@ def record_view(event_id: int) -> float:
 
 # Get the top N trending events, if no limit is provided, it defaults to 10. 
 @redis_db.optional(fallback=list)
-def get_top_trending(limit: int = DEFAULT_TOP_N) -> list[dict]:
+def get_top_trending(limit: int = DEFAULT_TOP_N) -> list[dict[str, Any]]:
     redis_client = redis_db.get_redis()
 
     # Get the top N events from the sorted set, along with their scores in reverse order
-    results = redis_client.zrevrange(
-        TRENDING_KEY,
-        0,
-        limit - 1,
-        withscores=True
+    results = cast(
+        "list[tuple[str, float]]",
+        redis_client.zrevrange(
+            TRENDING_KEY,
+            0,
+            limit - 1,
+            withscores=True
+        )
     )
 
     trending_events = []

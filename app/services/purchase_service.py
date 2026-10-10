@@ -1,3 +1,5 @@
+from typing import Any
+
 from app.database.postgres import get_connection
 from app.services.cache_service import invalidate_event
 
@@ -6,7 +8,7 @@ def purchase_ticket(
     user_id: int,
     ticket_type_id: int,
     quantity: int
-):
+) -> dict[str, Any] | None:
 
     conn = get_connection()
 

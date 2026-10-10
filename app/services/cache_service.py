@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from typing import Any
 from app.config import get_settings
 from app.database import redis as redis_db
 
@@ -13,7 +14,7 @@ def event_cache_key(event_id: int) -> str:
 
 # Reading from the cache
 @redis_db.optional()
-def get_cached_event(event_id: int) -> dict | None:
+def get_cached_event(event_id: int) -> dict[str, Any] | None:
     redis_client = redis_db.get_redis()
     key = event_cache_key(event_id)
 
@@ -24,7 +25,7 @@ def get_cached_event(event_id: int) -> dict | None:
         print(f"CACHE MISS: {key}")
         return None
 
-    data = json.loads(cached_data)
+    data: dict[str, Any] = json.loads(cached_data)
     if data.get("start_datetime"):
         data["start_datetime"] = datetime.fromisoformat(
             data["start_datetime"]
@@ -41,7 +42,7 @@ def get_cached_event(event_id: int) -> dict | None:
 @redis_db.optional()
 def set_cached_event(
     event_id: int,
-    data: dict,
+    data: dict[str, Any],
     ttl: int = DEFAULT_TTL_SECONDS
 ) -> None:
     redis_client = redis_db.get_redis()

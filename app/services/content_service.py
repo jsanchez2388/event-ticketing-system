@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
+from typing import Any
 from app.database.mongo import get_event_content_collection, optional
 from app.models.event_content import ReviewCreate
 from app.services.cache_service import invalidate_event
 
 @optional(fallback=None)
-def get_event_content(event_id: int) -> dict | None:
+def get_event_content(event_id: int) -> dict[str, Any] | None:
     """
     Return the content document for the given event, or None if not found.
     Args:
@@ -24,7 +25,7 @@ def get_event_content(event_id: int) -> dict | None:
 
 
 @optional(fallback=dict)
-def get_event_content_by_ids(event_ids: list[int]) -> dict[int, dict]:
+def get_event_content_by_ids(event_ids: list[int]) -> dict[int, dict[str, Any]]:
     """
     Return content documents for multiple events in a single MongoDB query.
 
@@ -56,7 +57,7 @@ def get_event_content_by_ids(event_ids: list[int]) -> dict[int, dict]:
     }
 
 
-def add_review(event_id: int, review: ReviewCreate) -> dict | None:
+def add_review(event_id: int, review: ReviewCreate) -> dict[str, Any] | None:
     """
     Add a review to the given event's content document.
     Args:
@@ -87,7 +88,10 @@ def add_review(event_id: int, review: ReviewCreate) -> dict | None:
 
     return review_data
 
-def get_reviews(event_id: int, min_rating: int | None = None) -> list[dict] | None:
+def get_reviews(
+    event_id: int,
+    min_rating: int | None = None
+) -> list[dict[str, Any]] | None:
     """
     Return the reviews for the given event, optionally filtered by minimum rating.
     Args:
@@ -107,7 +111,7 @@ def get_reviews(event_id: int, min_rating: int | None = None) -> list[dict] | No
     if document is None:
         return None
 
-    reviews = document.get("reviews", [])
+    reviews: list[dict[str, Any]] = document.get("reviews", [])
 
     if min_rating is not None:
         reviews = [
@@ -147,7 +151,7 @@ def delete_review(event_id: int, user_id: int) -> bool:
 
     return False
 
-def create_event_content(document: dict) -> bool:
+def create_event_content(document: dict[str, Any]) -> bool:
     """
     Create a new content document for the given event.
     Verifies that the event exists in PostgreSQL before creating.
@@ -173,7 +177,7 @@ def create_event_content(document: dict) -> bool:
 
 def update_event_content(
     event_id: int,
-    updates: dict,
+    updates: dict[str, Any],
     replace_flexible: bool = False
 ) -> bool:
     """
@@ -263,7 +267,7 @@ def get_average_rating(event_id: int) -> float | None:
     """
     collection = get_event_content_collection()
 
-    pipeline = [
+    pipeline: list[dict[str, Any]] = [
         {
             "$match": {
                 "eventId": event_id
@@ -289,4 +293,4 @@ def get_average_rating(event_id: int) -> float | None:
     if not result:
         return None
 
-    return round(result[0]["averageRating"],2)
+    return round(float(result[0]["averageRating"]), 2)

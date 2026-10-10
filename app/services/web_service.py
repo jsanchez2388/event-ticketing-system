@@ -1,3 +1,6 @@
+from collections.abc import Sequence
+from typing import Any
+
 from app.database.postgres import get_connection
 from app.services.event_service import get_event_detail, get_events_by_ids
 from app.services.trending_service import get_top_trending
@@ -5,7 +8,7 @@ from app.services.content_service import get_event_content_by_ids
 from app.services.user_service import get_users_by_ids
 
 
-def get_event_cards():
+def get_event_cards() -> Sequence[dict[str, Any]]:
     conn = get_connection()
 
     try:
@@ -72,7 +75,7 @@ def get_event_cards():
         conn.close()
 
 
-def get_trending_event_cards(limit: int = 10):
+def get_trending_event_cards(limit: int = 10) -> list[dict[str, Any]]:
     trending = get_top_trending(limit)
 
     if not trending:
@@ -107,7 +110,7 @@ def get_trending_event_cards(limit: int = 10):
     return results
 
 
-def get_event_page_details(event_id: int):
+def get_event_page_details(event_id: int) -> dict[str, Any] | None:
 
     event = get_event_detail(event_id)
     

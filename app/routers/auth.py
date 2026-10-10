@@ -330,6 +330,9 @@ def signup(
         )
 
     except Exception:
+        user = None
+
+    if user is None:
 
         return templates.TemplateResponse(
             request=request,

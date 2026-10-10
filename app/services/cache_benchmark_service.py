@@ -1,5 +1,6 @@
 from time import perf_counter
 from statistics import median
+from typing import Any
 
 from app.services.event_service import build_event_detail
 from app.services.cache_service import (
@@ -12,7 +13,7 @@ from app.services.cache_service import (
 def run_cache_benchmark(
     event_id: int,
     iterations: int = 10,
-):
+) -> dict[str, Any]:
     if iterations < 1:
         raise ValueError(
             "Iterations must be at least 1."
@@ -63,6 +64,9 @@ def run_cache_benchmark(
     invalidate_event(event_id)
 
     event = build_event_detail(event_id)
+
+    if event is None:
+        raise ValueError("Event not found.")
 
     set_cached_event(
         event_id,

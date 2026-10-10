@@ -1,3 +1,5 @@
+from typing import Any
+
 import bcrypt
 
 from app.database.postgres import get_connection
@@ -28,7 +30,7 @@ def verify_password(
         return False
 
 
-def get_user_by_email(email: str):
+def get_user_by_email(email: str) -> dict[str, Any] | None:
 
     conn = get_connection()
 
@@ -70,7 +72,7 @@ def create_user(
     email: str,
     password: str,
     role: str
-):
+) -> dict[str, Any] | None:
 
     conn = get_connection()
 

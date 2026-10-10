@@ -1,19 +1,23 @@
 from typing import Any, cast
-
 import psycopg2
-from psycopg2.extras import RealDictCursor
+from psycopg2.extras import RealDictConnection, RealDictCursor
 
 from app.config import get_settings
 
-def get_connection():
+def get_connection() -> RealDictConnection:
+      """Returns a connection to the PostgreSQL database."""
       settings = get_settings()
 
-      return psycopg2.connect(
-          settings.require("POSTGRES_CONNECTION_STRING"),
-          cursor_factory=RealDictCursor
+      return cast(
+          RealDictConnection,
+          psycopg2.connect(
+              settings.require("POSTGRES_CONNECTION_STRING"),
+              cursor_factory=RealDictCursor
+          )
       )
 
 def test_connection() -> dict[str, Any]:
+    """Tests the connection to the PostgreSQL database."""
     conn = get_connection()
 
     try:
@@ -27,7 +31,7 @@ def test_connection() -> dict[str, Any]:
             """
         )
 
-        result = cast("dict[str, Any] | None", cursor.fetchone())
+        result = cursor.fetchone()
 
         cursor.close()
 

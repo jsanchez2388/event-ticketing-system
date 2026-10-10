@@ -9,6 +9,7 @@ import statistics
 
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -30,7 +31,7 @@ ARM_LABELS = {
 ARM_ORDER = [ARM_DATABASE, ARM_DATABASE_WARM, ARM_REDIS]
 
 
-def summarize(timings: list[float]) -> dict:
+def summarize(timings: list[float]) -> dict[str, Any]:
     """Return min / max / average / median (plus stdev and count) in ms."""
     if not timings:
         return {}
@@ -59,7 +60,7 @@ def load_results(path: Path = RESULTS_CSV) -> dict[str, list[float]]:
     return results
 
 
-def summarize_all(results: dict[str, list[float]]) -> dict[str, dict]:
+def summarize_all(results: dict[str, list[float]]) -> dict[str, dict[str, Any]]:
     """Summarise every arm present, in display order."""
     return {
         arm: summarize(results[arm])

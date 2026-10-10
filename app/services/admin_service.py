@@ -1,3 +1,7 @@
+from collections.abc import Sequence
+from datetime import datetime
+from typing import Any
+
 from app.services.analytics_service import (
     get_tickets_sold,
     get_event_inventory,
@@ -11,7 +15,7 @@ from app.services.content_service import get_average_rating
 
 from app.services.cache_service import invalidate_event     
 
-def get_admin_dashboard_data():
+def get_admin_dashboard_data() -> dict[str, Any]:
 
     # ============================================================
     # POSTGRESQL REPORTS
@@ -253,7 +257,7 @@ from app.database.postgres import get_connection
 from app.services.cache_service import invalidate_event
 
 
-def get_all_venues():
+def get_all_venues() -> Sequence[dict[str, Any]]:
     """
     Return all venues for the Admin event form.
     """
@@ -288,10 +292,10 @@ def create_event(
     venue_id: int,
     title: str,
     event_type: str,
-    start_datetime,
-    end_datetime,
+    start_datetime: datetime,
+    end_datetime: datetime,
     status: str = "scheduled",
-):
+) -> dict[str, Any] | None:
     """
     Create a new PostgreSQL event.
     """
@@ -365,12 +369,12 @@ def create_event(
 def create_ticket_type(
     event_id: int,
     ticket_name: str,
-    price,
+    price: float,
     total_quantity: int,
     minimum_purchase: int = 1,
     maximum_purchase: int = 10,
     status: str = "active",
-):
+) -> dict[str, Any] | None:
     if price < 0:
         raise ValueError("Ticket price cannot be negative.")
 
@@ -463,7 +467,7 @@ def create_ticket_type(
 # ADMIN - GET EVENT
 # ============================================================
 
-def get_admin_event(event_id: int):
+def get_admin_event(event_id: int) -> dict[str, Any] | None:
     conn = get_connection()
 
     try:
@@ -502,10 +506,10 @@ def update_event(
     venue_id: int,
     title: str,
     event_type: str,
-    start_datetime,
-    end_datetime,
+    start_datetime: datetime,
+    end_datetime: datetime,
     status: str,
-):
+) -> dict[str, Any] | None:
     if end_datetime <= start_datetime:
         raise ValueError(
             "Event end time must be after the start time."
@@ -572,7 +576,7 @@ def update_event(
 # ============================================================
 
 
-def cancel_event(event_id: int):
+def cancel_event(event_id: int) -> dict[str, Any] | None:
     """
     Cancel an event without deleting its PostgreSQL record,
     MongoDB content, ticket types, orders, or sales history.
@@ -616,7 +620,7 @@ def cancel_event(event_id: int):
     return event
 
 
-def get_admin_ticket_type(ticket_type_id: int):
+def get_admin_ticket_type(ticket_type_id: int) -> dict[str, Any] | None:
     conn = get_connection()
 
     try:
@@ -656,10 +660,10 @@ def get_admin_ticket_type(ticket_type_id: int):
 
 def update_ticket_type(
     ticket_type_id: int,
-    price,
+    price: float,
     total_quantity: int,
     status: str,
-):
+) -> dict[str, Any] | None:
     if price < 0:
         raise ValueError("Ticket price cannot be negative.")
 

@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 from time import perf_counter
 from datetime import datetime
+from typing import Any
 
 from app.database import redis as redis_db
 from app.services.analytics_service import (
@@ -684,7 +685,7 @@ def _build_speakers(
         ):
             continue
 
-        speaker = {}
+        speaker: dict[str, Any] = {}
 
         if name:
             speaker["name"] = name
@@ -1208,6 +1209,11 @@ def website_admin_create_event(
             end_datetime=end_value,
             status=status,
         )
+
+        if new_event is None:
+            raise RuntimeError(
+                "Event creation did not return a row."
+            )
 
         event_id = new_event["event_id"]
 

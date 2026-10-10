@@ -1,54 +1,50 @@
 import functools
 import time
-from typing import Any
-
+from collections.abc import Callable
+from typing import Any, ParamSpec, TypeVar, cast
 from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.database import Database
 from pymongo.errors import ConnectionFailure
-
 from app.config import get_settings
 
+P = ParamSpec("P")
+R = TypeVar("R")
 
-_client: MongoClient | None = None
+MongoDocument = dict[str, Any]
+
+_client: MongoClient[MongoDocument] | None = None
 _degraded = False
 _last_connect_attempt = 0.0
 
-# Mongo holds optional event content - descriptions, speakers, schedules,
-# performers, reviews - while PostgreSQL stays the system of record, so an
-# outage must drop those sections rather than fail the request. OperationFailure
-# is left to raise, since bad credentials or a malformed query are bugs, not
-# outages.
+# Specific exceptions that indicate MongoDB is unavailable, which we want to catch and degrade gracefully.
 UNAVAILABLE_ERRORS = (
     RuntimeError,
     ConnectionFailure
 )
 
-# Without these an unreachable cluster would hang every request for pymongo's
-# 30 second server-selection default instead of failing fast into the degraded
-# path.
+# The timeouts are short because we want to fail fast and degrade gracefully if MongoDB is unavailable.
 CONNECT_TIMEOUT_SECONDS = 2
 SOCKET_TIMEOUT_SECONDS = 2
 SERVER_SELECTION_TIMEOUT_SECONDS = 2
 
+# The cooldown is long enough to avoid spamming the logs with repeated failures when MongoDB is down.
 RECONNECT_COOLDOWN_SECONDS = 5
 
 
-def init_client() -> MongoClient:
+def init_client() -> MongoClient[MongoDocument]:
+    """Initialize the MongoDB client."""
     global _client, _degraded
 
-    client = MongoClient(
+    client: MongoClient[MongoDocument] = MongoClient(
         get_settings().require("MONGO_URI"),
         connectTimeoutMS=CONNECT_TIMEOUT_SECONDS * 1000,
         socketTimeoutMS=SOCKET_TIMEOUT_SECONDS * 1000,
         serverSelectionTimeoutMS=SERVER_SELECTION_TIMEOUT_SECONDS * 1000
     )
 
-    # MongoClient never contacts the cluster on construction, so only a ping
-    # proves the connection is usable.
     try:
         client.admin.command("ping")
-
     except Exception:
         client.close()
         raise
@@ -59,10 +55,8 @@ def init_client() -> MongoClient:
     return _client
 
 
-def get_client() -> MongoClient:
-    # Connect on first use so the standalone scripts under mongo/ keep working
-    # without an explicit init_client() call. The cooldown inside
-    # _try_reconnect stops a down cluster from being retried on every read.
+def get_client() -> MongoClient[MongoDocument]:
+    """Return the MongoDB client, or raise if it has not been initialized."""
     if _client is None:
         _try_reconnect()
 
@@ -75,11 +69,7 @@ def get_client() -> MongoClient:
 
 
 def _try_reconnect() -> bool:
-    """Attempt one reconnect, at most once per cooldown window.
-
-    Lets the app recover on its own when MongoDB was unavailable at startup, or
-    went away and came back, without restarting the server.
-    """
+    """Attempt to reconnect to MongoDB if the cooldown has passed."""
     global _last_connect_attempt
 
     now = time.monotonic()
@@ -98,17 +88,14 @@ def _try_reconnect() -> bool:
     return True
 
 
-def optional(fallback=None):
-    """Return `fallback` instead of raising when MongoDB is unavailable.
-
-    Pass a zero-argument callable for mutable fallbacks, for example
-    `@optional(fallback=dict)`. Use it only on reads that enrich a response;
-    writes must keep raising so a failed save is never reported as a success.
-    """
-    def decorator(fn):
+def optional(
+    fallback: Any = None,
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
+    """Decorator to provide a fallback value when MongoDB is unavailable."""
+    def decorator(fn: Callable[P, R]) -> Callable[P, R]:
 
         @functools.wraps(fn)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             global _degraded
 
             try:
@@ -116,13 +103,13 @@ def optional(fallback=None):
 
             except UNAVAILABLE_ERRORS as error:
                 if not _try_reconnect():
-                    return _degrade(fn, error, fallback)
+                    return cast(R, _degrade(fn, error, fallback))
 
                 try:
                     result = fn(*args, **kwargs)
 
                 except UNAVAILABLE_ERRORS as retry_error:
-                    return _degrade(fn, retry_error, fallback)
+                    return cast(R, _degrade(fn, retry_error, fallback))
 
             if _degraded:
                 _degraded = False
@@ -135,7 +122,8 @@ def optional(fallback=None):
     return decorator
 
 
-def _degrade(fn, error, fallback):
+def _degrade(fn: Callable[..., Any], error: BaseException, fallback: Any) -> Any:
+    """Called when an operation fails while MongoDB is unavailable."""
     global _degraded
 
     if not _degraded:
@@ -150,15 +138,18 @@ def is_available() -> bool:
     return _client is not None and not _degraded
 
 
-def get_database() -> Database:
+def get_database() -> Database[MongoDocument]:
+    """Return the MongoDB database, or raise if it has not been initialized."""
     return get_client()[get_settings().require("MONGO_DB")]
 
 
-def get_event_content_collection() -> Collection:
+def get_event_content_collection() -> Collection[MongoDocument]:
+    """Return the event content collection, or raise if it has not been initialized."""
     return get_database()[get_settings().EVENT_CONTENT_COLLECTION]
 
 
 def test_connection() -> dict[str, Any]:
+    """Tests the connection to the MongoDB database."""
     get_client().admin.command("ping")
 
     return {
@@ -168,6 +159,7 @@ def test_connection() -> dict[str, Any]:
 
 
 def close_client() -> None:
+    """Close the MongoDB client."""
     global _client
 
     if _client is not None:

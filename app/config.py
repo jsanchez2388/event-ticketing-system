@@ -30,7 +30,7 @@ class Settings:
         if not value:
             raise RuntimeError(f"{name} is missing. Add it to the .env file.")
 
-        return value
+        return str(value)
 
 @lru_cache()
 def get_settings() -> Settings:

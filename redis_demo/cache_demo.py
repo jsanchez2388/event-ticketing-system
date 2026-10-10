@@ -52,6 +52,10 @@ def demo_cache_flow(event_id: int) -> None:
     second_result = get_event_detail(event_id)
     second_elapsed_ms = (perf_counter() - start) * 1000
 
+    if second_result is None:
+        print(f"Event {event_id} was not found.")
+        return
+
     print(f"Second request time: {second_elapsed_ms:.3f} ms")
     print(f"Cache hit: {second_result['cache_hit']}")
     print(f"Popularity score: {second_result['popularity_score']}")
@@ -66,6 +70,10 @@ def demo_ttl_expiry(event_id: int) -> None:
 
     # Get the event normally first.
     event = get_event_detail(event_id)
+
+    if event is None:
+        print(f"Event {event_id} was not found.")
+        return
 
     # Re-cache it with a short TTL just for this demo.
     set_cached_event(event_id, event, ttl=5)
@@ -83,6 +91,10 @@ def demo_ttl_expiry(event_id: int) -> None:
     print("\nRequesting the event again after expiration...")
 
     result = get_event_detail(event_id)
+
+    if result is None:
+        print(f"Event {event_id} was not found.")
+        return
 
     print(f"Cache hit: {result['cache_hit']}")
 

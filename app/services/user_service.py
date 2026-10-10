@@ -1,7 +1,9 @@
+from typing import Any
+
 from app.database.postgres import get_connection
 
 
-def get_user(user_id: int) -> dict | None:
+def get_user(user_id: int) -> dict[str, Any] | None:
     """
     Return a single user from PostgreSQL by user_id, or None if not found.
     """
@@ -36,7 +38,7 @@ def get_user(user_id: int) -> dict | None:
 
 
 # Will be used to collect all the user details for the review section of the event details page
-def get_users_by_ids(user_ids: list[int]) -> dict[int, dict]:
+def get_users_by_ids(user_ids: list[int]) -> dict[int, dict[str, Any]]:
     """
     Return multiple users from PostgreSQL keyed by user_id.
     """

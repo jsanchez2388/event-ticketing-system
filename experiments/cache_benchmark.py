@@ -129,7 +129,13 @@ def run_experiments(event_id: int, runs: int, include_warm_conn: bool) -> dict[s
 
     try:
         invalidate_event(event_id)
-        set_cached_event(event_id, build_event_detail(event_id), ttl=BENCHMARK_TTL_SECONDS)
+
+        event_detail = build_event_detail(event_id)
+
+        if event_detail is None:
+            raise ValueError(f"Event {event_id} was not found.")
+
+        set_cached_event(event_id, event_detail, ttl=BENCHMARK_TTL_SECONDS)
 
         warm_up(event_id, conn)
 

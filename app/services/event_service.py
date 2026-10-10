@@ -1,4 +1,9 @@
 
+from collections.abc import Sequence
+from typing import Any
+
+from psycopg2.extras import RealDictConnection
+
 from app.database import mongo as mongo_db
 from app.database.postgres import get_connection
 from app.services.content_service import get_event_content
@@ -12,7 +17,7 @@ from app.services.cache_service import (
 from app.services.trending_service import (record_view, get_event_score)
 
 
-def get_all_events():
+def get_all_events() -> Sequence[dict[str, Any]]:
     conn = get_connection()
 
     try:
@@ -87,7 +92,10 @@ EVENT_BY_ID_SQL = """
 """
 
 
-def get_event_by_id(event_id: int, conn=None):
+def get_event_by_id(
+    event_id: int,
+    conn: RealDictConnection | None = None
+) -> dict[str, Any] | None:
     """Return one event joined to its venue, with remaining inventory summed.
 
     Pass an open `conn` to reuse it; otherwise a new connection is opened
@@ -95,7 +103,7 @@ def get_event_by_id(event_id: int, conn=None):
     """
     owns_connection = conn is None
 
-    if owns_connection:
+    if conn is None:
         conn = get_connection()
 
     try:
@@ -117,7 +125,7 @@ def get_event_by_id(event_id: int, conn=None):
 
 
 # Will be used to collect all the event details for the trending page
-def get_events_by_ids(event_ids: list[int]):
+def get_events_by_ids(event_ids: list[int]) -> Sequence[dict[str, Any]]:
     if not event_ids:
         return []
 
@@ -157,12 +165,15 @@ def get_events_by_ids(event_ids: list[int]):
 
 
 
-def get_event_content_from_mongo(event_id: int):
+def get_event_content_from_mongo(event_id: int) -> dict[str, Any] | None:
     return get_event_content(event_id)
 
 
 # Builds a complete event detail by combining PostgreSQL + MongoDB data. NO Redis involved. Redis will cache the result of this function.
-def build_event_detail(event_id: int, conn=None):
+def build_event_detail(
+    event_id: int,
+    conn: RealDictConnection | None = None
+) -> dict[str, Any] | None:
     """Combine PostgreSQL and MongoDB data for one event. No Redis involved."""
     event = get_event_by_id(event_id, conn=conn)
 
@@ -187,7 +198,10 @@ def build_event_detail(event_id: int, conn=None):
 
 
 # Combines PostgreSQL + MongoDB + Redis to return a complete event detail, with popularity score and cache hit flag. 
-def get_event_detail(event_id: int, use_cache: bool = True):
+def get_event_detail(
+    event_id: int,
+    use_cache: bool = True
+) -> dict[str, Any] | None:
     event_detail = None
     cache_hit = False
     use_cache = (
